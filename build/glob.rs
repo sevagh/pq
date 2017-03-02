@@ -1,19 +1,12 @@
 extern crate std;
 
-use std::env;
+use std::path::Path as Path;
 use std::path::PathBuf as PathBuf;
 
 pub fn discover_fdset_files() -> Vec<PathBuf> {
     let mut fdset_files = Vec::new();
 
-    let mut home = match env::home_dir() {
-        Some(home) => home,
-        None => return fdset_files,
-    };
-
-    home.push(".pq");
-
-    let paths = std::fs::read_dir(home.as_path()).unwrap();
+    let paths = std::fs::read_dir(Path::new("./fdset")).unwrap();
 
     for p in paths {
         let path = match p {

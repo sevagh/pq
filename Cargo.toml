@@ -2,6 +2,10 @@
 name = "pq"
 version = "0.1.0"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
+build = "build/main.rs"
+
+[build-dependencies.protobuf]
+git = "https://github.com/stepancheg/rust-protobuf.git"
 
 [dependencies.protobuf]
 git = "https://github.com/stepancheg/rust-protobuf.git"
