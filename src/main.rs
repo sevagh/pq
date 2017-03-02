@@ -1,6 +1,6 @@
 #![crate_type = "bin"]
 
-include!("./hello.rs");
+include!("./protob.rs");
 
 fn main() {
     println!("{}", message());
