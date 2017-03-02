@@ -1,5 +1,7 @@
 #![crate_type = "bin"]
 
+include!("./hello.rs");
+
 fn main() {
-    println!("Hello world")
+    println!("{}", message());
 }
