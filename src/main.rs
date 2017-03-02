@@ -28,11 +28,18 @@ fn write_file(bin: &str) {
 }
 
 fn main() {
-    glob::discover_fdset_files();
+    let fdset_files = glob::discover_fdset_files();
+
+    for f in fdset_files {
+        println!("{}", f.display());
+    }
+
+    /*
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 2 {
         panic!("must have exactly one argument");
     }
     let ref pb_bin = args[1];
     write_file(&pb_bin);
+    */
 }
