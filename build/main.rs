@@ -27,13 +27,13 @@ fn main() {
         }
     }
 
-    let proto_files = glob::discover_proto_files();
+    let fdset_files = glob::discover_fdset_files();
 
-    if proto_files.is_empty() {
-        panic!("No proto files in ./proto");
+    if fdset_files.is_empty() {
+        panic!("No fdset files in ./fdset");
     }
 
-    for file in proto_files {
+    for file in fdset_files {
         let file_str = file.to_string_lossy().into_owned();
         let written_files = protob::write_file(&file_str);
 
