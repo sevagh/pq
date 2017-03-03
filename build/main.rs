@@ -15,6 +15,13 @@ fn main() {
         Err(_) => return,
     }
 
+    for genrs_file_to_remove in glob::discover_genrs_files() {
+        match fs::remove_file(genrs_file_to_remove) {
+            Ok(x) => x,
+            Err(_) => return,
+        }
+    }
+
     let fdset_files = glob::discover_fdset_files();
 
     for file in fdset_files {

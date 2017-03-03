@@ -4,9 +4,17 @@ use std::path::Path as Path;
 use std::path::PathBuf as PathBuf;
 
 pub fn discover_fdset_files() -> Vec<PathBuf> {
-    let mut fdset_files = Vec::new();
+    return discover_files("./fdset", "fdset");
+}
 
-    let paths = std::fs::read_dir(Path::new("./fdset")).unwrap();
+pub fn discover_genrs_files() -> Vec<PathBuf> {
+    return discover_files("./src/protobuf", "rs");
+}
+
+fn discover_files(path: &str, extension: &str) -> Vec<PathBuf> {
+    let mut result_files = Vec::new();
+
+    let paths = std::fs::read_dir(Path::new(path)).unwrap();
 
     for p in paths {
         let path = match p {
@@ -16,15 +24,15 @@ pub fn discover_fdset_files() -> Vec<PathBuf> {
 
         match path.extension() {
             Some(x) => {
-                if x != "fdset" {
+                if x != extension {
                     continue;
                 }
             },
             None => continue,
         }
 
-        fdset_files.push(path);
+        result_files.push(path);
     }
 
-    return fdset_files;
+    return result_files;
 }
