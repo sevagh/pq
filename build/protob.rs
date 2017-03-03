@@ -10,13 +10,16 @@ use protobuf::parse_from_reader;
 use protobuf::descriptor::*;
 use protobuf::codegen::*;
 
-pub fn write_file(bin: &str) {
+pub fn write_file(bin: &str) -> Vec<PathBuf> {
+    let mut rpaths: Vec<PathBuf> = Vec::new();
+
     let mut is = File::open(&Path::new(bin)).unwrap();
     let fds = parse_from_reader::<FileDescriptorSet>(&mut is as &mut Read).unwrap();
 
     let file_names: Vec<String> = fds.get_file().iter()
         .map(|f| f.get_name().to_string())
         .collect();
+
     let results = gen(fds.get_file(), &file_names);
 
     for r in &results {
@@ -25,5 +28,9 @@ pub fn write_file(bin: &str) {
 
         let mut file_writer = File::create(&rpath).unwrap();
         file_writer.write(&r.content).unwrap();
+
+        rpaths.push(PathBuf::from(&r.name));
     }
+
+    return rpaths;
 }
