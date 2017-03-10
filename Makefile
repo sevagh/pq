@@ -1,15 +1,17 @@
 FDSET := $(patsubst %.proto,%.fdset,$(wildcard proto/*.proto))
 
-all: $(FDSET) cargo
+all: clean $(FDSET) cargo
 
 $(FDSET): %.fdset: %.proto
 	protoc $^ -o $@
 
 cargo:
-	cargo build -vv
+	cargo build
 
 .PHONY: clean
 
 clean:
 	-rm -rf proto/*.fdset
-	-cargo clean
+	#hack until i get build script to listen on proto/ dir
+	-rm -rf src/proto/*.rs
+	-rm -rf src/protob.rs
