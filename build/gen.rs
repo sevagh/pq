@@ -35,8 +35,8 @@ pub fn gen_protob_body(protob_path: &Path) {
         .unwrap();
 
     f.write_all(b" 
-pub fn message() -> &'static str {
-    \"Hello, Fuck!\"
+pub fn process_bytes(bytes: String) {
+    println!(\"{}\", bytes.replace(\"hello\", \"goodbye\"));
 }
 ").unwrap();
 }
