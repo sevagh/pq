@@ -14,7 +14,18 @@ pub fn gen_schemata_modfile(modfile_path: &Path, proto_path: &PathBuf) {
     write!(f, "mod {};\n", proto_path.file_stem().unwrap().to_str().unwrap()).unwrap();
 }
 
-pub fn gen_protob_file(protob_path: &Path, msgdefs: Vec<String>) {
+pub fn append_schemata_modfile(modfile_path: &Path, msgdefs: &Vec<String>) {
+    let mut f = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open(modfile_path)
+        .unwrap();
+
+    write!(f, "{}", format_msgdefs(msgdefs));
+}
+
+pub fn gen_protob_file(protob_path: &Path, msgdefs: &Vec<String>) {
     let mut f = OpenOptions::new()
         .create(true)
         .write(true)
@@ -42,5 +53,14 @@ fn _process_bytes(read: &mut StdinLock, msgdef: &Message) {{
 
     msgdef.merge_from(&mut stream).unwrap();
 }}
-", msgdefs.join("\n")).unwrap();
+", format_msgdefs(msgdefs)).unwrap();
+}
+
+fn format_msgdefs(msgdefs: &Vec<String>) -> String {
+    let mut ret = Vec::new();
+
+    for m in msgdefs {
+        ret.push(format!("use schemata::{};", m));
+    }
+    ret.join("\n")
 }

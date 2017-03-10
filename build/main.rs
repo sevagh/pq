@@ -36,7 +36,8 @@ fn main() {
         }
     }
 
-    gen::gen_protob_file(&protob_path, deserialize_vec);
+    gen::append_schemata_modfile(&schemata_modfile_path, &deserialize_vec);
+    gen::gen_protob_file(&protob_path, &deserialize_vec);
 }
 
 fn delete_if_exists(path: &PathBuf) -> Result<bool, Error> {
