@@ -3,12 +3,8 @@ extern crate std;
 use std::path::Path as Path;
 use std::path::PathBuf as PathBuf;
 
-pub fn discover_fdset_files() -> Vec<PathBuf> {
-    return discover_files("./proto", "fdset");
-}
-
 pub fn discover_genrs_files() -> Vec<PathBuf> {
-    return discover_files("./src/proto", "rs");
+    return discover_files("./src/schemata", "rs");
 }
 
 fn discover_files(path: &str, extension: &str) -> Vec<PathBuf> {

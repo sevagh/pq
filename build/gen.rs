@@ -11,7 +11,7 @@ pub fn gen_protob_includes(protob_path: &Path) {
         .open(protob_path)
         .unwrap();
 
-    write!(f, "mod proto;\n").unwrap();
+    write!(f, "mod schemata;\n").unwrap();
 }
 
 pub fn gen_protob_modfile(modfile_path: &Path, proto_paths: Vec<PathBuf>) {
