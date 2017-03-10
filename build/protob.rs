@@ -23,7 +23,7 @@ pub fn write_file(bin: &str) -> Vec<PathBuf> {
     let results = gen(fds.get_file(), &file_names);
 
     for r in &results {
-        let mut rpath = PathBuf::from("./src/protobuf/");
+        let mut rpath = PathBuf::from("./src/proto/");
         rpath.push(&r.name);
 
         let mut file_writer = File::create(&rpath).unwrap();

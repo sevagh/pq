@@ -1,6 +1,8 @@
 #![crate_type = "bin"]
 
-include!(concat!(env!("OUT_DIR"), "/protob.rs"));
+extern crate protobuf;
+
+include!("./protob.rs");
 
 fn main() {
     println!("{}", message());

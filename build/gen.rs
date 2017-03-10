@@ -3,7 +3,7 @@ use std::path::Path;
 use std::fs::OpenOptions;
 use std::io::Write;
 
-pub fn gen_protob_includes(file_path: PathBuf, protob_path: &Path) {
+pub fn gen_protob_includes(protob_path: &Path) {
     let mut f = OpenOptions::new()
         .create(true)
         .write(true)
@@ -11,7 +11,20 @@ pub fn gen_protob_includes(file_path: PathBuf, protob_path: &Path) {
         .open(protob_path)
         .unwrap();
 
-    write!(f, "include!(\"./protobuf/{}\");\n", file_path.to_string_lossy().into_owned()).unwrap();
+    write!(f, "mod proto;\n").unwrap();
+}
+
+pub fn gen_protob_modfile(modfile_path: &Path, proto_paths: Vec<PathBuf>) {
+    let mut f = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(false)
+        .open(modfile_path)
+        .unwrap();
+
+    for proto_f in proto_paths {
+        write!(f, "mod {};\n", proto_f.file_stem().unwrap().to_str().unwrap()).unwrap();
+    }
 }
 
 pub fn gen_protob_body(protob_path: &Path) {

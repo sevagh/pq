@@ -3,15 +3,15 @@ extern crate protobuf;
 
 use std::fs;
 use std::env;
-use std::path::Path;
+use std::path::PathBuf;
 
 mod glob;
 mod protob;
 mod gen;
 
 fn main() {
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let protob_path = Path::new(&out_dir).join("protob.rs");
+    let protob_path = PathBuf::from("./src/protob.rs");
+    let protob_modfile_path = PathBuf::from("./src/proto/mod.rs");
 
     if protob_path.exists() {
         match fs::remove_file(protob_path.to_string_lossy().into_owned()) {
@@ -33,14 +33,14 @@ fn main() {
         panic!("No fdset files in ./fdset");
     }
 
-    for file in fdset_files {
+    for file in &fdset_files {
         let file_str = file.to_string_lossy().into_owned();
         let written_files = protob::write_file(&file_str);
 
-        for wf in written_files {
-            gen::gen_protob_includes(wf, &protob_path);
-        }
+        println!("{:?} {:?}", protob_path, protob_modfile_path);
+        gen::gen_protob_modfile(&protob_modfile_path, written_files);
     }
 
+    gen::gen_protob_includes(&protob_path);
     gen::gen_protob_body(&protob_path);
 }

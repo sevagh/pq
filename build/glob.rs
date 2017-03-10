@@ -8,7 +8,7 @@ pub fn discover_fdset_files() -> Vec<PathBuf> {
 }
 
 pub fn discover_genrs_files() -> Vec<PathBuf> {
-    return discover_files("./src/protobuf", "rs");
+    return discover_files("./src/proto", "rs");
 }
 
 fn discover_files(path: &str, extension: &str) -> Vec<PathBuf> {

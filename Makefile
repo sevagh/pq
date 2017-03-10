@@ -6,7 +6,7 @@ $(FDSET): %.fdset: %.proto
 	protoc $^ -o $@
 
 cargo:
-	cargo build
+	cargo build -vv
 
 .PHONY: clean
 
