@@ -10,6 +10,7 @@ function gen_schemata() {
 }
 
 function run_cargo() {
+    touch src/main.rs
     cargo build
 }
 
