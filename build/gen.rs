@@ -22,7 +22,7 @@ pub fn append_schemata_modfile(modfile_path: &Path, msgdefs: &Vec<String>) {
         .open(modfile_path)
         .unwrap();
 
-    write!(f, "{}", format_msgdefs(msgdefs));
+    write!(f, "{}", format_msgdefs(msgdefs)).unwrap();
 }
 
 pub fn gen_protob_file(protob_path: &Path, msgdefs: &Vec<String>) {

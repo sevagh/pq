@@ -21,6 +21,7 @@ fn main() {
 
     for f in genrs_files {
         gen::gen_schemata_modfile(&schemata_modfile_path, &f);
+        let filename = f.to_string_lossy().into_owned();
 
         let f = fs::File::open(f).unwrap();
         let f = BufReader::new(f);
@@ -31,7 +32,7 @@ fn main() {
                 let mut res: Vec<String> = line_contents.split_whitespace().map(|s| s.to_string()).collect();
                 res.pop().unwrap();
                 let last_word = res.pop().unwrap();
-                deserialize_vec.push(last_word);
+                deserialize_vec.push(format!("{}::{}", filename, last_word));
             }
         }
     }
