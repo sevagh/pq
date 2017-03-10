@@ -4,7 +4,7 @@ use std::path::Path as Path;
 use std::path::PathBuf as PathBuf;
 
 pub fn discover_fdset_files() -> Vec<PathBuf> {
-    return discover_files("./fdset", "fdset");
+    return discover_files("./proto", "fdset");
 }
 
 pub fn discover_genrs_files() -> Vec<PathBuf> {
