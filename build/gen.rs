@@ -11,7 +11,7 @@ pub fn gen_protob_includes(protob_path: &Path) {
         .open(protob_path)
         .unwrap();
 
-    write!(f, "mod schemata;\n").unwrap();
+    write!(f, "mod schemata;\nmod decode;\n\nuse decode::print_message;\nuse std::io::StdinLock;\n").unwrap();
 }
 
 pub fn gen_protob_modfile(modfile_path: &Path, proto_paths: Vec<PathBuf>) {
@@ -35,8 +35,8 @@ pub fn gen_protob_body(protob_path: &Path) {
         .unwrap();
 
     f.write_all(b" 
-pub fn process_bytes(bytes: String) {
-    println!(\"{}\", bytes.replace(\"hello\", \"goodbye\"));
+pub fn process_bytes(bytes: &mut StdinLock) {
+    print_message(bytes);
 }
 ").unwrap();
 }

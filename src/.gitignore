@@ -1,4 +1,5 @@
 *
 !.gitignore
 !main.rs
+!decode.rs
 !schemata
