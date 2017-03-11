@@ -21,7 +21,8 @@ fn main() {
 
     for f in genrs_files {
         gen::gen_schemata_modfile(&schemata_modfile_path, &f);
-        let filename = f.to_string_lossy().into_owned();
+        let file_stripped = f.clone();
+        let filename = file_stripped.file_stem().unwrap().to_string_lossy().into_owned();
 
         let f = fs::File::open(f).unwrap();
         let f = BufReader::new(f);

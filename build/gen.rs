@@ -11,7 +11,7 @@ pub fn gen_schemata_modfile(modfile_path: &Path, proto_path: &PathBuf) {
         .open(modfile_path)
         .unwrap();
 
-    write!(f, "mod {};\n", proto_path.file_stem().unwrap().to_str().unwrap()).unwrap();
+    write!(f, "pub mod {};\n", proto_path.file_stem().unwrap().to_str().unwrap()).unwrap();
 }
 
 pub fn append_schemata_modfile(modfile_path: &Path, msgdefs: &Vec<String>) {
