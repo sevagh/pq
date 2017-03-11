@@ -45,15 +45,11 @@ use std::io::StdinLock;
 {}
 
 pub fn process_bytes(read: &mut StdinLock) {{
-    _process_bytes(read);
-}}
+    let mut stream = CodedInputStream::new(read);
 
-fn _process_bytes(read: &mut StdinLock, msgdef: &Message) {{
-    let stream = CodedInputStream::new(read);
-
-    msgdef.merge_from(&mut stream).unwrap();
+    {}
 }}
-", format_msgdefs(msgdefs)).unwrap();
+", format_msgdefs(msgdefs), format_mergefrom_calls(msgdefs)).unwrap();
 }
 
 fn format_msgdefs(msgdefs: &Vec<String>) -> String {
@@ -61,6 +57,17 @@ fn format_msgdefs(msgdefs: &Vec<String>) -> String {
 
     for m in msgdefs {
         ret.push(format!("use schemata::{};", m));
+    }
+    ret.join("\n")
+}
+
+fn format_mergefrom_calls(msgdefs: &Vec<String>) -> String {
+    let mut ret = Vec::new();
+
+    for m in msgdefs {
+        let split = m.split("::");
+        let vec = split.collect::<Vec<&str>>();
+        ret.push(format!("{}::new().merge_from(&mut stream).unwrap();", vec.last().unwrap()));
     }
     ret.join("\n")
 }

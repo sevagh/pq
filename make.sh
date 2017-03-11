@@ -11,8 +11,8 @@ function gen_schemata() {
 
 function run_cargo() {
     touch src/main.rs
-    cargo build $1
+    cargo build
 }
 
 gen_schemata
-run_cargo $1
+run_cargo
