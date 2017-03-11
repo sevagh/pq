@@ -22,6 +22,7 @@ pub fn append_schemata_modfile(modfile_path: &Path, msgdefs: &Vec<String>) {
         .open(modfile_path)
         .unwrap();
 
+    write!(f, "\n").unwrap();
     write!(f, "{}", format_msgdefs(msgdefs)).unwrap();
 }
 
@@ -33,8 +34,7 @@ pub fn gen_protob_file(protob_path: &Path, msgdefs: &Vec<String>) {
         .open(protob_path)
         .unwrap();
 
-    write!(&mut f, " 
-mod schemata;
+    write!(&mut f, "mod schemata;
 
 use protobuf::Message;
 use protobuf::CodedInputStream;
@@ -44,10 +44,10 @@ use std::io::StdinLock;
 
 {}
 
-pub fn process_bytes(read: &mut StdinLock) {{
+pub fn process_bytes(read: &mut Read) {{
     let mut stream = CodedInputStream::new(read);
 
-    {}
+{}
 }}
 ", format_msgdefs(msgdefs), format_mergefrom_calls(msgdefs)).unwrap();
 }
@@ -67,7 +67,10 @@ fn format_mergefrom_calls(msgdefs: &Vec<String>) -> String {
     for m in msgdefs {
         let split = m.split("::");
         let vec = split.collect::<Vec<&str>>();
-        ret.push(format!("{}::new().merge_from(&mut stream).unwrap();", vec.last().unwrap()));
+        ret.push(format!("\tmatch {}::new().merge_from(&mut stream) {{
+        Ok(x) => println!(\"{{:?}}\", x),
+        Err(e) => panic!(e),
+    }};", vec.last().unwrap()));
     }
     ret.join("\n")
 }
