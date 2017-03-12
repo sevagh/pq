@@ -52,9 +52,9 @@ fn format_mergefrom_calls(msgdefs: &Vec<String>) -> String {
     for m in msgdefs {
         let split = m.split("::");
         let vec = split.collect::<Vec<&str>>();
-        ret.push(format!("\tmatch {}::new().merge_from(&mut stream) {{
-        Ok(x) => println!(\"{{:?}}\", x),
-        Err(e) => panic!(e),
+        ret.push(format!("\tmatch {0}::new().merge_from(&mut stream) {{
+        Ok(x) => println!(\"Decoded with {0}:\n\t{{:?}}\", x),
+        Err(_) => println!(\"Couldn't decode with {0}, trying next\"),
     }};", vec.last().unwrap()));
     }
     ret.join("\n")
