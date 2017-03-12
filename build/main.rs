@@ -38,7 +38,6 @@ fn main() {
         }
     }
 
-    gen::append_schemata_modfile(&schemata_modfile_path, &deserialize_vec);
     gen::gen_protob_file(&protob_path, &deserialize_vec);
 }
 
