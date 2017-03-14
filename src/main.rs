@@ -13,7 +13,7 @@ fn main() {
     let mut handle = _handle.lock();
 
     match handle.read_to_end(&mut buffer) {
-        Ok(_) => process_bytes(&buffer),
+        Ok(_) => process_bytes(&mut buffer),
         Err(error) => println!("error: {}", error),
     }
 }
