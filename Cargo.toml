@@ -9,3 +9,6 @@ git = "https://github.com/stepancheg/rust-protobuf.git"
 
 [dependencies.protobuf]
 git = "https://github.com/stepancheg/rust-protobuf.git"
+
+[dev-dependencies.protobuf]
+git = "https://github.com/stepancheg/rust-protobuf.git"

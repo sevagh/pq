@@ -22,7 +22,7 @@ if [ z"${1-}" == z"build" ]; then
 elif [ z"${1-}" == z"clean" ]; then
     clean_gen_code
 elif [ z"${1-}" == z"test" ]; then
-    cargo test
+    cargo test -- --nocapture
 else
     printf "usage: $0 build|clean|test\n" $0
     exit 255
