@@ -27,12 +27,11 @@ pub fn gen_protob_file(protob_path: &Path, msgdefs: &Vec<String>) {
 use protobuf::Message;
 use protobuf::CodedInputStream;
 use protobuf::ProtobufResult;
-use protobuf::core::parse_length_delimited_from_bytes;
 
 {}
 
-pub fn process_bytes(mut data: &[u8]) {{
-    let mut stream = CodedInputStream::from_bytes(data);
+pub fn process_stream(stdin_stream: &mut Read) {{
+    let mut stream = CodedInputStream::new(stdin_stream);
 {}
 }}
 ", format_msgdef_imports(msgdefs), format_mergefrom_calls(msgdefs)).unwrap();
@@ -50,15 +49,27 @@ fn format_msgdef_imports(msgdefs: &Vec<String>) -> String {
 fn format_mergefrom_calls(msgdefs: &Vec<String>) -> String {
     let mut ret = Vec::new();
 
+    ret.push("
+    loop {
+        match stream.eof() {
+            Err(e) => panic!(e),
+            Ok(true) => break,
+            Ok(false) => {".to_string());
+
     for m in msgdefs {
         let split = m.split("::");
         let vec = split.collect::<Vec<&str>>();
         ret.push(format!("
-    let result: ProtobufResult<{0}> = parse_length_delimited_from_bytes(&mut data);
-    match result {{
-        Ok(x) => println!(\"Decoded with {0}:\n\t{{:?}}\", x),
-        Err(e) => println!(\"Couldn't decode with {0}: {{}}, trying next\", e),
-    }};", vec.last().unwrap()));
+            match stream.read_message::<{0}>() {{
+                Err(e) => println!(\"{{}}\", e),
+                Ok(x) => println!(\"{{:?}}\", x),
+            }}", vec.last().unwrap()));
     }
+
+    ret.push("
+            }
+        }
+    }".to_string());
+
     ret.join("\n")
 }

@@ -4,16 +4,11 @@ extern crate protobuf;
 
 include!("./protob.rs");
 
-use std::io;
-use std::io::Read;
+use std::io::{self, Read};
 
 fn main() {
-    let mut buffer = Vec::new();
     let mut _handle = io::stdin();
     let mut handle = _handle.lock();
 
-    match handle.read_to_end(&mut buffer) {
-        Ok(_) => process_bytes(&mut buffer),
-        Err(error) => println!("error: {}", error),
-    }
+    process_stream(&mut handle);
 }
