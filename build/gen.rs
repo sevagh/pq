@@ -59,15 +59,13 @@ fn format_mergefrom_calls(msgdefs: &Vec<String>) -> String {
     for m in msgdefs {
         let split = m.split("::");
         let vec = split.collect::<Vec<&str>>();
-        ret.push(format!("
-            match stream.read_message::<{0}>() {{
-                Err(e) => println!(\"{{}}\", e),
-                Ok(x) => println!(\"{{:?}}\", x),
-            }}", vec.last().unwrap()));
+        ret.push(format!("\t\t\t\tmatch stream.read_message::<{0}>() {{
+                    Err(e) => println!(\"{{}}\", e),
+                    Ok(x) => println!(\"{{:?}}\", x),
+                }}", vec.last().unwrap()));
     }
 
-    ret.push("
-            }
+    ret.push("\t\t\t}
         }
     }".to_string());
 
