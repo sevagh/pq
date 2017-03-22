@@ -48,16 +48,11 @@ fn main() {
     match filepath {
         "" => {
             let stdin = io::stdin();
-            let mut read = stdin.lock();
-            f(&mut read);
+            f(&mut stdin.lock());
         },
         _ => { 
-            let file = match File::open(filepath) {
-                Ok(x) => x,
-                Err(e) => panic!(e),
-            };
-            let mut read = BufReader::new(file);
-            f(&mut read);
+            let file = File::open(filepath).expect("Could not open file!");
+            f(&mut BufReader::new(file));
         }
     }
 }
