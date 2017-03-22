@@ -3,6 +3,7 @@
 import addressbook_pb2
 import random
 import string
+import sys
 
 
 def gen_person():
@@ -15,4 +16,4 @@ def gen_person():
 
 if __name__ == '__main__':
     person = gen_person()
-    print(person.SerializeToString())
+    sys.stdout.buffer.write(person.SerializeToString())
