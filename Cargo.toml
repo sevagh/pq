@@ -6,8 +6,7 @@ authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 [dependencies]
 docopt = "0.7"
 rustc-serialize = "0.3"
-[dependencies.protobuf]
-git = "https://github.com/stepancheg/rust-protobuf.git"
-
-[dev-dependencies.protobuf]
-git = "https://github.com/stepancheg/rust-protobuf.git"
+serde-protobuf = "0.5"
+serde = "0.9.12"
+serde-value = "0.4.0"
+protobuf = "1.2.1"

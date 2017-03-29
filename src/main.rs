@@ -1,18 +1,14 @@
 #![crate_type = "bin"]
 
-extern crate protobuf;
 extern crate rustc_serialize;
 extern crate docopt;
 
 mod protob;
-mod unknown;
 
 use docopt::Docopt;
-
+use protob::{process_single, process_stream};
 use std::io::{self, Read, BufReader};
 use std::fs::File;
-
-use protob::{process_single, process_stream};
 
 const USAGE: &'static str = "
 pq - Protobuf pretty-printer
