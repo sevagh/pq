@@ -1,4 +1,4 @@
-package tutorial;
+package com.example.person;
 
 message Person {
   required string name = 1;
