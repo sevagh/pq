@@ -1,5 +1,5 @@
 use std::env;
-use std::fs::File;
+use std::fs::{File, read_dir};
 use std::io::Read;
 use serde::de::Deserialize;
 use serde_protobuf::descriptor::Descriptors;
@@ -8,13 +8,15 @@ use serde_value::Value;
 use protobuf::{CodedInputStream, parse_from_reader};
 
 pub fn process_single(read: &mut Read) {
-    let proto = parse_from_reader(&mut open_combined_fdset()).unwrap();
-    let descriptors = Descriptors::from_proto(&proto);
-    let byte_is = CodedInputStream::new(read);
+    for mut fdset_file in discover_fdsets() {
+        let proto = parse_from_reader(&mut fdset_file).unwrap();
+        let descriptors = Descriptors::from_proto(&proto);
+        let byte_is = CodedInputStream::new(read);
 
-    let mut deserializer = Deserializer::for_named_message(&descriptors, ".com.example.dog.Dog", byte_is).unwrap();
-    let value = Value::deserialize(&mut deserializer).unwrap();
-    println!("{:?}", value);
+        let mut deserializer = Deserializer::for_named_message(&descriptors, ".com.example.dog.Dog", byte_is).unwrap();
+        let value = Value::deserialize(&mut deserializer).unwrap();
+        println!("{:?}", value);
+    }
 }
 
 pub fn process_stream(read: &mut Read) {
@@ -30,16 +32,27 @@ pub fn process_stream(read: &mut Read) {
     }
 }
 
-fn open_combined_fdset() -> File {
-    let mut home = match env::home_dir() {
-        Some(home) => home,
-        None => panic!("Could not find $HOME"),
-    };
+fn discover_fdsets() -> Vec<File> {
+    let mut fdset_files = Vec::new();
 
-    home.push(".pq/combined.fdset");
+    let mut home = env::home_dir().expect("Could not find $HOME");
+    home.push(".pq");
+    let paths = read_dir(home.as_path()).unwrap();
 
-    match File::open(home.as_path()) {
-        Ok(x) => return x,
-        Err(e) => panic!(e),
+    for p in paths {
+        let path = match p {
+            Ok(p) => p.path(),
+            Err(_) => continue,
+        };
+        match path.extension() {
+            Some(x) => {
+                if x != "fdset" {
+                    continue;
+                }
+            },
+            None => continue,
+        }
+        fdset_files.push(File::open(path.as_path()).unwrap());
     }
+    return fdset_files;
 }
