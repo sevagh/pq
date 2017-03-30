@@ -3,6 +3,9 @@
 extern crate rustc_serialize;
 extern crate docopt;
 extern crate protobuf;
+extern crate serde;
+extern crate serde_protobuf;
+extern crate serde_value;
 
 mod protob;
 
