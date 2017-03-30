@@ -1,5 +1,4 @@
 extern crate serde;
-extern crate protobuf;
 extern crate serde_protobuf;
 extern crate serde_value;
 
@@ -9,7 +8,8 @@ use self::serde::de::Deserialize;
 use self::serde_protobuf::descriptor::Descriptors;
 use self::serde_protobuf::de::Deserializer;
 use self::serde_value::Value;
-use self::protobuf::{CodedInputStream, parse_from_reader};
+use protobuf::{CodedInputStream, parse_from_reader};
+use unknown::Unknown;
 
 pub fn process_single(read: &mut Read) {
     let mut file = fs::File::open("testdata/address.fdset").unwrap();
@@ -20,13 +20,14 @@ pub fn process_single(read: &mut Read) {
     read.read(&mut buffer).unwrap();
     let mut byte_is = CodedInputStream::from_bytes(&buffer);
 
-    let mut deserializer = Deserializer::for_named_message(&descriptors, ".google.protobuf.FileDescriptorSet", byte_is).unwrap();
+    let mut unknown = Unknown::new();
+    let mut deserializer = Deserializer::new(&descriptors, &unknown, byte_is).unwrap();
     let value = Value::deserialize(&mut deserializer).unwrap();
     println!("{:?}", value);
 }
 
 pub fn process_stream(read: &mut Read) {
-    let mut stream = protobuf::stream::CodedInputStream::new(read);
+    let mut stream = CodedInputStream::new(read);
 
     loop {
         match stream.eof() {

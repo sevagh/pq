@@ -2,8 +2,10 @@
 
 extern crate rustc_serialize;
 extern crate docopt;
+extern crate protobuf;
 
 mod protob;
+mod unknown;
 
 use docopt::Docopt;
 use protob::{process_single, process_stream};
