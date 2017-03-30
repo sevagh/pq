@@ -16,9 +16,7 @@ pub fn process_single(read: &mut Read) {
     let proto = parse_from_reader(&mut file).unwrap();
     let descriptors = Descriptors::from_proto(&proto);
 
-    let mut buffer = Vec::new();
-    read.read(&mut buffer).unwrap();
-    let mut byte_is = CodedInputStream::from_bytes(&buffer);
+    let mut byte_is = CodedInputStream::new(read);
 
     let mut unknown = Unknown::new();
     let mut deserializer = Deserializer::new(&descriptors, &unknown, byte_is).unwrap();
