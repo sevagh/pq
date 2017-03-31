@@ -18,14 +18,15 @@ const USAGE: &'static str = "
 pq - Protobuf pretty-printer
 
 Usage:
-  pq [<filepath>] [--stream]
+  pq [<filepath>] [--stream] --type=<string>
   pq (-h | --help)
   pq --version
 
 Options:
-  --stream      Consume stream (NOT IMPLEMENTED YET)
-  -h --help     Show this screen.
-  --version     Show version.
+  --type=<msg_type>     Message type e.g. .com.example.Type 
+  --stream              Consume stream (NOT IMPLEMENTED YET)
+  -h --help             Show this screen.
+  --version             Show version.
 ";
 
 #[derive(Debug, RustcDecodable)]
@@ -38,21 +39,22 @@ fn main() {
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
 
-    let f: fn(&mut Read) = match args.get_bool("--stream")  {
+    let f: fn(&mut Read, &str) = match args.get_bool("--stream") {
         true => process_stream,
         false => process_single,
     };
 
     let filepath = args.get_str("<filepath>");
+    let msg_type = args.get_str("<type>");
 
     match filepath {
         "" => {
             let stdin = io::stdin();
-            f(&mut stdin.lock());
+            f(&mut stdin.lock(), msg_type);
         },
         _ => { 
             let file = File::open(filepath).expect("Could not open file!");
-            f(&mut BufReader::new(file));
+            f(&mut BufReader::new(file), msg_type);
         }
     }
 }
