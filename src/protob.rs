@@ -20,20 +20,21 @@ pub fn process_single(read: &mut Read) {
         let fdset_protos: &[FileDescriptorProto] = fdset.get_file();
         for file_proto in fdset_protos.iter() {
             for message_proto in file_proto.get_message_type().iter() {
-                println!("{:?}", message_proto);
                 message_descriptors.push(MessageDescriptor::from_proto(&fdset_path.to_string_lossy().into_owned().as_str(), message_proto));
             }
         }
     }
 
     descriptors.resolve_refs();
+    let mut read_buf = Vec::new();
+    read.read_to_end(&mut read_buf).unwrap();
 
     for md in message_descriptors {
-        let stream = CodedInputStream::new(read);
-        println!("ATTEMPT TO DESERIALIE WITH\n:\t{:?}\n\n", md);
+        let stream = CodedInputStream::from_bytes(&read_buf);
+        println!("ATTEMPT TO DESERIALIE WITH:\n\t{:?}\n", md.name());
         let mut deserializer = Deserializer::new(&descriptors, &md, stream);
         let value = Value::deserialize(&mut deserializer).unwrap();
-        println!("DESERIALIZED\n:\t{:?}\n\n", value);
+        println!("RESULT:\n\t{:?}\n\n", value);
     }
 }
 

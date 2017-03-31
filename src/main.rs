@@ -18,12 +18,12 @@ const USAGE: &'static str = "
 pq - Protobuf pretty-printer
 
 Usage:
-  pq [-s] [<filepath>]
+  pq [<filepath>] [--stream]
   pq (-h | --help)
   pq --version
 
 Options:
-  -s, --single  Consume single message.
+  --stream      Consume stream (NOT IMPLEMENTED YET)
   -h --help     Show this screen.
   --version     Show version.
 ";
@@ -38,9 +38,9 @@ fn main() {
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
 
-    let f: fn(&mut Read) = match args.get_bool("-s")  {
-        true => process_single,
-        false => process_stream,
+    let f: fn(&mut Read) = match args.get_bool("--stream")  {
+        true => process_stream,
+        false => process_single,
     };
 
     let filepath = args.get_str("<filepath>");
