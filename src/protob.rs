@@ -7,22 +7,20 @@ use serde_protobuf::descriptor::Descriptors;
 use serde_protobuf::de::Deserializer;
 use serde_value::Value;
 use protobuf::{CodedInputStream, parse_from_reader};
-use protobuf::descriptor::FileDescriptorSet;
 
 pub fn process_single(read: &mut Read, msg_type: &str) {
     let mut descriptors = Descriptors::new();
 
     for fdset_path in discover_fdsets() {
         let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
-        let fdset: FileDescriptorSet = parse_from_reader(&mut fdset_file).unwrap();
-        descriptors.add_file_set_proto(&fdset);
+        let fdset_proto = parse_from_reader(&mut fdset_file).unwrap();
+        descriptors.add_file_set_proto(&fdset_proto);
     }
 
     descriptors.resolve_refs();
 
     let stream = CodedInputStream::new(read);
-    println!("{:?}", msg_type);
-    let mut deserializer = Deserializer::for_named_message(&descriptors, msg_type, stream).expect("Couldn't deserialize with specified type");
+    let mut deserializer = Deserializer::for_named_message(&descriptors, msg_type, stream).unwrap();
     let value = Value::deserialize(&mut deserializer).unwrap();
     println!("{:?}", value);
 }

@@ -45,7 +45,7 @@ fn main() {
     };
 
     let filepath = args.get_str("<filepath>");
-    let msg_type = args.get_str("<type>");
+    let msg_type = args.get_str("--type");
 
     match filepath {
         "" => {
