@@ -28,13 +28,12 @@ pub fn process_single(read: &mut Read) {
 
     descriptors.resolve_refs();
 
-    let byte_is = CodedInputStream::new(read);
-
     for md in message_descriptors {
-        println!("ATTEMPT TO DESERIALIE WITH: {:?}\n\n", md);
-        let mut deserializer = Deserializer::new(&descriptors, &md, byte_is);
+        let stream = CodedInputStream::new(read);
+        println!("ATTEMPT TO DESERIALIE WITH\n:\t{:?}\n\n", md);
+        let mut deserializer = Deserializer::new(&descriptors, &md, stream);
         let value = Value::deserialize(&mut deserializer).unwrap();
-        println!("{:?}", value);
+        println!("DESERIALIZED\n:\t{:?}\n\n", value);
     }
 }
 
