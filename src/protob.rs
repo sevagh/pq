@@ -3,23 +3,27 @@ use std::fs::{File, read_dir};
 use std::io::Read;
 use std::path::PathBuf;
 use serde::de::Deserialize;
-use serde_protobuf::descriptor::{Descriptors, MessageDescriptor};
+use serde_protobuf::descriptor::Descriptors;
 use serde_protobuf::de::Deserializer;
 use serde_value::Value;
 use protobuf::{CodedInputStream, parse_from_reader};
 
 pub fn process_single(read: &mut Read) {
-    for mut fdset_path in discover_fdsets() {
-        let fdset_file = File::open(fdset_path.as_path()).unwrap();
-        let proto = parse_from_reader(&mut fdset_file).unwrap();
-        let md = MessageDescriptor::from_proto(fdset_path, proto);
-        let descriptors = Descriptors::from_proto(proto);
-        let byte_is = CodedInputStream::new(read);
+    let mut descriptors = Descriptors::new();
 
-        let mut deserializer = Deserializer::new(&descriptors, md, byte_is).unwrap();
-        let value = Value::deserialize(&mut deserializer).unwrap();
-        println!("{:?}", value);
+    for fdset_path in discover_fdsets() {
+        let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
+        let proto = parse_from_reader(&mut fdset_file).unwrap();
+        descriptors.add_file_set_proto(&proto);
     }
+
+    descriptors.resolve_refs();
+
+    let byte_is = CodedInputStream::new(read);
+
+    let mut deserializer = Deserializer::for_named_message(&descriptors, ".com.example.dog.Dog", byte_is).unwrap();
+    let value = Value::deserialize(&mut deserializer).unwrap();
+    println!("{:?}", value);
 }
 
 pub fn process_stream(read: &mut Read) {
