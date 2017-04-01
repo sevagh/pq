@@ -14,7 +14,8 @@ use docopt::Docopt;
 use protob::{process_single, PqrsError};
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::fs::File;
-use std::process::exit;
+
+const ATTEMPTS: i32 = 1;
 
 const USAGE: &'static str = "
 pq - Protobuf to json
@@ -45,7 +46,7 @@ fn main() {
     let msg_type = args.get_str("--type");
     let outfile = args.get_str("-o");
 
-    let mut buf = match filepath {
+    let buf = match filepath {
         "" => {
             let mut buf = Vec::new();
             io::stdin().read_to_end(&mut buf).unwrap();
@@ -74,8 +75,19 @@ fn main() {
         }
     };
 
-    match process_single(&mut buf, msg_type, &mut write) {
-        Ok(_) => exit(0),
+    deser_with_attempts(buf, msg_type, write, ATTEMPTS);
+}
+
+fn deser_with_attempts(mut data: Vec<u8>, msg_type: &str, mut write: &mut Write, attempts: i32) {
+    if attempts < 0 {
+        return;
+    }
+    match process_single(&data, msg_type, &mut write) {
+        Ok(_) => return,
+        Err(PqrsError::EofError(_)) => {
+            data.pop();
+            deser_with_attempts(data, msg_type, &mut write, (attempts-1));
+        }
         Err(e) => panic!(e),
     }
 }
