@@ -11,9 +11,10 @@ extern crate serde_json;
 mod protob;
 
 use docopt::Docopt;
-use protob::process_single;
+use protob::{process_single, PqrsError};
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::fs::File;
+use std::process::exit;
 
 const USAGE: &'static str = "
 pq - Protobuf to json
@@ -73,5 +74,8 @@ fn main() {
         }
     };
 
-    process_single(&mut buf, msg_type, &mut write).unwrap();
+    match process_single(&mut buf, msg_type, &mut write) {
+        Ok(_) => exit(0),
+        Err(e) => panic!(e),
+    }
 }
