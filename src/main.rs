@@ -6,25 +6,26 @@ extern crate protobuf;
 extern crate serde;
 extern crate serde_protobuf;
 extern crate serde_value;
+extern crate serde_json;
 
 mod protob;
 
 use docopt::Docopt;
-use protob::{process_single, process_stream};
-use std::io::{self, Read, BufReader};
+use protob::process_single;
+use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::fs::File;
 
 const USAGE: &'static str = "
-pq - Protobuf pretty-printer
+pq - Protobuf to json
 
 Usage:
-  pq [<filepath>] [--stream] --type=<string>
+  pq [<filepath>] --type=<string> [-o=<filepath>]
   pq (-h | --help)
   pq --version
 
 Options:
   --type=<msg_type>     Message type e.g. .com.example.Type 
-  --stream              Consume stream (NOT IMPLEMENTED YET)
+  -o, --outfile         Output file path
   -h --help             Show this screen.
   --version             Show version.
 ";
@@ -39,22 +40,38 @@ fn main() {
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
 
-    let f: fn(&mut Read, &str) = match args.get_bool("--stream") {
-        true => process_stream,
-        false => process_single,
-    };
-
     let filepath = args.get_str("<filepath>");
     let msg_type = args.get_str("--type");
+    let outfile = args.get_str("-o");
 
-    match filepath {
+    let mut buf = match filepath {
         "" => {
-            let stdin = io::stdin();
-            f(&mut stdin.lock(), msg_type);
+            let mut buf = Vec::new();
+            io::stdin().read_to_end(&mut buf).unwrap();
+            buf
         },
         _ => { 
+            let mut buf = Vec::new();
             let file = File::open(filepath).expect("Could not open file!");
-            f(&mut BufReader::new(file), msg_type);
+            let mut file_read = BufReader::new(file);
+            file_read.read_to_end(&mut buf).unwrap();
+            buf
         }
-    }
+    };
+
+    let stdout_ = io::stdout();
+    let mut stdout = stdout_.lock();
+    let file: File;
+    let mut file_write: BufWriter<File>;
+
+    let mut write = match outfile {
+        "" => &mut stdout as &mut Write,
+        _ => {
+            file = File::create(outfile).expect("Could not create out file!");
+            file_write = BufWriter::new(file);
+            &mut file_write as &mut Write
+        }
+    };
+
+    process_single(&mut buf, msg_type, &mut write).unwrap();
 }

@@ -6,7 +6,8 @@ authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 [dependencies]
 docopt = "0.7"
 rustc-serialize = "0.3"
-serde-protobuf = "0.5"
 serde = "0.9.12"
 serde-value = "0.4.0"
+serde_json = "0.9.9"
+serde-protobuf = "0.5"
 protobuf = "1.2.1"
