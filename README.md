@@ -1,59 +1,76 @@
-# pq-rs
+# pqrs
+### protobuf to json deserializer, written in Rust
 
-## JQ for protobuf, written in Rust
+`pqrs` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
 
-This is heavily in the WIP stage. Both Rust and Protobuf are totally new to me.
+### Usage
 
-## Goal
-
-The goal is to make a UNIX-y tool for generalized protobuf pretty-printing:
+1. Have your `.proto` files:
 
 ```
-$ /stream/of/compiled/protobuf | pq | jq
+$ head py-test/dog.proto -n3
+package com.example.dog;
+
+message Dog {
+$
+$ head py-test/person.proto -n3
+package com.example.person;
+
+message Person {
+```
+
+2. Compile them into `.fdset` files:
+
+```
+$ protoc -o dog.fdset dog.proto
+$ protoc -o person.fdset person.proto
+```
+
+3. Copy the `.fdset` files into `~/.pq`:
+
+```
+$ ls ~/.pq/
+dog.fdset person.fdet
+```
+
+4. Pipe a single compiled protobuf message to pq:
+
+```
+sevag:pqrs $ ./py-test/generate_random_proto.py | pq --type="com.example.dog.Dog" | jq
 {
-    "Name": "John Smith",
-    "Profession": "Underwater Basket Weaver"
-}
-{
-    "Name": "Alice Chang",
-    "Profession": "Politician"
-}
-{
-    "Name": "Wolfgang Mozart",
-    "Profession": "Composer"
+  "age": 4,
+  "breed": "poodle"
 }
 ```
 
-## Strategy
+`pqrs` operates on stdin/stdout by default but also works with files.
 
-1. Create an empty protobuf object:
+* Pass the input file as the first positional argument:
+
+`pq --type="com.example.dog.Dog" /path/to/input.bin`
+
+* Output to a file instead of `stdout`:
+
+`pq --type="com.example.dog.Dog" -o /path/to/output.json`
+
+### Goal
+
+The goal was to make a UNIX-y tool for generalized protobuf pretty-printing. Since `jq` already exists, I dropped the pretty-printing requirement and just output ugly JSON.
+
+### Dependencies
 
 ```
-$ cat schemata/unknown.proto 
-syntax = "proto3";
-
-message Unknown {
-}
+[dependencies]
+docopt = "0.7"
+rustc-serialize = "0.3"
+serde = "0.9.12"
+serde-value = "0.4.0"
+serde_json = "0.9.9"
+serde-protobuf = "0.5"
+protobuf = "1.2.1"
 ```
 
-2. Compile it to a `.rs` file with the [Rust protobuf](https://github.com/stepancheg/rust-protobuf) package:
+### Todo
 
-```
-$ protoc --rust_out ./src/ ./schemata/unknown.proto
-$ cat src/unknown.rs
-[...]
-// see codegen.rs for the explanation why impl Sync explicitly
-unsafe impl ::std::marker::Sync for Unknown {}
-
-impl Unknown {
-    pub fn new() -> Unknown {
-        ::std::default::Default::default()
-    }
-[...]
-```
-
-3. Deserialize a stream of compiled protobuf message data from stdin with the `Unknown` object
-
-4. [Optional?] Compare it to user-provided `.fdset` files to determine what type of message it is
-
-5. Print the JSON representation
+* Proper testing. CI with `py-test/`, Rust tests, etc.
+* Figure out how to handle streams (delimiters, etc.?)
