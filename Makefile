@@ -1,4 +1,5 @@
-CARGO = rust/bin/cargo
+CARGO = $(PWD)/rust/bin/cargo
+export RUSTC = $(PWD)/rust/bin/rustc
 TARGET = x86_64-unknown-linux-musl
 CARGO_FLAGS += --target=$(TARGET)
 
