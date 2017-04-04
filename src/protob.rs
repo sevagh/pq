@@ -67,11 +67,13 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
                 }
             },
             Ok(_) => continue,
-            Err(e) => return Err(e),
+            Err(_) => continue,
         }
     }
-    let contender_max = contenders.iter().max_by_key(|x| x.len());
-    contender_max.serialize(&mut serializer).unwrap();
+    if !contenders.is_empty() {
+        let contender_max = contenders.iter().max_by_key(|x| x.len());
+        contender_max.serialize(&mut serializer).unwrap();
+    }
     Ok(())
 }
 
