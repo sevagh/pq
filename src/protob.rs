@@ -64,7 +64,6 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
                 }
                 if unknowns_found == 0 {
                     contenders.push(value);
-                    //value.serialize(&mut serializer).unwrap();
                 }
             },
             Ok(_) => continue,
