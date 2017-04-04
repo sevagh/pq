@@ -49,6 +49,7 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
     let (descriptors, message_descriptors) = get_descriptors(true);
     
     let mut serializer = Serializer::new(out);
+    let mut contenders = Vec::new();
     for md in message_descriptors {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::new(&descriptors, &md, stream);
@@ -62,13 +63,16 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
                     }
                 }
                 if unknowns_found == 0 {
-                    value.serialize(&mut serializer).unwrap();
+                    contenders.push(value);
+                    //value.serialize(&mut serializer).unwrap();
                 }
             },
             Ok(_) => continue,
             Err(e) => return Err(e),
         }
     }
+    let contender_max = contenders.iter().max_by_key(|x| x.len());
+    contender_max.serialize(&mut serializer).unwrap();
     Ok(())
 }
 
