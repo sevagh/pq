@@ -38,17 +38,10 @@ fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(), Pqr
     let stream = CodedInputStream::from_bytes(data);
     let mut deserializer = Deserializer::for_named_message(&descriptors, &loc_msg_type, stream).unwrap();
     let mut serializer = Serializer::new(out);
-    let value = match Value::deserialize(&mut deserializer) {
-        Ok(x) => x,
-        Err(Error(ErrorKind::Protobuf(ProtobufError::WireError(msg)), _)) => {
-            if msg == "unexpected EOF" {
-                return Err(PqrsError::EofError(msg));
-            }
-            return Err(PqrsError::ProtobufError(msg));
-        },
-        Err(e) => return Err(PqrsError::SerdeError(String::from(e.description()))),
-    };
-    value.serialize(&mut serializer).unwrap();
+    match deser(&mut deserializer) {
+        Ok(value) => value.serialize(&mut serializer).unwrap(),
+        Err(e) => return Err(e),
+    }
     Ok(())
 }
 
@@ -59,19 +52,25 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
     for md in message_descriptors {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::new(&descriptors, &md, stream);
-        let value = match Value::deserialize(&mut deserializer) {
-            Ok(x) => x,
-            Err(Error(ErrorKind::Protobuf(ProtobufError::WireError(msg)), _)) => {
-                if msg == "unexpected EOF" {
-                    return Err(PqrsError::EofError(msg));
-                }
-                return Err(PqrsError::ProtobufError(msg));
-            },
-            Err(e) => return Err(PqrsError::SerdeError(String::from(e.description()))),
-        };
-        value.serialize(&mut serializer).unwrap();
+        match deser(&mut deserializer) {
+            Ok(value) => value.serialize(&mut serializer).unwrap(),
+            Err(e) => return Err(e),
+        }
     }
     Ok(())
+}
+
+fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
+    match Value::deserialize(deserializer) {
+        Ok(x) => return Ok(x),
+        Err(Error(ErrorKind::Protobuf(ProtobufError::WireError(msg)), _)) => {
+            if msg == "unexpected EOF" {
+                return Err(PqrsError::EofError(msg));
+            }
+            return Err(PqrsError::ProtobufError(msg));
+        },
+        Err(e) => return Err(PqrsError::SerdeError(String::from(e.description()))),
+    };
 }
 
 fn get_descriptors(with_message_descriptors: bool) -> (Descriptors, Vec<MessageDescriptor>) {
