@@ -75,10 +75,10 @@ fn main() {
         }
     };
 
-    deser_with_attempts(buf, msg_type, write, ATTEMPTS);
+    deser_with_eof_attempts(buf, msg_type, write, ATTEMPTS);
 }
 
-fn deser_with_attempts(mut data: Vec<u8>, msg_type: &str, mut write: &mut Write, attempts: i32) {
+fn deser_with_eof_attempts(mut data: Vec<u8>, msg_type: &str, mut write: &mut Write, attempts: i32) {
     if attempts < 0 {
         return;
     }
@@ -86,7 +86,7 @@ fn deser_with_attempts(mut data: Vec<u8>, msg_type: &str, mut write: &mut Write,
         Ok(_) => return,
         Err(PqrsError::EofError(_)) => {
             data.pop();
-            deser_with_attempts(data, msg_type, &mut write, (attempts-1));
+            deser_with_eof_attempts(data, msg_type, &mut write, (attempts-1));
         }
         Err(e) => panic!(e),
     }
