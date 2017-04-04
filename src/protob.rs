@@ -18,14 +18,7 @@ pub enum PqrsError {
     ProtobufError(String),
 }
 
-pub fn process_single(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(), PqrsError> {
-    match msg_type {
-        "guess" => return guess_message(data, out),
-        _ => return named_message(data, msg_type, out),
-    }
-}
-
-fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(), PqrsError> {
+pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(), PqrsError> {
     let mut loc_msg_type = String::new();
     let ch = msg_type.chars().nth(0).unwrap();
     if ch != '.' {
@@ -45,7 +38,7 @@ fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(), Pqr
     Ok(())
 }
 
-fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
+pub fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
     let (descriptors, message_descriptors) = get_descriptors(true);
     
     let mut serializer = Serializer::new(out);
