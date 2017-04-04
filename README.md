@@ -5,53 +5,100 @@
 
 ### Usage
 
-1. Have your `.proto` files:
-
-```
-$ head py-test/dog.proto -n3
-package com.example.dog;
-
-message Dog {
-$
-$ head py-test/person.proto -n3
-package com.example.person;
-
-message Person {
-```
-
-2. Compile them into `.fdset` files:
+1. Put your `*.fdset` files in `~/.pq`:
 
 ```
 $ protoc -o dog.fdset dog.proto
 $ protoc -o person.fdset person.proto
+$ cp *.fdset ~/.pq/
 ```
 
-3. Copy the `.fdset` files into `~/.pq`:
+2. Pipe a single compiled protobuf message to pq:
 
 ```
-$ ls ~/.pq/
-dog.fdset person.fdet
-```
-
-4. Pipe a single compiled protobuf message to pq:
-
-```
-sevag:pqrs $ ./py-test/generate_random_proto.py | pq --type="com.example.dog.Dog" | jq
+sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 {
   "age": 4,
-  "breed": "poodle"
+  "breed": "poodle",
+  "temperament": "excited"
+}
+sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
+{
+  "id": 2,
+  "name": "raffi"
 }
 ```
 
-`pqrs` operates on stdin/stdout by default but also works with files.
+### Message guessing
 
-* Pass the input file as the first positional argument:
+`pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --type="com.example.dog.Dog"`.
 
-`pq --type="com.example.dog.Dog" /path/to/input.bin`
+**Guessing strategy:**
 
-* Output to a file instead of `stdout`:
+* For every message type discovered in `~/.pq/*.fdset`, try to decode the message with it
+* If the decode attempt has an error, skip this type
+* If any fields are empty/null (`serde_value::Value::Unit` in the codebase), skip this type
+* If the decode is successful, store the decoded `BTreeMap` in a vector
+* Display the element from the vector which has the most fields
 
-`pq --type="com.example.dog.Dog" -o /path/to/output.json`
+So, deconstructing the above example for the null field case:
+
+```
+sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
+# this is a com.example.person.Person message
+#
+# first attempt: decode with com.example.dog.Dog:
+# {"age": 4,"breed": "raffi","temperament": null}
+#
+# second attempt: decode with com.example.person.Person:
+# {"id": 4,"name": "raffi"}
+```
+
+What happens here is that Dog and Person have similar definitions. A Dog ([see your yourself](./py-test)) is defined as `Age: Int, Breed: String, Temperament: String`, while a Person is `Id: Int, Name: String`.
+
+Since protobuf treats fields as positional, the only thing that matters is that a Dog is `Int, String, String` and a Person is `Int, String`. However, since Dog has an extra third field which is decoded as null, `pqrs` decides that this message couldn't have been a Dog or else it would have had a non-null third string.
+
+Result:
+
+```
+# pqrs guesses that this is a Person
+{
+  "id": 4,
+  "name": "raffi"
+}
+```
+
+Now for the other case, the winner by number of fields:
+
+```
+sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
+# this is a com.example.dog.Dog message
+#
+# first attempt: decode with com.example.dog.Dog:
+# {"age": 4,"breed": "poodle","temperament": "excited"}
+#
+# second attempt: decode with com.example.person.Person:
+# {"id": 4,"name": "poodle"}
+```
+
+In this case, there are no null fields. However, the Person-decoded `BTreeMap` was unable to extract the third string from the message because the Person type only has 2 fields. Dog, however, has `Int, String, String`, and therefore got more information from the message.
+
+`pqrs` chooses Dog as the winner:
+
+```
+{
+  "age": 4,
+  "breed": "poodle",
+  "temperament": "excited"
+}
+```
+
+### Files
+
+`pqrs` operates on stdin/stdout by default but also works with files:
+
+* Pass the input file as the first positional argument: `pq /path/to/input.bin`
+* Output to a file instead of stdout: `pq -o /path/to/output.json`
 
 ### Goal
 

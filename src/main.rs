@@ -11,22 +11,20 @@ extern crate serde_json;
 mod protob;
 
 use docopt::Docopt;
-use protob::{process_single, PqrsError};
+use protob::{named_message, guess_message};
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::fs::File;
-
-const ATTEMPTS: i32 = 1;
 
 const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [<filepath>] --type=<string> [-o=<filepath>]
+  pq [<filepath>] [--type=<string>] [-o=<filepath>]
   pq (-h | --help)
   pq --version
 
 Options:
-  --type=<msg_type>     Message type e.g. .com.example.Type 
+  --type=<msg_type>     Message type e.g. com.example.Type 
   -o, --outfile         Output file path
   -h --help             Show this screen.
   --version             Show version.
@@ -75,19 +73,18 @@ fn main() {
         }
     };
 
-    deser_with_attempts(buf, msg_type, write, ATTEMPTS);
-}
-
-fn deser_with_attempts(mut data: Vec<u8>, msg_type: &str, mut write: &mut Write, attempts: i32) {
-    if attempts < 0 {
-        return;
-    }
-    match process_single(&data, msg_type, &mut write) {
-        Ok(_) => return,
-        Err(PqrsError::EofError(_)) => {
-            data.pop();
-            deser_with_attempts(data, msg_type, &mut write, (attempts-1));
-        }
-        Err(e) => panic!(e),
+    match msg_type {
+        "" => {
+            match guess_message(&buf, &mut write) {
+                Ok(_) => return,
+                Err(e) => panic!(e),
+            }
+        },
+        _ => {
+            match named_message(&buf, msg_type, &mut write) {
+                Ok(_) => return,
+                Err(e) => panic!(e),
+            }
+        },
     }
 }
