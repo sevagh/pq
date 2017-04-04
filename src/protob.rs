@@ -53,10 +53,19 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::new(&descriptors, &md, stream);
         match deser(&mut deserializer) {
-            Ok(value) => {
-                println!("{:#?}", value);
-                value.serialize(&mut serializer).unwrap();
-            }
+            Ok(Value::Map(value)) => {
+                let mut unknowns_found = 0;
+                for (_, v) in &value {
+                    match v {
+                        &Value::Unit => unknowns_found += 1,
+                        _ => continue,
+                    }
+                }
+                if unknowns_found == 0 {
+                    value.serialize(&mut serializer).unwrap();
+                }
+            },
+            Ok(_) => continue,
             Err(e) => return Err(e),
         }
     }
