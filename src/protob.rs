@@ -53,7 +53,10 @@ fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::new(&descriptors, &md, stream);
         match deser(&mut deserializer) {
-            Ok(value) => value.serialize(&mut serializer).unwrap(),
+            Ok(value) => {
+                println!("{:#?}", value);
+                value.serialize(&mut serializer).unwrap();
+            }
             Err(e) => return Err(e),
         }
     }
@@ -94,26 +97,12 @@ fn get_descriptors(with_message_descriptors: bool) -> (Descriptors, Vec<MessageD
 }
 
 fn discover_fdsets() -> Vec<PathBuf> {
-    let mut fdset_files = Vec::new();
-
     let mut home = env::home_dir().expect("Could not find $HOME");
     home.push(".pq");
-    let paths = read_dir(home.as_path()).unwrap();
 
-    for p in paths {
-        let path = match p {
-            Ok(p) => p.path(),
-            Err(_) => continue,
-        };
-        match path.extension() {
-            Some(x) => {
-                if x != "fdset" {
-                    continue;
-                }
-            },
-            None => continue,
-        }
-        fdset_files.push(path);
-    }
-    fdset_files
+    read_dir(home.as_path()).unwrap()
+        .map(|x| {
+            x.unwrap().path()
+        })
+        .collect::<Vec<_>>()
 }
