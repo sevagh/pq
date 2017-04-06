@@ -3,6 +3,15 @@
 
 `pqrs` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
 
+### Contents
+1. [Usage](#usage)
+    1. [Files](#files)
+2. [Message guessing](#message-guessing)
+3. [Portability with musl](#portability-with-musl)
+4. [Dependencies](#dependencies)
+5. [Goals](#goals)
+6. [Todo](#todo)
+
 ### Usage
 
 1. Put your `*.fdset` files in `~/.pq`:
@@ -28,6 +37,13 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
   "name": "raffi"
 }
 ```
+
+#### Files
+
+`pqrs` operates on stdin/stdout by default but also works with files:
+
+* Pass the input file as the first positional argument: `pq /path/to/input.bin`
+* Output to a file instead of stdout: `pq -o /path/to/output.json`
 
 ### Message guessing
 
@@ -93,20 +109,26 @@ In this case, there are no null fields. However, the Person-decoded `BTreeMap` w
 }
 ```
 
-### Files
+### Portability with musl
 
-`pqrs` operates on stdin/stdout by default but also works with files:
+First, clone and compile `musl-gcc` on your system:
 
-* Pass the input file as the first positional argument: `pq /path/to/input.bin`
-* Output to a file instead of stdout: `pq -o /path/to/output.json`
+```
+$ git clone git://git.musl-libc.org/musl
+$ ./configure && make && sudo make install
+```
 
-### Portability
+Then, run `make` in this repo - this downloads a local `./rust` toolchain with the `x86_64-unknown-linux-musl` target and runs `./rust/bin/cargo --target=x86_64-unknown-linux-musl` to build `pqrs`.
 
-For now, `pqrs` depends on whatever GLIBC your `rustc` is compiled with. In the roadmap I'm trying to switch to musl to make a static binary for `x86_64` which I can host on GitHub as a binary release for downloads.
+The result is a static binary:
 
-### Goal
-
-The goal was to make a UNIX-y tool for generalized protobuf pretty-printing. Since `jq` already exists, I dropped the pretty-printing requirement and just output ugly JSON.
+```
+$ ldd ./target/x86_64-unknown-linux-musl/debug/pq
+        not a dynamic executable
+$
+$ file ./target/x86_64-unknown-linux-musl/debug/pq
+./target/x86_64-unknown-linux-musl/debug/pq: ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, BuildID[sha1]=3aa843efe79d0082aacb674a28e8d1ed8105a5e5, not stripped
+```
 
 ### Dependencies
 
@@ -121,7 +143,15 @@ serde-protobuf = "0.5"
 protobuf = "1.2.1"
 ```
 
+### Goals
+
+The original goal was to make a UNIX-y tool for generalized protobuf pretty-printing. Since `jq` already exists, I dropped the pretty-printing requirement and just output ugly JSON.
+
+A new goal is handling a stream of protobuf data.
+
 ### Todo
 
 * Proper testing. CI with `py-test/`, Rust tests, etc.
 * Figure out how to handle streams (delimiters, etc.?)
+* Release on `crates.io`
+* Host static binary on github releases for download
