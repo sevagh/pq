@@ -18,7 +18,9 @@ def gen_dog():
     dog = dog_pb2.Dog()
     dog.age = random.choice(range(0, 20))
     breeds = ['rottweiler', 'gsd', 'poodle']
+    temperaments = ['chill', 'aggressive', 'excited']
     dog.breed = breeds[random.choice(range(0, 3))]
+    dog.temperament = temperaments[random.choice(range(0, 3))]
     return dog
 
 
