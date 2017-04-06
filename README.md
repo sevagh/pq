@@ -1,4 +1,4 @@
-# pqrs
+# pqrs [![GitHub release](https://img.shields.io/github/release/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/releases/tag/0.1.0) [![GitHub tag](https://img.shields.io/github/tag/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/tree/0.1.0) [![GitHub commits](https://img.shields.io/github/commits-since/sevagh/pqrs/0.1.0.svg)](https://github.com/sevagh/pqrs/commits/master)
 ### protobuf to json deserializer, written in Rust
 
 `pqrs` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
