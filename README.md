@@ -100,9 +100,26 @@ In this case, there are no null fields. However, the Person-decoded `BTreeMap` w
 * Pass the input file as the first positional argument: `pq /path/to/input.bin`
 * Output to a file instead of stdout: `pq -o /path/to/output.json`
 
-### Portability
+### Portability with musl
 
-For now, `pqrs` depends on whatever GLIBC your `rustc` is compiled with. In the roadmap I'm trying to switch to musl to make a static binary for `x86_64` which I can host on GitHub as a binary release for downloads.
+First, clone and compile `musl-gcc` on your system:
+
+```
+$ git clone git://git.musl-libc.org/musl
+$ ./configure && make && sudo make install
+```
+
+Then, run `make` in this repo - this downloads a local `./rust` toolchain with the `x86_64-unknown-linux-musl` target and runs `./rust/bin/cargo --target=x86_64-unknown-linux-musl` to build `pqrs`.
+
+The result is a static binary:
+
+```
+$ ldd ./target/x86_64-unknown-linux-musl/debug/pq
+        not a dynamic executable
+$
+$ file ./target/x86_64-unknown-linux-musl/debug/pq
+./target/x86_64-unknown-linux-musl/debug/pq: ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, BuildID[sha1]=3aa843efe79d0082aacb674a28e8d1ed8105a5e5, not stripped
+```
 
 ### Goal
 
