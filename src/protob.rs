@@ -12,6 +12,7 @@ use serde_value::Value;
 use protobuf::{CodedInputStream, parse_from_reader};
 use protobuf::error::ProtobufError;
 
+#[derive(Debug)]
 pub enum PqrsError {
     EofError(String),
     SerdeError(String),
@@ -26,7 +27,7 @@ pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(),
     }
     loc_msg_type.push_str(msg_type);
 
-    let (descriptors, _) = get_descriptors(false);
+    let (descriptors, _) = load_descriptors(false);
 
     let stream = CodedInputStream::from_bytes(data);
     let mut deserializer = Deserializer::for_named_message(&descriptors, &loc_msg_type, stream).unwrap();
@@ -39,7 +40,7 @@ pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(),
 }
 
 pub fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
-    let (descriptors, message_descriptors) = get_descriptors(true);
+    let (descriptors, message_descriptors) = load_descriptors(true);
     
     let mut serializer = Serializer::new(out);
     let mut contenders = Vec::new();
@@ -83,7 +84,7 @@ fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
     };
 }
 
-fn get_descriptors(with_message_descriptors: bool) -> (Descriptors, Vec<MessageDescriptor>) {
+fn load_descriptors(with_message_descriptors: bool) -> (Descriptors, Vec<MessageDescriptor>) {
     let mut descriptors = Descriptors::new();
     let mut message_descriptors = Vec::new();
 
@@ -108,8 +109,5 @@ fn discover_fdsets() -> Vec<PathBuf> {
     home.push(".pq");
 
     read_dir(home.as_path()).unwrap()
-        .map(|x| {
-            x.unwrap().path()
-        })
-        .collect::<Vec<_>>()
+        .map(|x| x.unwrap().path()).collect::<Vec<_>>()
 }

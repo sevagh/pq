@@ -100,6 +100,10 @@ In this case, there are no null fields. However, the Person-decoded `BTreeMap` w
 * Pass the input file as the first positional argument: `pq /path/to/input.bin`
 * Output to a file instead of stdout: `pq -o /path/to/output.json`
 
+### Portability
+
+For now, `pqrs` depends on whatever GLIBC your `rustc` is compiled with. In the roadmap I'm trying to switch to musl to make a static binary for `x86_64` which I can host on GitHub as a binary release for downloads.
+
 ### Goal
 
 The goal was to make a UNIX-y tool for generalized protobuf pretty-printing. Since `jq` already exists, I dropped the pretty-printing requirement and just output ugly JSON.
