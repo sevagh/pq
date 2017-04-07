@@ -33,8 +33,9 @@ docs:
 	mandoc -Thtml pqrs.1 >docs/index.html
 
 lint:
-	cargo fmt -- --write-mode=diff
-	-cargo clippy
+	rustup default stable && cargo fmt -- --write-mode=diff
+	rustup default nightly && cargo clippy
+	rustup default stable
 
 package: build
 	cd target/$(TARGET)/debug;\

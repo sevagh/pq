@@ -1,15 +1,14 @@
+use discovery::load_descriptors;
 use error::PqrsError;
-use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::result::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
-use serde_protobuf::descriptor::{Descriptors, MessageDescriptor};
 use serde_protobuf::de::Deserializer;
 use serde_protobuf::error::{Error, ErrorKind};
 use serde_value::Value;
-use protobuf::{CodedInputStream, parse_from_reader};
+use protobuf::CodedInputStream;
 use protobuf::error::ProtobufError;
 
 pub fn named_message(data: &[u8],
@@ -24,10 +23,14 @@ pub fn named_message(data: &[u8],
     }
     loc_msg_type.push_str(msg_type);
 
-    let (descriptors, _) = load_descriptors(fdsets, false);
+    let loaded_descs = match load_descriptors(fdsets, false) {
+        Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
+        Err(e) => return Err(e),
+        Ok(x) => x,
+    };
 
     let stream = CodedInputStream::from_bytes(data);
-    let mut deserializer = Deserializer::for_named_message(&descriptors, &loc_msg_type, stream)
+    let mut deserializer = Deserializer::for_named_message(&loaded_descs.descriptors, &loc_msg_type, stream)
         .unwrap();
     let mut serializer = Serializer::new(out);
     match deser(&mut deserializer) {
@@ -38,13 +41,17 @@ pub fn named_message(data: &[u8],
 }
 
 pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
-    let (descriptors, message_descriptors) = load_descriptors(fdsets, true);
+    let loaded_descs = match load_descriptors(fdsets, true) {
+        Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
+        Err(e) => return Err(e),
+        Ok(x) => x,
+    };
 
     let mut serializer = Serializer::new(out);
     let mut contenders = Vec::new();
-    for md in message_descriptors {
+    for md in loaded_descs.message_descriptors {
         let stream = CodedInputStream::from_bytes(data);
-        let mut deserializer = Deserializer::new(&descriptors, &md, stream);
+        let mut deserializer = Deserializer::new(&loaded_descs.descriptors, &md, stream);
         match deser(&mut deserializer) {
             Ok(Value::Map(value)) => {
                 let mut unknowns_found = 0;
@@ -80,31 +87,4 @@ fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
         }
         Err(e) => return Err(PqrsError::SerdeError(String::from(e.description()))),
     };
-}
-
-fn load_descriptors(fdsets: Vec<PathBuf>,
-                    with_message_descriptors: bool)
-                    -> (Descriptors, Vec<MessageDescriptor>) {
-    let mut descriptors = Descriptors::new();
-    let mut message_descriptors = Vec::new();
-
-    for fdset_path in fdsets {
-        let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
-        let fdset_proto = parse_from_reader(&mut fdset_file).unwrap();
-        descriptors.add_file_set_proto(&fdset_proto);
-        if with_message_descriptors {
-            for file_proto in fdset_proto.get_file().iter() {
-                for message_proto in file_proto.get_message_type().iter() {
-                    message_descriptors
-                        .push(MessageDescriptor::from_proto(&fdset_path
-                                                                 .to_string_lossy()
-                                                                 .into_owned()
-                                                                 .as_str(),
-                                                            message_proto));
-                }
-            }
-        }
-    }
-    descriptors.resolve_refs();
-    (descriptors, message_descriptors)
 }
