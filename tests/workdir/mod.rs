@@ -7,8 +7,9 @@ use std::process;
 use std::str::FromStr;
 
 pub struct Workdir {
+    pub cmd: process::Command,
+    pub tests_path: PathBuf,
     root: PathBuf,
-    pub fdsets_path: PathBuf,
 }
 
 impl Workdir {
@@ -17,43 +18,34 @@ impl Workdir {
         if root.ends_with("deps") {
             root.pop();
         }
-        let mut fdsets_path = root.parent().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
-        fdsets_path.push("tests/fdsets");
-        Workdir { root: root, fdsets_path: fdsets_path }
+        let mut tests_path = root.parent().unwrap().parent().unwrap().to_path_buf();
+        tests_path.push("tests");
+        let cmd = process::Command::new(root.join("pq"));
+        Workdir { cmd: cmd, root: root, tests_path: tests_path }
     }
 
-    pub fn read_stdout(&self, cmd: &mut process::Command) -> String {
-        let stdout: String = self.stdout(cmd);
+    pub fn read_stdout(&mut self) -> String {
+        let stdout: String = self.stdout();
         stdout
     }
 
-    pub fn command(&self) -> process::Command {
-        let mut cmd = process::Command::new(&self.pqrs_bin());
-        cmd.arg(format!("--fdsets={}", self.fdsets_path.to_string_lossy().into_owned().as_str()));
-        cmd
-    }
-
-    pub fn output(&self, cmd: &mut process::Command) -> process::Output {
-        let o = cmd.output().unwrap();
+    pub fn output(&mut self) -> process::Output {
+        let o = self.cmd.output().unwrap();
         if !o.status.success() {
             panic!("\n\n===== {:?} =====\n\
                     command failed but expected success!\
                     \n\nstatus: {}\
                     \n\nstdout: {}\n\nstderr: {}\
                     \n\n=====\n",
-                   cmd, o.status,
+                   self.cmd, o.status,
                    String::from_utf8_lossy(&o.stdout),
                    String::from_utf8_lossy(&o.stderr))
         }
         o
     }
 
-    pub fn run(&self, cmd: &mut process::Command) {
-        self.output(cmd);
-    }
-
-    pub fn stdout<T: FromStr>(&self, cmd: &mut process::Command) -> T {
-        let o = self.output(cmd);
+    pub fn stdout<T: FromStr>(&mut self) -> T {
+        let o = self.output();
         let stdout = String::from_utf8_lossy(&o.stdout);
         stdout.trim_matches(&['\r', '\n'][..]).parse().ok().expect(
             &format!("Could not convert from string: '{}'", stdout))
@@ -71,10 +63,6 @@ impl Workdir {
                    String::from_utf8_lossy(&o.stdout),
                    String::from_utf8_lossy(&o.stderr));
         }
-    }
-
-    pub fn pqrs_bin(&self) -> PathBuf {
-        self.root.join("pq")
     }
 }
 

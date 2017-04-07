@@ -1,30 +1,35 @@
 extern crate protobuf;
 
 mod workdir;
-mod schemata;
 
-use std::process;
 use workdir::Workdir;
-use schemata::dog::Dog;
-use schemata::person::Person;
 
-fn no_arg(_: &mut process::Command) {
-    ()
+fn for_dog(work: &mut Workdir) {
+    work.cmd.arg(&work.tests_path.join("samples/dog"));
 }
 
-fn run_pqrs<F>(modify_cmd: F) -> String
-          where F: FnOnce(&mut process::Command) {
-    let work = Workdir::new();
+fn for_person(work: &mut Workdir) {
+    work.cmd.arg(&work.tests_path.join("samples/person"));
+}
+ 
+fn run_pqrs<F>(modify_arg: F) -> String
+          where F: FnOnce(&mut Workdir) {
+    let mut work = Workdir::new();
 
-    let mut cmd = work.command();
+    work.cmd.arg("--fdsets").arg(&work.tests_path.join("fdsets"));
+    modify_arg(&mut work);
 
-    println!("DEBUG: {:?}", cmd);
-    work.read_stdout(&mut cmd)
+    work.read_stdout()
 }
 
 #[test]
-fn test_whatever() {
-    let out = run_pqrs(no_arg);
-    println!("{:?}", out);
-    assert!(true);
+fn test_dog_decode() {
+    assert_eq!(run_pqrs(for_dog),
+                "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
+}
+
+#[test]
+fn test_person_decode() {
+    assert_eq!(run_pqrs(for_person),
+                "{\"id\":0,\"name\":\"khosrov\"}");
 }
