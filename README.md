@@ -9,8 +9,9 @@
 2. [Message guessing](#message-guessing)
 3. [Portability with musl](#portability-with-musl)
 4. [Dependencies](#dependencies)
-5. [Goals](#goals)
-6. [Todo](#todo)
+5. [Tests](#tests)
+6. [Goals](#goals)
+7. [Todo](#todo)
 
 ### Usage
 
@@ -38,12 +39,13 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 }
 ```
 
-#### Files
+#### Args
 
 `pqrs` operates on stdin/stdout by default but also works with files:
 
 * Pass the input file as the first positional argument: `pq /path/to/input.bin`
 * Output to a file instead of stdout: `pq -o /path/to/output.json`
+* Use an alternative fdset path (not `~/.pq`): `pq -f /path/to/fdsets`
 
 ### Message guessing
 
@@ -142,6 +144,10 @@ serde_json = "0.9.9"
 serde-protobuf = "0.5"
 protobuf = "1.2.1"
 ```
+
+### Tests
+
+The testing tools are [./py-test](./py-test) for a Python random compiled protobuf generator, and [./tests](./tests) for Rust integration tests. The integration tests invoke the `pqrs` binary using `std::process` and checks return codes, stdout, etc. - inspired by [the xsv test suite](https://github.com/BurntSushi/xsv/tree/master/tests).
 
 ### Goals
 
