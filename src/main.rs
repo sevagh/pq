@@ -30,7 +30,7 @@ Usage:
   pq --version
 
 Options:
-  --msgtype=<msgtype>   Message type e.g. com.example.Type 
+  --msgtype=<msgtype>   Message type e.g. com.example.Type
   --outfile=<path>      Output file path
   --fdsets=<path>       Alternative path to fdsets
   -h --help             Show this screen.
@@ -47,8 +47,8 @@ struct Args {
 
 fn main() {
     let args: Args = Docopt::new(USAGE)
-                                .and_then(|d| d.decode())
-                                .unwrap_or_else(|e| e.exit());
+        .and_then(|d| d.decode())
+        .unwrap_or_else(|e| e.exit());
 
     let stderr = io::stderr();
     let mut stderr = stderr.lock();
@@ -64,8 +64,8 @@ fn main() {
                 }
             };
             Box::new(BufReader::new(file))
-        },
-        None => Box::new(stdin.lock())
+        }
+        None => Box::new(stdin.lock()),
     };
 
     let mut buf = Vec::new();
@@ -76,7 +76,7 @@ fn main() {
             process::exit(-1);
         }
     }
-        
+
     let stdout = io::stdout();
     let mut outfile: Box<Write> = match args.flag_outfile {
         Some(x) => {
@@ -88,7 +88,7 @@ fn main() {
                 }
             };
             Box::new(BufWriter::new(file))
-        },
+        }
         None => Box::new(stdout.lock()),
     };
 
@@ -97,13 +97,13 @@ fn main() {
         Err(PqrsError::InitError(msg)) => {
             writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
             process::exit(-1);
-        },
+        }
         Err(e) => panic!(e),
     };
 
     match args.flag_msgtype {
         Some(x) => named_message(&buf, &x, &mut outfile, fdsets).unwrap(),
-        None => guess_message(&buf, &mut outfile, fdsets).unwrap(), 
+        None => guess_message(&buf, &mut outfile, fdsets).unwrap(),
     }
 }
 
@@ -120,6 +120,8 @@ fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsError>
         }
     };
 
-    Ok(read_dir(path.as_path()).unwrap()
-            .map(|x| x.unwrap().path()).collect::<Vec<_>>())
+    Ok(read_dir(path.as_path())
+           .unwrap()
+           .map(|x| x.unwrap().path())
+           .collect::<Vec<_>>())
 }

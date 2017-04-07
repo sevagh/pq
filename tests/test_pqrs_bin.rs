@@ -16,12 +16,15 @@ fn for_dog(work: &mut Runner) {
 fn for_person(work: &mut Runner) {
     work.cmd.arg(&work.tests_path.join("samples/person"));
 }
- 
+
 fn run_pqrs<F>(modify_arg: F) -> process::Output
-          where F: FnOnce(&mut Runner) {
+    where F: FnOnce(&mut Runner)
+{
     let mut work = Runner::new();
 
-    work.cmd.arg("--fdsets").arg(&work.tests_path.join("fdsets"));
+    work.cmd
+        .arg("--fdsets")
+        .arg(&work.tests_path.join("fdsets"));
     modify_arg(&mut work);
 
     work.run()
@@ -35,7 +38,8 @@ fn test_dog_decode() {
     assert!(out.status.success());
 
     //check output
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
+    assert_eq!(String::from_utf8_lossy(&out.stdout),
+               "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
 }
 
 #[test]
@@ -46,7 +50,8 @@ fn test_person_decode() {
     assert!(out.status.success());
 
     //check output
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "{\"id\":0,\"name\":\"khosrov\"}");
+    assert_eq!(String::from_utf8_lossy(&out.stdout),
+               "{\"id\":0,\"name\":\"khosrov\"}");
 }
 
 #[test]
@@ -60,5 +65,6 @@ fn test_nonexistent_file() {
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
 
     //check stderr
-    assert_eq!(String::from_utf8_lossy(&out.stderr), "Could not open file: file-doesnt-exist\n");
+    assert_eq!(String::from_utf8_lossy(&out.stderr),
+               "Could not open file: file-doesnt-exist\n");
 }

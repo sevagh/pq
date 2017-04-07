@@ -12,7 +12,11 @@ use serde_value::Value;
 use protobuf::{CodedInputStream, parse_from_reader};
 use protobuf::error::ProtobufError;
 
-pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
+pub fn named_message(data: &[u8],
+                     msg_type: &str,
+                     out: &mut Write,
+                     fdsets: Vec<PathBuf>)
+                     -> Result<(), PqrsError> {
     let mut loc_msg_type = String::new();
     let ch = msg_type.chars().nth(0).unwrap();
     if ch != '.' {
@@ -23,7 +27,8 @@ pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write, fdsets: Vec<P
     let (descriptors, _) = load_descriptors(fdsets, false);
 
     let stream = CodedInputStream::from_bytes(data);
-    let mut deserializer = Deserializer::for_named_message(&descriptors, &loc_msg_type, stream).unwrap();
+    let mut deserializer = Deserializer::for_named_message(&descriptors, &loc_msg_type, stream)
+        .unwrap();
     let mut serializer = Serializer::new(out);
     match deser(&mut deserializer) {
         Ok(value) => value.serialize(&mut serializer).unwrap(),
@@ -34,7 +39,7 @@ pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write, fdsets: Vec<P
 
 pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
     let (descriptors, message_descriptors) = load_descriptors(fdsets, true);
-    
+
     let mut serializer = Serializer::new(out);
     let mut contenders = Vec::new();
     for md in message_descriptors {
@@ -52,7 +57,7 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Resu
                 if unknowns_found == 0 {
                     contenders.push(value);
                 }
-            },
+            }
             Ok(_) => continue,
             Err(_) => continue,
         }
@@ -72,12 +77,14 @@ fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
                 return Err(PqrsError::EofError(msg));
             }
             return Err(PqrsError::ProtobufError(msg));
-        },
+        }
         Err(e) => return Err(PqrsError::SerdeError(String::from(e.description()))),
     };
 }
 
-fn load_descriptors(fdsets: Vec<PathBuf>, with_message_descriptors: bool) -> (Descriptors, Vec<MessageDescriptor>) {
+fn load_descriptors(fdsets: Vec<PathBuf>,
+                    with_message_descriptors: bool)
+                    -> (Descriptors, Vec<MessageDescriptor>) {
     let mut descriptors = Descriptors::new();
     let mut message_descriptors = Vec::new();
 
@@ -88,7 +95,12 @@ fn load_descriptors(fdsets: Vec<PathBuf>, with_message_descriptors: bool) -> (De
         if with_message_descriptors {
             for file_proto in fdset_proto.get_file().iter() {
                 for message_proto in file_proto.get_message_type().iter() {
-                    message_descriptors.push(MessageDescriptor::from_proto(&fdset_path.to_string_lossy().into_owned().as_str(), message_proto));
+                    message_descriptors
+                        .push(MessageDescriptor::from_proto(&fdset_path
+                                                                 .to_string_lossy()
+                                                                 .into_owned()
+                                                                 .as_str(),
+                                                            message_proto));
                 }
             }
         }
