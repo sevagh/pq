@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    table.head, table.foot { width: 100%; }
+    td.head-rtitle, td.foot-os { text-align: right; }
+    td.head-vol { text-align: center; }
+    div.Pp { margin: 1ex 0ex; }
+  </style>
+  <title>PQ(1)</title>
+</head>
+<body>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">PQ(1)</td>
+    <td class="head-vol">General Commands Manual</td>
+    <td class="head-rtitle">PQ(1)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<h1 class="Sh">NAME</h1>
+pq - jq for protobuf - parse protobuf generically
+<h1 class="Sh">SYNOPSIS</h1>
+<b>pq</b> [ <b>--outfile=PATH</b>] [ <b>--fdsets=PATH</b>] [
+  <b>--msgtype=STRING</b>] <i>[file]</i>
+<h1 class="Sh">DESCRIPTION</h1>
+<b>pq</b> parses a compiled protobuf message with .fdset files located in
+  '~/.pq/'
+<h1 class="Sh">POSITIONAL ARGS</h1>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>(OPTIONAL)file</b></dt>
+  <dd class="It-tag">
+    <div style="height: 0.00em;">&#160;</div>
+    Read message from a file. Default is stdin.</dd>
+</dl>
+<h1 class="Sh">OPTIONS</h1>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--outfile=PATH</b></dt>
+  <dd class="It-tag">
+    <div style="height: 0.00em;">&#160;</div>
+    Write JSON output to a file. Default is stdout</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--fdsets=PATH</b></dt>
+  <dd class="It-tag">
+    <div style="height: 0.00em;">&#160;</div>
+    Use alternative fdset dir. Default is '~/.pq/'. This directory must only
+      contain valid fdset files (i.e. compiled with 'protoc -o x.fdset
+      x.proto').</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--msgtype=STRING</b></dt>
+  <dd class="It-tag">
+    <div style="height: 0.00em;">&#160;</div>
+    Use this message type to decode protobuf - must be a fully qualified message
+      name e.g. 'com.example.dog.Dog'. Default behavior is to try to guess the
+      message type.</dd>
+</dl>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date"></td>
+    <td class="foot-os"></td>
+  </tr>
+</table>
+</body>
+</html>
