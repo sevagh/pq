@@ -39,8 +39,8 @@ pub fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsEr
 }
 
 pub fn load_descriptors(fdsets: Vec<PathBuf>,
-                    with_message_descriptors: bool)
-                    -> Result<LoadedDescriptors, PqrsError> {
+                        with_message_descriptors: bool)
+                        -> Result<LoadedDescriptors, PqrsError> {
     let mut descriptors = Descriptors::new();
     let mut message_descriptors = Vec::new();
 
@@ -57,10 +57,10 @@ pub fn load_descriptors(fdsets: Vec<PathBuf>,
             for file_proto in fdset_proto.get_file().iter() {
                 for message_proto in file_proto.get_message_type().iter() {
                     message_descriptors
-                        .push(MessageDescriptor::from_proto(&fdset_path
-                                                                 .to_string_lossy()
-                                                                 .into_owned()
-                                                                 .as_str(),
+                        .push(MessageDescriptor::from_proto(fdset_path
+                                                                .to_string_lossy()
+                                                                .into_owned()
+                                                                .as_str(),
                                                             message_proto));
                 }
             }
@@ -71,5 +71,8 @@ pub fn load_descriptors(fdsets: Vec<PathBuf>,
         return Err(PqrsError::EmptyFdsetError(String::from("no valid fdsets found")));
     }
     descriptors.resolve_refs();
-    Ok(LoadedDescriptors { descriptors: descriptors, message_descriptors: message_descriptors })
+    Ok(LoadedDescriptors {
+           descriptors: descriptors,
+           message_descriptors: message_descriptors,
+       })
 }

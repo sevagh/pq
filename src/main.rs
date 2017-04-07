@@ -97,11 +97,11 @@ fn main() {
         Err(PqrsError::InitError(msg)) => {
             writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
             process::exit(-1);
-        },
+        }
         Err(PqrsError::EmptyFdsetError(msg)) => {
             writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
             process::exit(-1);
-        },
+        }
         Err(e) => panic!(e),
     };
 

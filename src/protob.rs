@@ -30,8 +30,8 @@ pub fn named_message(data: &[u8],
     };
 
     let stream = CodedInputStream::from_bytes(data);
-    let mut deserializer = Deserializer::for_named_message(&loaded_descs.descriptors, &loc_msg_type, stream)
-        .unwrap();
+    let mut deserializer =
+        Deserializer::for_named_message(&loaded_descs.descriptors, &loc_msg_type, stream).unwrap();
     let mut serializer = Serializer::new(out);
     match deser(&mut deserializer) {
         Ok(value) => value.serialize(&mut serializer).unwrap(),
@@ -77,13 +77,13 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Resu
 
 fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
     match Value::deserialize(deserializer) {
-        Ok(x) => return Ok(x),
+        Ok(x) => Ok(x),
         Err(Error(ErrorKind::Protobuf(ProtobufError::WireError(msg)), _)) => {
             if msg == "unexpected EOF" {
                 return Err(PqrsError::EofError(msg));
             }
-            return Err(PqrsError::ProtobufError(msg));
+            Err(PqrsError::ProtobufError(msg))
         }
-        Err(e) => return Err(PqrsError::SerdeError(String::from(e.description()))),
-    };
+        Err(e) => Err(PqrsError::SerdeError(String::from(e.description()))),
+    }
 }
