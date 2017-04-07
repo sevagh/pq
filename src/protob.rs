@@ -48,9 +48,9 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Resu
         match deser(&mut deserializer) {
             Ok(Value::Map(value)) => {
                 let mut unknowns_found = 0;
-                for (_, v) in &value {
-                    match v {
-                        &Value::Unit => unknowns_found += 1,
+                for v in value.values() {
+                    match *v {
+                        Value::Unit => unknowns_found += 1,
                         _ => continue,
                     }
                 }
@@ -58,8 +58,7 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Resu
                     contenders.push(value);
                 }
             }
-            Ok(_) => continue,
-            Err(_) => continue,
+            Ok(_) | Err(_) => continue,
         }
     }
     if !contenders.is_empty() {
@@ -96,10 +95,10 @@ fn load_descriptors(fdsets: Vec<PathBuf>,
             for file_proto in fdset_proto.get_file().iter() {
                 for message_proto in file_proto.get_message_type().iter() {
                     message_descriptors
-                        .push(MessageDescriptor::from_proto(&fdset_path
-                                                                 .to_string_lossy()
-                                                                 .into_owned()
-                                                                 .as_str(),
+                        .push(MessageDescriptor::from_proto(fdset_path
+                                                                .to_string_lossy()
+                                                                .into_owned()
+                                                                .as_str(),
                                                             message_proto));
                 }
             }
