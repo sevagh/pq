@@ -1,7 +1,12 @@
+extern crate protobuf;
+
 mod workdir;
+mod schemata;
 
 use std::process;
 use workdir::Workdir;
+use schemata::dog::Dog;
+use schemata::person::Person;
 
 fn no_arg(_: &mut process::Command) {
     ()

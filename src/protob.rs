@@ -1,3 +1,4 @@
+use error::PqrsError;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
@@ -10,13 +11,6 @@ use serde_protobuf::error::{Error, ErrorKind};
 use serde_value::Value;
 use protobuf::{CodedInputStream, parse_from_reader};
 use protobuf::error::ProtobufError;
-
-#[derive(Debug)]
-pub enum PqrsError {
-    EofError(String),
-    SerdeError(String),
-    ProtobufError(String),
-}
 
 pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
     let mut loc_msg_type = String::new();

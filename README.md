@@ -43,9 +43,10 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 
 `pqrs` operates on stdin/stdout by default but also works with files:
 
-* Pass the input file as the first positional argument: `pq /path/to/input.bin`
-* Output to a file instead of stdout: `pq -o /path/to/output.json`
-* Use an alternative fdset path (not `~/.pq`): `pq -f /path/to/fdsets`
+* Use infile instead of stdin:      `pq /path/to/input.bin`
+* Use outfile instead of stdout:    `pq --outfile="/path/to/output.json"`
+* Explicitly specify fdsets dir:    `pq --fdsets="/fdsets/path/`
+* Named message (vs guessing):      `pq --msgtype="com.dog.Dog"`
 
 ### Message guessing
 
@@ -55,61 +56,11 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 
 * For every message type discovered in `~/.pq/*.fdset`, try to decode the message with it
 * If the decode attempt has an error, skip this type
-* If any fields are empty/null (`serde_value::Value::Unit` in the codebase), skip this type
+* If any fields are empty/null (`serde_value::Value::Unit` in the codebase), discard the decoded result
 * If the decode is successful, store the decoded `BTreeMap` in a vector
-* Display the element from the vector which has the most fields
+* Display the `BTreeMap` from the vector which has the most fields
 
-So, deconstructing the above example for the null field case:
-
-```
-sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
-# this is a com.example.person.Person message
-#
-# first attempt: decode with com.example.dog.Dog:
-# {"age": 4,"breed": "raffi","temperament": null}
-#
-# second attempt: decode with com.example.person.Person:
-# {"id": 4,"name": "raffi"}
-```
-
-What happens here is that Dog and Person have similar definitions. A Dog ([see your yourself](./py-test)) is defined as `Age: Int, Breed: String, Temperament: String`, while a Person is `Id: Int, Name: String`.
-
-Since protobuf treats fields as positional, the only thing that matters is that a Dog is `Int, String, String` and a Person is `Int, String`. However, since Dog has an extra third field which is decoded as null, `pqrs` decides that this message couldn't have been a Dog or else it would have had a non-null third string.
-
-Result:
-
-```
-# pqrs guesses that this is a Person
-{
-  "id": 4,
-  "name": "raffi"
-}
-```
-
-Now for the other case, the winner by number of fields:
-
-```
-sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
-# this is a com.example.dog.Dog message
-#
-# first attempt: decode with com.example.dog.Dog:
-# {"age": 4,"breed": "poodle","temperament": "excited"}
-#
-# second attempt: decode with com.example.person.Person:
-# {"id": 4,"name": "poodle"}
-```
-
-In this case, there are no null fields. However, the Person-decoded `BTreeMap` was unable to extract the third string from the message because the Person type only has 2 fields. Dog, however, has `Int, String, String`, and therefore got more information from the message.
-
-`pqrs` chooses Dog as the winner:
-
-```
-{
-  "age": 4,
-  "breed": "poodle",
-  "temperament": "excited"
-}
-```
+Since protobuf treats fields as positional, similar protos (e.g. Dog: <Int: age, String: breed>, Person: <Int: ssn, String: name>) are indistinguishable.
 
 ### Portability with musl
 
