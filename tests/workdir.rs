@@ -6,18 +6,25 @@ use std::str::FromStr;
 
 pub struct Workdir {
     root: PathBuf,
+    pub fdsets_path: PathBuf,
 }
 
 impl Workdir {
     pub fn new() -> Workdir {
-        let mut root = env::current_exe().unwrap()
-                           .parent()
-                           .expect("executable's directory")
-                           .to_path_buf();
-        if root.ends_with("deps") {
-            root.pop();
-        }
-        Workdir { root: root }
+        let root = env::current_exe().unwrap()
+            .parent()
+            .expect("executable's directory")
+            .to_path_buf();
+        let mut fdsets_path = root
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf();
+        fdsets_path.push("tests/fdsets");
+        Workdir { root: root, fdsets_path: fdsets_path }
     }
 
     pub fn read_stdout(&self, cmd: &mut process::Command) -> String {

@@ -3,25 +3,23 @@ mod workdir;
 use std::process;
 use workdir::Workdir;
 
-fn no_headers(cmd: &mut process::Command) {
-    cmd.arg("--no-headers");
+fn no_arg(_: &mut process::Command) {
+    ()
 }
 
-fn pad(cmd: &mut process::Command) {
-    cmd.arg("--pad");
-}
-
-fn run_pqrs<F>(test_name: &str, modify_cmd: F) -> String
+fn run_pqrs<F>(modify_cmd: F) -> String
           where F: FnOnce(&mut process::Command) {
-    let wrk = Workdir::new();
+    let work = Workdir::new();
 
-    let mut cmd = wrk.command();
-    modify_cmd(cmd.arg("in1.csv").arg("in2.csv"));
-    wrk.read_stdout(&mut cmd)
+    let mut cmd = work.command();
+    println!("DEBUG: {:?}", format!("-f {}", work.fdsets_path.to_string_lossy().into_owned().as_str()));
+
+    modify_cmd(cmd.arg(format!("-f {}", work.fdsets_path.to_string_lossy().into_owned().as_str())));
+    work.read_stdout(&mut cmd)
 }
-
 
 #[test]
 fn test_whatever() {
+    run_pqrs(no_arg);
     assert!(true);
 }
