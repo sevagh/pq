@@ -11,14 +11,21 @@ pub struct Runner {
 
 impl Runner {
     pub fn new() -> Runner {
-        let mut root = env::current_exe().unwrap().parent().expect("executable's directory").to_path_buf();
+        let mut root = env::current_exe()
+            .unwrap()
+            .parent()
+            .expect("executable's directory")
+            .to_path_buf();
         if root.ends_with("deps") {
             root.pop();
         }
         let mut tests_path = root.parent().unwrap().parent().unwrap().to_path_buf();
         tests_path.push("tests");
         let cmd = process::Command::new(root.join("pq"));
-        Runner { cmd: cmd, tests_path: tests_path }
+        Runner {
+            cmd: cmd,
+            tests_path: tests_path,
+        }
     }
 
     pub fn run(&mut self) -> process::Output {
