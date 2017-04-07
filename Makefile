@@ -29,4 +29,7 @@ rust/bin/cargo: rust/rustup.sh
 	$< --disable-sudo --disable-ldconfig --yes --prefix=rust \
 		--with-target=$(TARGET)
 
+docs:
+	mandoc -Thtml pqrs.1 >docs/index.html
+
 .PHONY: all message build test clean distclean
