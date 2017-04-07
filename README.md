@@ -54,7 +54,7 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 
 ### Message guessing
 
-`pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --type="com.example.dog.Dog"`.
+`pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --msgtype="com.example.dog.Dog"`.
 
 **Guessing strategy:**
 
