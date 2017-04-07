@@ -10,6 +10,7 @@
     1. [Files](#files)
 2. [Message guessing](#message-guessing)
 3. [Portability with musl](#portability-with-musl)
+    1. [Download](#download)
 4. [Dependencies](#dependencies)
 5. [Tests](#tests)
 6. [Goals](#goals)
@@ -84,6 +85,10 @@ $
 $ file ./target/x86_64-unknown-linux-musl/debug/pq
 ./target/x86_64-unknown-linux-musl/debug/pq: ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, BuildID[sha1]=3aa843efe79d0082aacb674a28e8d1ed8105a5e5, not stripped
 ```
+
+#### Download
+
+You can download a static `musl`-compiled binary from the [releases page](https://github.com/sevagh/pqrs/releases).
 
 ### Dependencies
 
