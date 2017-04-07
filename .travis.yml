@@ -2,9 +2,3 @@ language: rust
 
 rust:
   - stable
-
-before_script:
-  - make
-
-script:
-  - ./rust/bin/cargo test
