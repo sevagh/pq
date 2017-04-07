@@ -24,45 +24,8 @@ impl Workdir {
         Workdir { cmd: cmd, root: root, tests_path: tests_path }
     }
 
-    pub fn read_stdout(&mut self) -> String {
-        let stdout: String = self.stdout();
-        stdout
-    }
-
-    pub fn output(&mut self) -> process::Output {
-        let o = self.cmd.output().unwrap();
-        if !o.status.success() {
-            panic!("\n\n===== {:?} =====\n\
-                    command failed but expected success!\
-                    \n\nstatus: {}\
-                    \n\nstdout: {}\n\nstderr: {}\
-                    \n\n=====\n",
-                   self.cmd, o.status,
-                   String::from_utf8_lossy(&o.stdout),
-                   String::from_utf8_lossy(&o.stderr))
-        }
-        o
-    }
-
-    pub fn stdout<T: FromStr>(&mut self) -> T {
-        let o = self.output();
-        let stdout = String::from_utf8_lossy(&o.stdout);
-        stdout.trim_matches(&['\r', '\n'][..]).parse().ok().expect(
-            &format!("Could not convert from string: '{}'", stdout))
-    }
-
-    pub fn assert_err(&self, cmd: &mut process::Command) {
-        let o = cmd.output().unwrap();
-        if o.status.success() {
-            panic!("\n\n===== {:?} =====\n\
-                    command succeeded but expected failure!\
-                    \n\nstatus: {}\
-                    \n\nstdout: {}\n\nstderr: {}\
-                    \n\n=====\n",
-                   cmd, o.status,
-                   String::from_utf8_lossy(&o.stdout),
-                   String::from_utf8_lossy(&o.stderr));
-        }
+    pub fn run(&mut self) -> process::Output {
+        self.cmd.output().unwrap()
     }
 }
 
