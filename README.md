@@ -98,7 +98,7 @@ protobuf = "1.2.1"
 
 ### Tests
 
-The testing tools are [./py-test](./py-test) for a Python random compiled protobuf generator, and [./tests](./tests) for Rust integration tests. The integration tests invoke the `pqrs` binary using `std::process` and checks return codes, stdout, etc. - inspired by [the xsv test suite](https://github.com/BurntSushi/xsv/tree/master/tests).
+The testing tools are [./py-test](./py-test) for a Python random compiled protobuf generator ([py-test README](./py-test/README.md)), and [./tests](./tests) for Rust integration tests. The integration tests invoke the `pqrs` binary using `std::process` and checks return codes, stdout, etc. - inspired by [the xsv test suite](https://github.com/BurntSushi/xsv/tree/master/tests).
 
 ### Goals
 
