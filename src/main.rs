@@ -10,15 +10,15 @@ extern crate serde_json;
 
 mod protob;
 mod error;
+mod discovery;
 
+use discovery::discover_fdsets;
 use docopt::Docopt;
 use protob::{named_message, guess_message};
 use error::PqrsError;
 use std::boxed::Box;
-use std::env;
-use std::fs::{File, read_dir};
+use std::fs::File;
 use std::io::{self, BufWriter, Write, BufReader, Read};
-use std::path::PathBuf;
 use std::process;
 
 const USAGE: &'static str = "
@@ -98,6 +98,10 @@ fn main() {
             writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
             process::exit(-1);
         }
+        Err(PqrsError::EmptyFdsetError(msg)) => {
+            writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
+            process::exit(-1);
+        }
         Err(e) => panic!(e),
     };
 
@@ -105,23 +109,4 @@ fn main() {
         Some(x) => named_message(&buf, &x, &mut outfile, fdsets).unwrap(),
         None => guess_message(&buf, &mut outfile, fdsets).unwrap(),
     }
-}
-
-fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsError> {
-    let path = match fdsetpath {
-        Some(x) => PathBuf::from(x),
-        None => {
-            let mut home = match env::home_dir() {
-                Some(x) => x,
-                None => return Err(PqrsError::InitError(String::from("Could not find $HOME"))),
-            };
-            home.push(".pq");
-            home
-        }
-    };
-
-    Ok(read_dir(path.as_path())
-           .unwrap()
-           .map(|x| x.unwrap().path())
-           .collect::<Vec<_>>())
 }

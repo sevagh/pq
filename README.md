@@ -13,6 +13,7 @@
     1. [Download](#download)
 4. [Dependencies](#dependencies)
 5. [Tests](#tests)
+    1. [Linting](#linting)
 6. [Goals](#goals)
 7. [Todo](#todo)
 
@@ -106,6 +107,10 @@ protobuf = "1.2.1"
 ### Tests
 
 The testing tools are [./py-test](./py-test) for a Python random compiled protobuf generator ([py-test README](./py-test/README.md)), and [./tests](./tests) for Rust integration tests. The integration tests invoke the `pqrs` binary using `std::process` and checks return codes, stdout, etc. - inspired by [the xsv test suite](https://github.com/BurntSushi/xsv/tree/master/tests).
+
+#### Linting
+
+There is no linting in the Travis-CI job because it takes too long, but there is a make target (`make lint`). This is a bit hacky - it switches to rust-stable to run `cargo fmt`, rust-nightly to run `cargo clippy` (and then back to rust-stable). Run this before submitting a PR, or alternatively, run `cargo fmt` and `cargo clippy` however you prefer.
 
 ### Goals
 
