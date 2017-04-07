@@ -1,3 +1,5 @@
+/* inspired by: https://github.com/BurntSushi/xsv/blob/master/tests/workdir.rs */
+
 use std::env;
 use std::fmt;
 use std::path::PathBuf;
@@ -11,18 +13,11 @@ pub struct Workdir {
 
 impl Workdir {
     pub fn new() -> Workdir {
-        let root = env::current_exe().unwrap()
-            .parent()
-            .expect("executable's directory")
-            .to_path_buf();
-        let mut fdsets_path = root
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .to_path_buf();
+        let mut root = env::current_exe().unwrap().parent().expect("executable's directory").to_path_buf();
+        if root.ends_with("deps") {
+            root.pop();
+        }
+        let mut fdsets_path = root.parent().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
         fdsets_path.push("tests/fdsets");
         Workdir { root: root, fdsets_path: fdsets_path }
     }
@@ -33,7 +28,8 @@ impl Workdir {
     }
 
     pub fn command(&self) -> process::Command {
-        let cmd = process::Command::new(&self.pqrs_bin());
+        let mut cmd = process::Command::new(&self.pqrs_bin());
+        cmd.arg(format!("--fdsets={}", self.fdsets_path.to_string_lossy().into_owned().as_str()));
         cmd
     }
 
@@ -78,7 +74,7 @@ impl Workdir {
     }
 
     pub fn pqrs_bin(&self) -> PathBuf {
-        self.root.join("pqrs")
+        self.root.join("pq")
     }
 }
 

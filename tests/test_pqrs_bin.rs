@@ -17,14 +17,14 @@ fn run_pqrs<F>(modify_cmd: F) -> String
     let work = Workdir::new();
 
     let mut cmd = work.command();
-    println!("DEBUG: {:?}", format!("-f {}", work.fdsets_path.to_string_lossy().into_owned().as_str()));
 
-    modify_cmd(cmd.arg(format!("-f {}", work.fdsets_path.to_string_lossy().into_owned().as_str())));
+    println!("DEBUG: {:?}", cmd);
     work.read_stdout(&mut cmd)
 }
 
 #[test]
 fn test_whatever() {
-    run_pqrs(no_arg);
+    let out = run_pqrs(no_arg);
+    println!("{:?}", out);
     assert!(true);
 }

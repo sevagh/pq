@@ -11,6 +11,3 @@ serde-value = "0.4.0"
 serde_json = "0.9.9"
 serde-protobuf = "0.5"
 protobuf = "1.2.1"
-
-[dev.dependencies]
-protobuf = "1.2.1"

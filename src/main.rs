@@ -39,7 +39,7 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
-    pub arg_infile: String,
+    pub arg_infile: Option<String>,
     pub flag_outfile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_fdsets: Option<String>,
@@ -54,10 +54,9 @@ fn main() {
     let mut stderr = stderr.lock();
 
     let stdin = io::stdin();
-    let mut infile: Box<Read> = match args.arg_infile.as_str() {
-        "" => Box::new(stdin.lock()),
-        x => {
-            let file = match File::open(x) {
+    let mut infile: Box<Read> = match args.arg_infile {
+        Some(x) => {
+            let file = match File::open(&x) {
                 Ok(x) => x,
                 Err(_) => {
                     writeln!(&mut stderr, "Could not open file: {}", x).unwrap();
@@ -65,14 +64,15 @@ fn main() {
                 }
             };
             Box::new(BufReader::new(file))
-        }
+        },
+        None => Box::new(stdin.lock())
     };
 
     let mut buf = Vec::new();
     match infile.read_to_end(&mut buf) {
         Ok(_) => (),
         Err(_) => {
-            writeln!(&mut stderr, "Could not real file {} to end", args.arg_infile).unwrap();
+            writeln!(&mut stderr, "Could not real file to end").unwrap();
             process::exit(255);
         }
     }
