@@ -71,6 +71,8 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Resu
     if !contenders.is_empty() {
         let contender_max = contenders.iter().max_by_key(|x| x.len());
         contender_max.serialize(&mut serializer).unwrap();
+    } else {
+        PqrsError::NoContenderError("could not decode with any fdset")
     }
     Ok(())
 }

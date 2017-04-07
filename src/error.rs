@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum PqrsError {
+    NoContenderError(String),
     EmptyFdsetError(String),
     InitError(String),
     EofError(String),

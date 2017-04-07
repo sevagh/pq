@@ -11,6 +11,7 @@ extern crate serde_json;
 mod protob;
 mod error;
 mod discovery;
+mod force;
 
 use discovery::discover_fdsets;
 use docopt::Docopt;
@@ -25,7 +26,7 @@ const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [--outfile=<path>] [--fdsets=<path>] [<infile>]
+  pq [--msgtype=<msgtype>] [--outfile=<path>] [--fdsets=<path>] [--force] [<infile>]
   pq (-h | --help)
   pq --version
 
@@ -33,6 +34,7 @@ Options:
   --msgtype=<msgtype>   Message type e.g. com.example.Type
   --outfile=<path>      Output file path
   --fdsets=<path>       Alternative path to fdsets
+  --force               Decode by deleting chars until success
   -h --help             Show this screen.
   --version             Show version.
 ";
@@ -43,6 +45,7 @@ struct Args {
     pub flag_outfile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_fdsets: Option<String>,
+    pub flag_force: bool,
 }
 
 fn main() {
@@ -105,8 +108,14 @@ fn main() {
         Err(e) => panic!(e),
     };
 
-    match args.flag_msgtype {
-        Some(x) => named_message(&buf, &x, &mut outfile, fdsets).unwrap(),
-        None => guess_message(&buf, &mut outfile, fdsets).unwrap(),
+    if args.flag_force {
+        let cloned_buf = buf.clone();
+        match args.flag_msgtype {
+            Some(x) => match named_message(&cloned_buf, &x, &mut outfile, fdsets) {
+                while !cloned_buf.is_empty() {
+            }
+            None => match guess_message(&buf, &mut outfile, fdsets) {
+            }
+        }
     }
 }
