@@ -1,5 +1,4 @@
-use std::env;
-use std::fs::{File, read_dir};
+use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::result::Result;
@@ -19,7 +18,7 @@ pub enum PqrsError {
     ProtobufError(String),
 }
 
-pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(), PqrsError> {
+pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
     let mut loc_msg_type = String::new();
     let ch = msg_type.chars().nth(0).unwrap();
     if ch != '.' {
@@ -27,7 +26,7 @@ pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(),
     }
     loc_msg_type.push_str(msg_type);
 
-    let (descriptors, _) = load_descriptors(false);
+    let (descriptors, _) = load_descriptors(fdsets, false);
 
     let stream = CodedInputStream::from_bytes(data);
     let mut deserializer = Deserializer::for_named_message(&descriptors, &loc_msg_type, stream).unwrap();
@@ -39,8 +38,8 @@ pub fn named_message(data: &[u8], msg_type: &str, out: &mut Write) -> Result<(),
     Ok(())
 }
 
-pub fn guess_message(data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
-    let (descriptors, message_descriptors) = load_descriptors(true);
+pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
+    let (descriptors, message_descriptors) = load_descriptors(fdsets, true);
     
     let mut serializer = Serializer::new(out);
     let mut contenders = Vec::new();
@@ -84,11 +83,11 @@ fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
     };
 }
 
-fn load_descriptors(with_message_descriptors: bool) -> (Descriptors, Vec<MessageDescriptor>) {
+fn load_descriptors(fdsets: Vec<PathBuf>, with_message_descriptors: bool) -> (Descriptors, Vec<MessageDescriptor>) {
     let mut descriptors = Descriptors::new();
     let mut message_descriptors = Vec::new();
 
-    for fdset_path in discover_fdsets() {
+    for fdset_path in fdsets {
         let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
         let fdset_proto = parse_from_reader(&mut fdset_file).unwrap();
         descriptors.add_file_set_proto(&fdset_proto);
@@ -102,12 +101,4 @@ fn load_descriptors(with_message_descriptors: bool) -> (Descriptors, Vec<Message
     }
     descriptors.resolve_refs();
     (descriptors, message_descriptors)
-}
-
-fn discover_fdsets() -> Vec<PathBuf> {
-    let mut home = env::home_dir().expect("Could not find $HOME");
-    home.push(".pq");
-
-    read_dir(home.as_path()).unwrap()
-        .map(|x| x.unwrap().path()).collect::<Vec<_>>()
 }

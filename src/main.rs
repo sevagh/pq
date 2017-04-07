@@ -1,6 +1,5 @@
 #![crate_type = "bin"]
 
-extern crate rustc_serialize;
 extern crate docopt;
 extern crate protobuf;
 extern crate serde;
@@ -13,28 +12,26 @@ mod protob;
 use docopt::Docopt;
 use protob::{named_message, guess_message};
 use std::boxed::Box;
+use std::env;
+use std::fs::{File, read_dir};
 use std::io::{self, BufWriter, Write, BufReader, Read};
-use std::fs::File;
+use std::path::PathBuf;
 
 const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [<infile>] [--type=<string>] [-o=<outfile>]
+  pq [<infile>] [--type=<string>] [-o=<outfile>] [-f=<fdsetpath>]
   pq (-h | --help)
   pq --version
 
 Options:
   --type=<msg_type>     Message type e.g. com.example.Type 
   -o, --outfile         Output file path
+  -f, --fdsetpath       Alternative path to fdsets
   -h --help             Show this screen.
   --version             Show version.
 ";
-
-#[derive(Debug, RustcDecodable)]
-struct Args {
-    pub infile: String,
-}
 
 fn main() {
     let args = Docopt::new(USAGE)
@@ -44,6 +41,7 @@ fn main() {
     let infile = args.get_str("<infile>");
     let msg_type = args.get_str("--type");
     let outfile = args.get_str("-o");
+    let fdset_path = args.get_str("-f");
 
     let stdin = io::stdin();
     let mut infile: Box<Read> = match infile {
@@ -66,8 +64,24 @@ fn main() {
         }
     };
 
+    let fdsets = discover_fdsets(fdset_path);
+
     match msg_type {
-        "" => guess_message(&buf, &mut outfile).unwrap(),
-        _ => named_message(&buf, msg_type, &mut outfile).unwrap(),
+        "" => guess_message(&buf, &mut outfile, fdsets).unwrap(),
+        _ => named_message(&buf, msg_type, &mut outfile, fdsets).unwrap(),
     }
+}
+
+fn discover_fdsets(fdsetpath: &str) -> Vec<PathBuf> {
+    let path = match fdsetpath {
+        "" => {
+            let mut home = env::home_dir().expect("Could not find $HOME");
+            home.push(".pq");
+            home
+        },
+        _ => PathBuf::from(fdsetpath),
+    };
+
+    read_dir(path.as_path()).unwrap()
+        .map(|x| x.unwrap().path()).collect::<Vec<_>>()
 }

@@ -3,6 +3,8 @@ test:
 	protoc --python_out . dog.proto
 	protoc -o dog.fdset dog.proto
 	protoc -o person.fdset person.proto
+	mkdir -p ./fdsets
+	mv *.fdset ./fdsets/
 
 copy:
 	cp *.fdset ~/.pq/
