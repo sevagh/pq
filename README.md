@@ -3,6 +3,8 @@
 
 `pqrs` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
 
+### Now on crates.io [![Crates.io](https://img.shields.io/crates/d/pq.svg)](https://crates.io/crates/pq) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq)
+
 ### Contents
 1. [Usage](#usage)
     1. [Files](#files)
