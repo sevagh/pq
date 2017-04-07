@@ -60,7 +60,7 @@ fn main() {
                 Ok(x) => x,
                 Err(_) => {
                     writeln!(&mut stderr, "Could not open file: {}", x).unwrap();
-                    process::exit(255);
+                    process::exit(-1);
                 }
             };
             Box::new(BufReader::new(file))
@@ -73,7 +73,7 @@ fn main() {
         Ok(_) => (),
         Err(_) => {
             writeln!(&mut stderr, "Could not real file to end").unwrap();
-            process::exit(255);
+            process::exit(-1);
         }
     }
         
@@ -84,7 +84,7 @@ fn main() {
                 Ok(y) => y,
                 Err(_) => {
                     writeln!(&mut stderr, "Could not create file: {} for writing", x).unwrap();
-                    process::exit(255);
+                    process::exit(-1);
                 }
             };
             Box::new(BufWriter::new(file))
@@ -96,7 +96,7 @@ fn main() {
         Ok(x) => x,
         Err(PqrsError::InitError(msg)) => {
             writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
-            process::exit(255);
+            process::exit(-1);
         },
         Err(e) => panic!(e),
     };
