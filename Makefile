@@ -32,4 +32,14 @@ rust/bin/cargo: rust/rustup.sh
 docs:
 	mandoc -Thtml pqrs.1 >docs/index.html
 
+lint:
+	cargo fmt -- --write-mode=diff
+	-cargo clippy
+
+package: build
+	cd target/$(TARGET)/debug;\
+		tar -czvf pq-bin.tar.gz pq;\
+		cd -;\
+		mv target/$(TARGET)/debug/pq-bin.tar.gz ./pq-bin.tar.gz 
+
 .PHONY: all message build test clean distclean

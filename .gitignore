@@ -1,2 +1,4 @@
 target
 rust
+*.tar.gz
+pq
