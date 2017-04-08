@@ -1,5 +1,6 @@
-use discovery::load_descriptors;
+use discovery::LoadedDescriptors;
 use error::PqrsError;
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::PathBuf;
 use std::result::Result;
@@ -7,51 +8,78 @@ use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
 use serde_protobuf::de::Deserializer;
 use serde_protobuf::error::{Error, ErrorKind};
+use serde_protobuf::descriptor::{Descriptors, MessageDescriptor};
 use serde_value::Value;
 use protobuf::CodedInputStream;
 use protobuf::error::ProtobufError;
 
-pub fn named_message(data: &[u8],
-                     msg_type: &str,
-                     out: &mut Write,
-                     fdsets: &[PathBuf])
-                     -> Result<(), PqrsError> {
+pub struct PqrsDecoder {
+    pub loaded_descs: LoadedDescriptors,
+    pub message_type: String,
+}
+
+impl PqrsDecoder {
+    pub fn new(msgtype: &Option<String>,
+                       fdsets: &[PathBuf]) -> Result<PqrsDecoder, PqrsError> {
+        let mut load_mds = true;
+        let loc_msg_type = match *msgtype {
+            Some(ref x) => {
+                load_mds = false;
+                adjust_message_type(x)
+            }
+            None => String::from(""),
+        };
+        let loaded_descs = match LoadedDescriptors::from_fdsets(fdsets, load_mds) {
+            Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
+            Err(e) => return Err(e),
+            Ok(x) => x,
+        };
+        Ok(PqrsDecoder { loaded_descs: loaded_descs, message_type: loc_msg_type })
+    }
+
+    pub fn decode_message(&self,
+                          data: &[u8],
+                          out: &mut Write)
+                          -> Result<(), PqrsError> {
+        let mut serializer = Serializer::new(out);
+        if !self.loaded_descs.message_descriptors.is_empty() {
+            let contenders = discover_contenders(data, &self.loaded_descs.descriptors, &self.loaded_descs.message_descriptors);
+            if contenders.is_empty() {
+                return Err(PqrsError::NoContenderError(String::from("could not decode with any fdset")));
+            }
+            let contender_max = contenders.iter().max_by_key(|x| x.len());
+            contender_max.serialize(&mut serializer).unwrap();
+        } else {
+            let stream = CodedInputStream::from_bytes(data);
+            let mut deserializer =
+                Deserializer::for_named_message(&self.loaded_descs.descriptors, &self.message_type, stream).unwrap();
+            match deser(&mut deserializer) {
+                Ok(value) => value.serialize(&mut serializer).unwrap(),
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(())
+    }
+}
+
+fn adjust_message_type(m: &str) -> String {
     let mut loc_msg_type = String::new();
-    let ch = msg_type.chars().nth(0).unwrap();
+    let ch = m.chars().nth(0).unwrap();
     if ch != '.' {
         loc_msg_type.push('.');
     }
-    loc_msg_type.push_str(msg_type);
-
-    let loaded_descs = match load_descriptors(fdsets, false) {
-        Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
-        Err(e) => return Err(e),
-        Ok(x) => x,
-    };
-
-    let stream = CodedInputStream::from_bytes(data);
-    let mut deserializer =
-        Deserializer::for_named_message(&loaded_descs.descriptors, &loc_msg_type, stream).unwrap();
-    let mut serializer = Serializer::new(out);
-    match deser(&mut deserializer) {
-        Ok(value) => value.serialize(&mut serializer).unwrap(),
-        Err(e) => return Err(e),
-    }
-    Ok(())
+    loc_msg_type.push_str(m);
+    loc_msg_type
 }
 
-pub fn guess_message(data: &[u8], out: &mut Write, fdsets: &[PathBuf]) -> Result<(), PqrsError> {
-    let loaded_descs = match load_descriptors(fdsets, true) {
-        Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
-        Err(e) => return Err(e),
-        Ok(x) => x,
-    };
-
-    let mut serializer = Serializer::new(out);
+fn discover_contenders(data: &[u8],
+                       d: &Descriptors,
+                       mds: &[MessageDescriptor])
+                       -> Vec<BTreeMap<Value, Value>> {
     let mut contenders = Vec::new();
-    for md in loaded_descs.message_descriptors {
+    for md in mds {
         let stream = CodedInputStream::from_bytes(data);
-        let mut deserializer = Deserializer::new(&loaded_descs.descriptors, &md, stream);
+        let mut deserializer = Deserializer::new(d, &md, stream);
         match deser(&mut deserializer) {
             Ok(Value::Map(value)) => {
                 let mut unknowns_found = 0;
@@ -68,14 +96,7 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: &[PathBuf]) -> Result
             Ok(_) | Err(_) => continue,
         }
     }
-    if contenders.is_empty() {
-        return Err(PqrsError::NoContenderError(String::from("could not decode with any fdset")));
-    }
-
-    let contender_max = contenders.iter().max_by_key(|x| x.len());
-    contender_max.serialize(&mut serializer).unwrap();
-
-    Ok(())
+    contenders
 }
 
 fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {

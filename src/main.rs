@@ -17,6 +17,7 @@ use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
 use force::forcefully_decode;
+use protob::PqrsDecoder;
 use std::io::{self, Write, Read};
 use std::process;
 
@@ -73,5 +74,6 @@ fn main() {
         Err(e) => panic!(e),
     };
 
-    forcefully_decode(&buf, &args.flag_msgtype, &mut stdout.lock(), &fdsets).unwrap();
+    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets).unwrap(); 
+    forcefully_decode(&pqrs_decoder, &buf, &mut stdout.lock()).unwrap();
 }
