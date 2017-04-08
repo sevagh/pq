@@ -38,7 +38,7 @@ pub fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsEr
     Ok(fdset_files)
 }
 
-pub fn load_descriptors(fdsets: Vec<PathBuf>,
+pub fn load_descriptors(fdsets: &[PathBuf],
                         with_message_descriptors: bool)
                         -> Result<LoadedDescriptors, PqrsError> {
     let mut descriptors = Descriptors::new();

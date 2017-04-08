@@ -14,7 +14,7 @@ use protobuf::error::ProtobufError;
 pub fn named_message(data: &[u8],
                      msg_type: &str,
                      out: &mut Write,
-                     fdsets: Vec<PathBuf>)
+                     fdsets: &[PathBuf])
                      -> Result<(), PqrsError> {
     let mut loc_msg_type = String::new();
     let ch = msg_type.chars().nth(0).unwrap();
@@ -40,7 +40,7 @@ pub fn named_message(data: &[u8],
     Ok(())
 }
 
-pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Result<(), PqrsError> {
+pub fn guess_message(data: &[u8], out: &mut Write, fdsets: &[PathBuf]) -> Result<(), PqrsError> {
     let loaded_descs = match load_descriptors(fdsets, true) {
         Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
         Err(e) => return Err(e),
@@ -68,12 +68,13 @@ pub fn guess_message(data: &[u8], out: &mut Write, fdsets: Vec<PathBuf>) -> Resu
             Ok(_) | Err(_) => continue,
         }
     }
-    if !contenders.is_empty() {
-        let contender_max = contenders.iter().max_by_key(|x| x.len());
-        contender_max.serialize(&mut serializer).unwrap();
-    } else {
-        PqrsError::NoContenderError("could not decode with any fdset")
+    if contenders.is_empty() {
+        return Err(PqrsError::NoContenderError(String::from("could not decode with any fdset")));
     }
+
+    let contender_max = contenders.iter().max_by_key(|x| x.len());
+    contender_max.serialize(&mut serializer).unwrap();
+
     Ok(())
 }
 
