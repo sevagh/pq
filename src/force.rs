@@ -12,13 +12,11 @@ pub fn forcefully_decode(buf: Vec<u8>,
     let buflen = buf.len();
     while offset < buflen {
         for n in 0..offset+1 {
-            println!("ITER!");
-            if !decode_single_slice(&buf[n..(buflen-offset+n)], &msgtype, out, &fdsets) {
-                offset += 1;
-            } else {
+            if decode_single_slice(&buf[n..(buflen-offset+n)], &msgtype, out, &fdsets) {
                 return Ok(());
             }
         }
+        offset += 1;
     }
     Err(PqrsError::CouldNotDecodeError(String::from("Could not decode")))
 }

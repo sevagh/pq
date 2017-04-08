@@ -73,5 +73,5 @@ fn main() {
         Err(e) => panic!(e),
     };
 
-    forcefully_decode(buf, args.flag_msgtype, &mut stdout.lock(), fdsets);
+    forcefully_decode(buf, args.flag_msgtype, &mut stdout.lock(), fdsets).unwrap();
 }
