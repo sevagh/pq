@@ -11,6 +11,47 @@ pub struct LoadedDescriptors {
     pub message_descriptors: Vec<MessageDescriptor>,
 }
 
+impl LoadedDescriptors {
+    pub fn from_fdsets(fdsets: &[PathBuf],
+                       with_message_descriptors: bool)
+                       -> Result<LoadedDescriptors, PqrsError> {
+        let mut descriptors = Descriptors::new();
+        let mut message_descriptors = Vec::new();
+
+        let mut fdset_proto_load_ctr = 0;
+        for fdset_path in fdsets {
+            let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
+            let fdset_proto = match parse_from_reader(&mut fdset_file) {
+                Err(_) => continue,
+                Ok(x) => x,
+            };
+            fdset_proto_load_ctr += 1;
+            descriptors.add_file_set_proto(&fdset_proto);
+            if with_message_descriptors {
+                for file_proto in fdset_proto.get_file().iter() {
+                    for message_proto in file_proto.get_message_type().iter() {
+                        message_descriptors
+                            .push(MessageDescriptor::from_proto(fdset_path
+                                                                    .to_string_lossy()
+                                                                    .into_owned()
+                                                                    .as_str(),
+                                                                message_proto));
+                    }
+                }
+            }
+        }
+
+        if fdset_proto_load_ctr == 0 {
+            return Err(PqrsError::EmptyFdsetError());
+        }
+        descriptors.resolve_refs();
+        Ok(LoadedDescriptors {
+               descriptors: descriptors,
+               message_descriptors: message_descriptors,
+           })
+    }
+}
+
 pub fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsError> {
     let mut fdset_files = Vec::new();
 
@@ -33,46 +74,7 @@ pub fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsEr
         }
     }
     if fdset_files.is_empty() {
-        return Err(PqrsError::EmptyFdsetError(String::from("no files in fdset dir")));
+        return Err(PqrsError::EmptyFdsetError());
     }
     Ok(fdset_files)
-}
-
-pub fn load_descriptors(fdsets: Vec<PathBuf>,
-                        with_message_descriptors: bool)
-                        -> Result<LoadedDescriptors, PqrsError> {
-    let mut descriptors = Descriptors::new();
-    let mut message_descriptors = Vec::new();
-
-    let mut fdset_proto_load_ctr = 0;
-    for fdset_path in fdsets {
-        let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
-        let fdset_proto = match parse_from_reader(&mut fdset_file) {
-            Err(_) => continue,
-            Ok(x) => x,
-        };
-        fdset_proto_load_ctr += 1;
-        descriptors.add_file_set_proto(&fdset_proto);
-        if with_message_descriptors {
-            for file_proto in fdset_proto.get_file().iter() {
-                for message_proto in file_proto.get_message_type().iter() {
-                    message_descriptors
-                        .push(MessageDescriptor::from_proto(fdset_path
-                                                                .to_string_lossy()
-                                                                .into_owned()
-                                                                .as_str(),
-                                                            message_proto));
-                }
-            }
-        }
-    }
-
-    if fdset_proto_load_ctr == 0 {
-        return Err(PqrsError::EmptyFdsetError(String::from("no valid fdsets found")));
-    }
-    descriptors.resolve_refs();
-    Ok(LoadedDescriptors {
-           descriptors: descriptors,
-           message_descriptors: message_descriptors,
-       })
 }

@@ -8,52 +8,53 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 
-mod protob;
 mod error;
 mod discovery;
+mod protob;
 
 use discovery::discover_fdsets;
 use docopt::Docopt;
-use protob::{named_message, guess_message};
 use error::PqrsError;
-use std::boxed::Box;
+use protob::PqrsDecoder;
 use std::fs::File;
-use std::io::{self, BufWriter, Write, BufReader, Read};
+use std::io::{self, Write, Read, BufReader};
 use std::process;
+
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [--outfile=<path>] [--fdsets=<path>] [<infile>]
-  pq (-h | --help)
-  pq --version
+  pq [--msgtype=<msgtype>] [--fdsets=<path>] [<infile>]
+  pq (--help | --version)
 
 Options:
   --msgtype=<msgtype>   Message type e.g. com.example.Type
-  --outfile=<path>      Output file path
   --fdsets=<path>       Alternative path to fdsets
-  -h --help             Show this screen.
+  --help                Show this screen.
   --version             Show version.
 ";
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
     pub arg_infile: Option<String>,
-    pub flag_outfile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_fdsets: Option<String>,
+    flag_version: bool,
 }
 
 fn main() {
     let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.decode())
+        .and_then(|d| d.version(Some(String::from(VERSION))).decode())
         .unwrap_or_else(|e| e.exit());
 
+    let stdin = io::stdin();
+    let stdout = io::stdout();
     let stderr = io::stderr();
+
     let mut stderr = stderr.lock();
 
-    let stdin = io::stdin();
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
             let file = match File::open(&x) {
@@ -77,36 +78,35 @@ fn main() {
         }
     }
 
-    let stdout = io::stdout();
-    let mut outfile: Box<Write> = match args.flag_outfile {
-        Some(x) => {
-            let file = match File::create(&x) {
-                Ok(y) => y,
-                Err(_) => {
-                    writeln!(&mut stderr, "Could not create file: {} for writing", x).unwrap();
-                    process::exit(-1);
-                }
-            };
-            Box::new(BufWriter::new(file))
-        }
-        None => Box::new(stdout.lock()),
-    };
-
     let fdsets = match discover_fdsets(args.flag_fdsets) {
         Ok(x) => x,
-        Err(PqrsError::InitError(msg)) => {
-            writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
-            process::exit(-1);
-        }
-        Err(PqrsError::EmptyFdsetError(msg)) => {
-            writeln!(&mut stderr, "Could not find fdsets: {}", msg).unwrap();
+        Err(PqrsError::InitError(_)) |
+        Err(PqrsError::EmptyFdsetError()) => {
+            writeln!(&mut stderr, "Could not find fdsets").unwrap();
             process::exit(-1);
         }
         Err(e) => panic!(e),
     };
 
-    match args.flag_msgtype {
-        Some(x) => named_message(&buf, &x, &mut outfile, fdsets).unwrap(),
-        None => guess_message(&buf, &mut outfile, fdsets).unwrap(),
+    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets).unwrap();
+    forcefully_decode(&pqrs_decoder, &buf, &mut stdout.lock()).unwrap();
+}
+
+fn forcefully_decode(pqrs_decoder: &PqrsDecoder,
+                     buf: &[u8],
+                     mut out: &mut Write)
+                     -> Result<(), PqrsError> {
+    let mut offset = 0;
+    let buflen = buf.len();
+    while offset < buflen {
+        for n in 0..offset + 1 {
+            if pqrs_decoder
+                   .decode_message(&buf[n..(buflen - offset + n)], &mut out)
+                   .is_ok() {
+                return Ok(());
+            }
+        }
+        offset += 1;
     }
+    Err(PqrsError::CouldNotDecodeError())
 }

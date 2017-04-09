@@ -3,7 +3,6 @@
 pq \- jq for protobuf - parse protobuf generically
 .SH SYNOPSIS
 .B pq
-[\fB\-\-outfile=PATH\fR]
 [\fB\-\-fdsets=PATH\fR]
 [\fB\-\-msgtype=STRING\fR]
 .IR [file]
@@ -16,10 +15,6 @@ parses a compiled protobuf message with .fdset files located in '~/.pq/'
 .br
 Read message from a file. Default is stdin.
 .SH OPTIONS
-.TP
-.BR \-\-outfile=PATH\fR
-.br
-Write JSON output to a file. Default is stdout
 .TP
 .BR \-\-fdsets=PATH\fR
 .br
