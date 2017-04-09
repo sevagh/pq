@@ -45,6 +45,28 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 
 ### Forced decoding
 
+The default behavior of `pqrs` is to try to brute-force decode a message. Given a 20-byte message:
+
+```
+while (don't have decode result)
+    if (decode [0:19]) == success: return
+
+    # try chopping off 1 byte
+    if (decode([0:18]) == success or\
+        decode([1:19]) == success): return
+
+    # try chopping off 2 consecutive bytes
+    if (decode([0:17]) == success or\
+        decode([1:18]) == success) or\
+        decode([2:19]) == success): return
+
+    # repeat until success or no bytes left
+```
+
+I thought of making this option toggleable, but in practise it's rare to have a pristine proto message. It could have a leading varint, a trailing EOF, anything. Therefore, I'd prefer `pqrs` to be robust by default.
+
+This will lead to terrible performance for any protos that are off by more than 2 bytes.
+
 ### Message guessing
 
 `pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --msgtype="com.example.dog.Dog"`.
