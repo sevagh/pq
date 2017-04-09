@@ -1,6 +1,6 @@
 [package]
 name = "pq"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
 repository = "https://github.com/sevagh/pqrs"
