@@ -13,8 +13,8 @@ pub struct LoadedDescriptors {
 
 impl LoadedDescriptors {
     pub fn from_fdsets(fdsets: &[PathBuf],
-                            with_message_descriptors: bool)
-                            -> Result<LoadedDescriptors, PqrsError> {
+                       with_message_descriptors: bool)
+                       -> Result<LoadedDescriptors, PqrsError> {
         let mut descriptors = Descriptors::new();
         let mut message_descriptors = Vec::new();
 
@@ -42,7 +42,7 @@ impl LoadedDescriptors {
         }
 
         if fdset_proto_load_ctr == 0 {
-            return Err(PqrsError::EmptyFdsetError(String::from("no valid fdsets found")));
+            return Err(PqrsError::EmptyFdsetError());
         }
         descriptors.resolve_refs();
         Ok(LoadedDescriptors {
@@ -74,7 +74,7 @@ pub fn discover_fdsets(fdsetpath: Option<String>) -> Result<Vec<PathBuf>, PqrsEr
         }
     }
     if fdset_files.is_empty() {
-        return Err(PqrsError::EmptyFdsetError(String::from("no files in fdset dir")));
+        return Err(PqrsError::EmptyFdsetError());
     }
     Ok(fdset_files)
 }

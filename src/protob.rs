@@ -19,8 +19,7 @@ pub struct PqrsDecoder {
 }
 
 impl PqrsDecoder {
-    pub fn new(msgtype: &Option<String>,
-                       fdsets: &[PathBuf]) -> Result<PqrsDecoder, PqrsError> {
+    pub fn new(msgtype: &Option<String>, fdsets: &[PathBuf]) -> Result<PqrsDecoder, PqrsError> {
         let mut load_mds = true;
         let loc_msg_type = match *msgtype {
             Some(ref x) => {
@@ -30,29 +29,33 @@ impl PqrsDecoder {
             None => String::from(""),
         };
         let loaded_descs = match LoadedDescriptors::from_fdsets(fdsets, load_mds) {
-            Err(PqrsError::EmptyFdsetError(msg)) => return Err(PqrsError::EmptyFdsetError(msg)),
+            Err(PqrsError::EmptyFdsetError()) => return Err(PqrsError::EmptyFdsetError()),
             Err(e) => return Err(e),
             Ok(x) => x,
         };
-        Ok(PqrsDecoder { loaded_descs: loaded_descs, message_type: loc_msg_type })
+        Ok(PqrsDecoder {
+               loaded_descs: loaded_descs,
+               message_type: loc_msg_type,
+           })
     }
 
-    pub fn decode_message(&self,
-                          data: &[u8],
-                          out: &mut Write)
-                          -> Result<(), PqrsError> {
+    pub fn decode_message(&self, data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
         let mut serializer = Serializer::new(out);
         if !self.loaded_descs.message_descriptors.is_empty() {
-            let contenders = discover_contenders(data, &self.loaded_descs.descriptors, &self.loaded_descs.message_descriptors);
+            let contenders = discover_contenders(data,
+                                                 &self.loaded_descs.descriptors,
+                                                 &self.loaded_descs.message_descriptors);
             if contenders.is_empty() {
-                return Err(PqrsError::NoContenderError(String::from("could not decode with any fdset")));
+                return Err(PqrsError::NoContenderError());
             }
             let contender_max = contenders.iter().max_by_key(|x| x.len());
             contender_max.serialize(&mut serializer).unwrap();
         } else {
             let stream = CodedInputStream::from_bytes(data);
-            let mut deserializer =
-                Deserializer::for_named_message(&self.loaded_descs.descriptors, &self.message_type, stream).unwrap();
+            let mut deserializer = Deserializer::for_named_message(&self.loaded_descs.descriptors,
+                                                                   &self.message_type,
+                                                                   stream)
+                    .unwrap();
             match deser(&mut deserializer) {
                 Ok(value) => value.serialize(&mut serializer).unwrap(),
                 Err(e) => return Err(e),
@@ -79,7 +82,7 @@ fn discover_contenders(data: &[u8],
     let mut contenders = Vec::new();
     for md in mds {
         let stream = CodedInputStream::from_bytes(data);
-        let mut deserializer = Deserializer::new(d, &md, stream);
+        let mut deserializer = Deserializer::new(d, md, stream);
         match deser(&mut deserializer) {
             Ok(Value::Map(value)) => {
                 let mut unknowns_found = 0;
@@ -104,7 +107,7 @@ fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
         Ok(x) => Ok(x),
         Err(Error(ErrorKind::Protobuf(ProtobufError::WireError(msg)), _)) => {
             if msg == "unexpected EOF" {
-                return Err(PqrsError::EofError(msg));
+                return Err(PqrsError::EofError());
             }
             Err(PqrsError::ProtobufError(msg))
         }

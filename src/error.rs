@@ -1,10 +1,10 @@
 #[derive(Debug)]
 pub enum PqrsError {
-    NoContenderError(String),
-    EmptyFdsetError(String),
-    CouldNotDecodeError(String),
+    NoContenderError(),
+    EmptyFdsetError(),
+    CouldNotDecodeError(),
+    EofError(),
     InitError(String),
-    EofError(String),
     SerdeError(String),
     ProtobufError(String),
 }
