@@ -16,14 +16,17 @@ use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
 use protob::PqrsDecoder;
-use std::io::{self, Write, Read};
+use std::fs::File;
+use std::io::{self, Write, Read, BufReader};
 use std::process;
+
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [--fdsets=<path>]
+  pq [--msgtype=<msgtype>] [--fdsets=<path>] [<infile>]
   pq (--help | --version)
 
 Options:
@@ -35,13 +38,15 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
+    pub arg_infile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_fdsets: Option<String>,
+    flag_version: bool,
 }
 
 fn main() {
     let args: Args = Docopt::new(USAGE)
-        .and_then(|d| d.decode())
+        .and_then(|d| d.version(Some(String::from(VERSION))).decode())
         .unwrap_or_else(|e| e.exit());
 
     let stdin = io::stdin();
@@ -50,8 +55,22 @@ fn main() {
 
     let mut stderr = stderr.lock();
 
+    let mut infile: Box<Read> = match args.arg_infile {
+        Some(x) => {
+            let file = match File::open(&x) {
+                Ok(x) => x,
+                Err(_) => {
+                    writeln!(&mut stderr, "Could not open file: {}", x).unwrap();
+                    process::exit(-1);
+                }
+            };
+            Box::new(BufReader::new(file))
+        }
+        None => Box::new(stdin.lock()),
+    };
+
     let mut buf = Vec::new();
-    match stdin.lock().read_to_end(&mut buf) {
+    match infile.read_to_end(&mut buf) {
         Ok(_) => (),
         Err(_) => {
             writeln!(&mut stderr, "Could not real file to end").unwrap();

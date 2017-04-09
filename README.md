@@ -7,15 +7,13 @@
 
 ### Contents
 1. [Usage](#usage)
-    1. [Files](#files)
-2. [Message guessing](#message-guessing)
-3. [Portability with musl](#portability-with-musl)
-    1. [Download](#download)
-4. [Dependencies](#dependencies)
-5. [Tests](#tests)
-    1. [Linting](#linting)
-6. [Goals](#goals)
-7. [Todo](#todo)
+2. [Forced decoding](#forced-decoding)
+3. [Message guessing](#message-guessing)
+4. [Portability with musl](#portability-with-musl)
+5. [Dependencies](#dependencies)
+6. [Tests](#tests)
+7. [Goals](#goals)
+8. [Todo](#todo)
 
 ### Usage
 
@@ -43,18 +41,13 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 }
 ```
 
-#### Args
+[Read the manpage](https://sevagh.github.io/pqrs/).
 
-`pqrs` operates on stdin/stdout by default but also works with files:
-
-* Use infile instead of stdin:      `pq /path/to/input.bin`
-* Use outfile instead of stdout:    `pq --outfile="/path/to/output.json"`
-* Explicitly specify fdsets dir:    `pq --fdsets="/fdsets/path/`
-* Named message (vs guessing):      `pq --msgtype="com.dog.Dog"`
+### Forced decoding
 
 ### Message guessing
 
-`pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --type="com.example.dog.Dog"`.
+`pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --msgtype="com.example.dog.Dog"`.
 
 **Guessing strategy:**
 
@@ -87,9 +80,7 @@ $ file ./target/x86_64-unknown-linux-musl/debug/pq
 ./target/x86_64-unknown-linux-musl/debug/pq: ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, BuildID[sha1]=3aa843efe79d0082aacb674a28e8d1ed8105a5e5, not stripped
 ```
 
-#### Download
-
-You can download a static `musl`-compiled binary from the [releases page](https://github.com/sevagh/pqrs/releases).
+Alternatively, you can download a static `musl`-compiled binary from the [releases page](https://github.com/sevagh/pqrs/releases).
 
 ### Dependencies
 
@@ -107,8 +98,6 @@ protobuf = "1.2.1"
 ### Tests
 
 The testing tools are [./py-test](./py-test) for a Python random compiled protobuf generator ([py-test README](./py-test/README.md)), and [./tests](./tests) for Rust integration tests. The integration tests invoke the `pqrs` binary using `std::process` and checks return codes, stdout, etc. - inspired by [the xsv test suite](https://github.com/BurntSushi/xsv/tree/master/tests).
-
-#### Linting
 
 There is no linting in the Travis-CI job because it takes too long, but there is a make target (`make lint`). This is a bit hacky - it switches to rust-stable to run `cargo fmt`, rust-nightly to run `cargo clippy` (and then back to rust-stable). Run this before submitting a PR, or alternatively, run `cargo fmt` and `cargo clippy` however you prefer.
 
