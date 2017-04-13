@@ -9,17 +9,14 @@ use runner::Runner;
 
 fn for_nonexistent_file(work: &mut Runner) {
     work.cmd.arg("file-doesnt-exist");
-    work.spawn();
 }
 
 fn for_dog_file(work: &mut Runner) {
     work.cmd.arg(&work.tests_path.join("samples/dog"));
-    work.spawn();
 }
 
 fn for_person(work: &mut Runner) {
     work.cmd.arg(&work.tests_path.join("samples/person"));
-    work.spawn();
 }
 
 fn for_dog_stdin(work: &mut Runner) {
@@ -40,6 +37,7 @@ fn run_pqrs<F>(modify_in: F) -> Output
 
     modify_in(&mut work);
 
+    work.spawn();
     work.output()
 }
 

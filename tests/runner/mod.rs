@@ -44,12 +44,15 @@ impl Runner {
         self.chld = Some(chld);
     }
 
-    fn _spawn(&mut self) -> Child {
+    pub fn _spawn(&mut self) -> Child {
         self.cmd.spawn().unwrap()
     }
 
     pub fn spawn(&mut self) {
-        self.chld = Some(self._spawn());
+        match self.chld {
+            Some(_) => (),
+            None => self.chld = Some(self._spawn()),
+        }
     }
 
     pub fn output(&mut self) -> Output {
