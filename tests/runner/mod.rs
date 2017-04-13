@@ -53,11 +53,6 @@ impl Runner {
     }
 
     pub fn output(&mut self) -> Output {
-        println!("Bullshit");
-        //self.chld.take().unwrap().wait_with_output().unwrap()
-        match self.chld.take() {
-            None => panic!("I fucking hate this language"),
-            Some(x) => x.wait_with_output().unwrap(),
-        }
+        self.chld.take().unwrap().wait_with_output().unwrap()
     }
 }
