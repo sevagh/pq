@@ -2,11 +2,13 @@
 
 use std::env;
 use std::path::PathBuf;
-use std::process;
+use std::io::Write;
+use std::process::{Command, Output, Child, Stdio};
 
 pub struct Runner {
-    pub cmd: process::Command,
+    pub cmd: Command,
     pub tests_path: PathBuf,
+    chld: Option<Child>,
 }
 
 impl Runner {
@@ -21,14 +23,39 @@ impl Runner {
         }
         let mut tests_path = root.parent().unwrap().parent().unwrap().to_path_buf();
         tests_path.push("tests");
-        let cmd = process::Command::new(root.join("pq"));
+        let mut cmd = Command::new(root.join("pq"));
+        cmd.stdout(Stdio::piped());
+        cmd.stderr(Stdio::piped());
         Runner {
             cmd: cmd,
             tests_path: tests_path,
+            chld: None,
         }
     }
 
-    pub fn run(&mut self) -> process::Output {
-        self.cmd.output().unwrap()
+    pub fn with_stdin(&mut self, contents: &[u8]) {
+        self.cmd.stdin(Stdio::piped());
+        let mut chld = self._spawn();
+        chld.stdin
+            .as_mut()
+            .unwrap()
+            .write_all(contents)
+            .unwrap();
+        self.chld = Some(chld);
+    }
+
+    pub fn _spawn(&mut self) -> Child {
+        self.cmd.spawn().unwrap()
+    }
+
+    pub fn spawn(&mut self) {
+        match self.chld {
+            Some(_) => (),
+            None => self.chld = Some(self._spawn()),
+        }
+    }
+
+    pub fn output(&mut self) -> Output {
+        self.chld.take().unwrap().wait_with_output().unwrap()
     }
 }
