@@ -2,6 +2,7 @@
 
 use std::env;
 use std::path::PathBuf;
+use std::io::Write;
 use std::process::{Command, Output, Child, Stdio};
 
 pub struct Runner {
@@ -32,9 +33,23 @@ impl Runner {
         }
     }
 
-    pub fn spawn(&mut self) {
-        let chld = self.cmd.spawn().unwrap();
+    pub fn with_stdin(&mut self, contents: &[u8]) {
+        self.cmd.stdin(Stdio::piped());
+        let chld = self._spawn();
+        chld
+            .stdin
+            .unwrap()
+            .write_all(contents)
+            .unwrap();
         self.chld = Some(chld);
+    }
+
+    fn _spawn(&mut self) -> Child {
+        self.cmd.spawn().unwrap()
+    }
+
+    pub fn spawn(&mut self) {
+        self.chld = Some(self._spawn());
     }
 
     pub fn output(&mut self) -> Output {
