@@ -8,7 +8,7 @@ use std::process::{Command, Output, Child, Stdio};
 pub struct Runner {
     pub cmd: Command,
     pub tests_path: PathBuf,
-    pub chld: Option<Child>,
+    chld: Option<Child>,
 }
 
 impl Runner {
@@ -35,9 +35,10 @@ impl Runner {
 
     pub fn with_stdin(&mut self, contents: &[u8]) {
         self.cmd.stdin(Stdio::piped());
-        let chld = self._spawn();
+        let mut chld = self._spawn();
         chld
             .stdin
+            .as_mut()
             .unwrap()
             .write_all(contents)
             .unwrap();
@@ -53,6 +54,11 @@ impl Runner {
     }
 
     pub fn output(&mut self) -> Output {
-        self.chld.take().unwrap().wait_with_output().unwrap()
+        println!("Bullshit");
+        //self.chld.take().unwrap().wait_with_output().unwrap()
+        match self.chld.take() {
+            None => panic!("I fucking hate this language"),
+            Some(x) => x.wait_with_output().unwrap(),
+        }
     }
 }
