@@ -22,7 +22,8 @@
 <h1 class="Sh">NAME</h1>
 pq - jq for protobuf - parse protobuf generically
 <h1 class="Sh">SYNOPSIS</h1>
-<b>pq</b> [ <b>--fdsets=PATH</b>] [ <b>--msgtype=STRING</b>] <i>[file]</i>
+<b>pq</b> [ <b>--fdsets=PATH</b>] [ <b>--msgtype=STRING</b>] [ <b>--stream</b>]
+  [ <b>--force</b>] <i>[file]</i>
 <h1 class="Sh">DESCRIPTION</h1>
 <b>pq</b> parses a compiled protobuf message with .fdset files located in
   '~/.pq/'
@@ -46,7 +47,19 @@ pq - jq for protobuf - parse protobuf generically
     <div style="height: 0.00em;">&#160;</div>
     Use this message type to decode protobuf - must be a fully qualified message
       name e.g. 'com.example.dog.Dog'. Default behavior is to try to guess the
-      message type.</dd>
+      message type. Guessing and msgtype apply to every message in a
+    stream.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--stream</b></dt>
+  <dd class="It-tag">
+    <div style="height: 0.00em;">&#160;</div>
+    Parse varint32-delimited stream.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--force</b></dt>
+  <dd class="It-tag">Forcefully decode by chopping bytes off the ends. This will
+      apply to every message in a stream.</dd>
 </dl>
 </div>
 <table class="foot">

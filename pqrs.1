@@ -5,6 +5,8 @@ pq \- jq for protobuf - parse protobuf generically
 .B pq
 [\fB\-\-fdsets=PATH\fR]
 [\fB\-\-msgtype=STRING\fR]
+[\fB\-\-stream\fR]
+[\fB\-\-force\fR]
 .IR [file]
 .SH DESCRIPTION
 .B pq
@@ -22,4 +24,11 @@ Use alternative fdset dir. Default is '~/.pq/'.
 .TP
 .BR \-\-msgtype=STRING\fR
 .br
-Use this message type to decode protobuf - must be a fully qualified message name e.g. 'com.example.dog.Dog'. Default behavior is to try to guess the message type.
+Use this message type to decode protobuf - must be a fully qualified message name e.g. 'com.example.dog.Dog'. Default behavior is to try to guess the message type. Guessing and msgtype apply to every message in a stream.
+.TP
+.BR \-\-stream\fR
+.br
+Parse varint32-delimited stream.
+.TP
+.BR \-\-force\fR
+Forcefully decode by chopping bytes off the ends. This will apply to every message in a stream.
