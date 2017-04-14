@@ -137,12 +137,3 @@ fn deser(deserializer: &mut Deserializer) -> Result<Value, PqrsError> {
         Err(e) => Err(PqrsError::SerdeError(String::from(e.description()))),
     }
 }
-
-pub fn decode_size(lead: &[u8], size: &mut u32) -> Result<(), PqrsError> {
-    let mut is = CodedInputStream::from_bytes(lead);
-    *size = match is.read_raw_varint32() {
-        Ok(x) => x,
-        _ => return Err(PqrsError::NoLeadingVarintError()),
-    };
-    Ok(())
-}
