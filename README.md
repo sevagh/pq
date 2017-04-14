@@ -9,11 +9,12 @@
 1. [Usage](#usage)
 2. [Forced decoding](#forced-decoding)
 3. [Message guessing](#message-guessing)
-4. [Portability with musl](#portability-with-musl)
-5. [Dependencies](#dependencies)
-6. [Tests](#tests)
-7. [Goals](#goals)
-8. [Todo](#todo)
+4. [Streaming](#streaming)
+5. [Portability with musl](#portability-with-musl)
+6. [Dependencies](#dependencies)
+7. [Tests](#tests)
+8. [Goals](#goals)
+9. [Todo](#todo)
 
 ### Usage
 
@@ -80,6 +81,12 @@ This will lead to terrible performance for any protos that are off by more than 
 * Display the `BTreeMap` from the vector which has the most fields
 
 Since protobuf treats fields as positional, similar protos (e.g. Dog: <Int: age, String: breed>, Person: <Int: ssn, String: name>) are indistinguishable.
+
+### Streaming
+
+I treat streams the way it's done by Google in [delimited_message_util](https://github.com/google/protobuf/blob/master/src/google/protobuf/util/delimited_message_util.cc#L28).
+
+Basically, each message is preceded with a raw `varint32` containing the length of the message. Different streaming strategies are possible. I need to come up with a way to accomodate them all.
 
 ### Portability with musl
 

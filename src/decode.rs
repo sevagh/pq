@@ -1,12 +1,8 @@
 use protob::PqrsDecoder;
-use std::io::{Read, Write};
-use protobuf::{CodedInputStream, parse_from_reader, ProtobufResult};
+use std::io::Write;
+use protobuf::CodedInputStream;
 use error::PqrsError;
 use std::result::Result;
-use serde::Deserialize;
-use serde_protobuf::de::Deserializer;
-use serde_protobuf::descriptor::Descriptors;
-use serde_value::Value;
 
 pub fn decode_single(pqrs_decoder: &PqrsDecoder,
                      buf: &[u8],
