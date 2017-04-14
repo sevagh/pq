@@ -1,6 +1,6 @@
 use protob::PqrsDecoder;
 use std::io::{Read, Write};
-use protobuf::{CodedInputStream, parse_from_reader};
+use protobuf::{CodedInputStream, parse_from_reader, ProtobufResult};
 use error::PqrsError;
 use std::result::Result;
 use serde::Deserialize;
@@ -31,44 +31,11 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
     Err(PqrsError::CouldNotDecodeError())
 }
 
-pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<(), PqrsError> {
-    let mut leading_varint: &'static [u8] = b"
-K
-leading_varint.protoxyz.sevag.pqrs\"#
-\rLeadingVarint
-size (Rsize";
-
-    let proto = parse_from_reader(&mut leading_varint).unwrap();
-    let descriptors = Descriptors::from_proto(&proto);
-    let byte_is = CodedInputStream::from_bytes(lead);
-
-    let mut deserializer =
-        Deserializer::for_named_message(&descriptors, ".xyz.sevag.pqrs.LeadingVarint", byte_is)
-            .unwrap();
-    *resulting_size = match Value::deserialize(&mut deserializer) {
-        Ok(Value::Map(x)) => {
-            match *x.values().nth(0).unwrap() {
-                Value::U8(ref y) => *y as u64,
-                Value::U16(ref y) => *y as u64,
-                Value::U32(ref y) => *y as u64,
-                Value::U64(ref y) => *y as u64,
-                _ => return Err(PqrsError::NoLeadingVarintError()),
-            }
-        }
-        Ok(_) | Err(_) => return Err(PqrsError::CouldNotDecodeError()),
+pub fn decode_size(lead: &[u8], size: &mut u32) -> Result<(), PqrsError> {
+    let mut is = CodedInputStream::from_bytes(lead);
+    *size = match is.read_raw_varint32() {
+        Ok(x) => x,
+        _ => return Err(PqrsError::NoLeadingVarintError()),
     };
     Ok(())
-}
-
-pub fn discover_leading_varint_size(infile: &mut Read) -> Result<(i32, u64), PqrsError> {
-    let mut leading_varint_bytesize = 0;
-    let mut next_proto_size = 0;
-    let mut buf = Vec::new();
-    while !decode_leading_varint(&buf, &mut next_proto_size).is_ok() {
-        let mut tmpbuf = vec![0; 1];
-        infile.read_exact(&mut tmpbuf).unwrap();
-        buf.append(&mut tmpbuf);
-        leading_varint_bytesize += 1;
-    }
-    Ok((leading_varint_bytesize, next_proto_size))
 }

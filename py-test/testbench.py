@@ -5,6 +5,7 @@ import dog_pb2
 import person_pb2
 import sys
 import random
+from google.protobuf.internal import encoder
 
 
 def gen_person():
@@ -25,12 +26,6 @@ def gen_dog():
     return dog.SerializeToString()
 
 
-def gen_leading_varint(size):
-    lv = leading_varint_pb2.LeadingVarint()
-    lv.size = size
-    return lv.SerializeToString()
-
-
 if __name__ == '__main__':
     gen_funcs = [gen_person, gen_dog]
     if len(sys.argv) != 2:
@@ -40,8 +35,8 @@ if __name__ == '__main__':
     if sys.argv[1] == 'stream':
         while True:
             obj = gen_funcs[random.choice(range(0, 2))]()
-            sys.stdout.buffer.write(gen_leading_varint(len(obj)))
-            sys.stdout.buffer.write(obj)
+            delimiter = encoder._VarintBytes(len(obj))
+            sys.stdout.buffer.write(delimiter + obj)
     elif sys.argv[1] == 'single':
         sys.stdout.buffer.write(gen_funcs[random.choice(range(0, 2))]())
     elif sys.argv[1] == 'dirty':

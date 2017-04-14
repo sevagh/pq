@@ -13,7 +13,7 @@ mod discovery;
 mod protob;
 mod decode;
 
-use decode::{decode_single, decode_leading_varint, discover_leading_varint_size};
+use decode::{decode_single, decode_size};
 use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
@@ -96,15 +96,18 @@ fn main() {
         }
         decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
     } else {
-        let (leading_varint_bytesize, mut size) = discover_leading_varint_size(&mut infile)
-            .unwrap();
         loop {
-            let mut buf = vec![0; size as usize];
-            infile.read_exact(&mut buf).unwrap();
-            decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
-            let mut varint_buf = vec![0; leading_varint_bytesize as usize];
-            infile.read_exact(&mut varint_buf).unwrap();
-            decode_leading_varint(&varint_buf, &mut size).unwrap();
+            let mut msg_size = 0;
+            let mut msg_size_buf = vec![0; 0];
+            let mut temp_buf = vec![0; 1];
+            infile.read_exact(&mut msg_size_buf).unwrap();
+            while !decode_size(&msg_size_buf, &mut msg_size).is_ok() {
+                infile.read_exact(&mut temp_buf).unwrap();
+                msg_size_buf.append(&mut temp_buf);
+            }
+            let mut msg_buf = vec![0; msg_size as usize];
+            infile.read_exact(&mut msg_buf).unwrap();
+            decode_single(&pqrs_decoder, &msg_buf, &mut stdout.lock(), true).unwrap();
         }
     }
 }
