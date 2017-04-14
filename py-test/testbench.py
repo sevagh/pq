@@ -12,7 +12,7 @@ def gen_person():
     person.id = random.choice(range(0, 4))
     names = ['raffi', 'khosrov', 'vahaken']
     person.name = names[random.choice(range(0, 3))]
-    return person
+    return person.SerializeToString()
 
 
 def gen_dog():
@@ -22,7 +22,7 @@ def gen_dog():
     temperaments = ['chill', 'aggressive', 'excited']
     dog.breed = breeds[random.choice(range(0, 3))]
     dog.temperament = temperaments[random.choice(range(0, 3))]
-    return dog
+    return dog.SerializeToString()
 
 
 def gen_leading_varint(size):
@@ -33,7 +33,18 @@ def gen_leading_varint(size):
 
 if __name__ == '__main__':
     gen_funcs = [gen_person, gen_dog]
-    while True:
-        obj = gen_funcs[random.choice(range(0, 2))]().SerializeToString()
-        sys.stdout.buffer.write(gen_leading_varint(len(obj)))
-        sys.stdout.buffer.write(obj)
+    if len(sys.argv) != 2:
+        print('Usage: {0} stream|single|dirty'.format(sys.argv[0]),
+              file=sys.stderr)
+        sys.exit(255)
+    if sys.argv[1] == 'stream':
+        while True:
+            obj = gen_funcs[random.choice(range(0, 2))]()
+            sys.stdout.buffer.write(gen_leading_varint(len(obj)))
+            sys.stdout.buffer.write(obj)
+    elif sys.argv[1] == 'single':
+        sys.stdout.buffer.write(gen_funcs[random.choice(range(0, 2))]())
+    elif sys.argv[1] == 'dirty':
+        sys.stdout.buffer.write(b'abcd')
+        sys.stdout.buffer.write(gen_funcs[random.choice(range(0, 2))]())
+        sys.stdout.buffer.write(b'\n')
