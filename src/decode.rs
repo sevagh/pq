@@ -19,9 +19,8 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
                      mut out: &mut Write,
                      force: bool)
                      -> Result<(), PqrsError> {
-    match force {
-        false => return pqrs_decoder.decode_message(buf, &mut out),
-        true => (),
+    if !force {
+        return pqrs_decoder.decode_message(buf, &mut out);
     }
     let mut offset = 0;
     let buflen = buf.len();
@@ -45,10 +44,12 @@ pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<()
     let descriptors = Descriptors::from_proto(&proto);
     let byte_is = CodedInputStream::from_bytes(lead);
 
-    let mut deserializer = Deserializer::for_named_message(&descriptors, ".xyz.sevag.pqrs.LeadingVarint", byte_is).unwrap();
+    let mut deserializer =
+        Deserializer::for_named_message(&descriptors, ".xyz.sevag.pqrs.LeadingVarint", byte_is)
+            .unwrap();
     *resulting_size = match Value::deserialize(&mut deserializer) {
         Ok(Value::Map(x)) => {
-            let val = match *x.values().nth(0).unwrap() {
+            match *x.values().nth(0).unwrap() {
                 Value::U8(ref y) => *y as u64,
                 Value::U16(ref y) => *y as u64,
                 Value::U32(ref y) => *y as u64,
@@ -56,8 +57,7 @@ pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<()
                 _ => {
                     return Err(PqrsError::NoLeadingVarintError());
                 }
-            };
-            val
+            }
         }
         Ok(_) | Err(_) => return Err(PqrsError::CouldNotDecodeError()),
     };

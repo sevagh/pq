@@ -85,24 +85,26 @@ fn main() {
         None => Box::new(stdin.lock()),
     };
 
-    match args.flag_stream {
-        false => {
-            let mut buf = Vec::new();
-            match infile.read_to_end(&mut buf) {
-                Ok(_) => (),
-                Err(_) => {
-                    writeln!(&mut stderr, "Could not real file to end").unwrap();
-                    process::exit(-1);
-                }
+    if args.flag_stream {
+        let mut buf = Vec::new();
+        match infile.read_to_end(&mut buf) {
+            Ok(_) => (),
+            Err(_) => {
+                writeln!(&mut stderr, "Could not real file to end").unwrap();
+                process::exit(-1);
             }
-            decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
         }
-        true => {
-            let (leading_varint_bytesize, first_proto_size) = discover_leading_varint_size(&mut infile).unwrap();
-            let mut buf = vec![0; first_proto_size as usize];
+        decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
+    } else {
+        let (leading_varint_bytesize, mut size) = discover_leading_varint_size(&mut infile)
+            .unwrap();
+        loop {
+            let mut buf = vec![0; size as usize];
             infile.read_exact(&mut buf).unwrap();
             decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
+            let mut varint_buf = vec![0; leading_varint_bytesize as usize];
+            infile.read_exact(&mut varint_buf).unwrap();
+            decode_leading_varint(&varint_buf, &mut size).unwrap();
         }
     }
 }
-
