@@ -1,16 +1,28 @@
-use discovery::discover_fdsets;
-use docopt::Docopt;
-use error::PqrsError;
 use protob::PqrsDecoder;
-use stream::decode_leading_varint;
-use std::fs::File;
-use std::io::{self, Write, Read, BufReader};
-use std::process;
+use std::io::Write;
+use protobuf::{CodedInputStream, parse_from_reader};
+use error::PqrsError;
+use std::result::Result;
+use serde::Deserialize;
+use serde_protobuf::de::Deserializer;
+use serde_protobuf::descriptor::Descriptors;
+use serde_value::Value;
+
+const LEADING_VARINT: &'static [u8] = b"
+K
+leading_varint.protoxyz.sevag.pqrs\"#
+\rLeadingVarint
+size (Rsize";
 
 pub fn decode_single(pqrs_decoder: &PqrsDecoder,
                      buf: &[u8],
-                     mut out: &mut Write)
+                     mut out: &mut Write,
+                     force: bool)
                      -> Result<(), PqrsError> {
+    match force {
+        false => return pqrs_decoder.decode_message(buf, &mut out),
+        true => (),
+    }
     let mut offset = 0;
     let buflen = buf.len();
     while offset < buflen {
@@ -24,4 +36,21 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
         offset += 1;
     }
     Err(PqrsError::CouldNotDecodeError())
+}
+
+pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut i32) -> Result<(), PqrsError> {
+    let mut leading_varint = LEADING_VARINT.clone();
+
+    let proto = parse_from_reader(&mut leading_varint).unwrap();
+    let descriptors = Descriptors::from_proto(&proto);
+    let byte_is = CodedInputStream::from_bytes(lead);
+
+    let mut deserializer = Deserializer::for_named_message(&descriptors, ".xyz.sevag.pqrs.LeadingVarint", byte_is).unwrap();
+   let value = match Value::deserialize(&mut deserializer) {
+       Ok(x) => x,
+       Err(_) => return Err(PqrsError::CouldNotDecodeError()),
+    };
+    println!("{:?}", value);
+    *resulting_size = 1337;
+    Ok(())
 }

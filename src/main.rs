@@ -11,15 +11,13 @@ extern crate serde_json;
 mod error;
 mod discovery;
 mod protob;
-mod stream;
 mod decode;
 
-use decode::decode_single;
+use decode::{decode_single, decode_leading_varint};
 use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
 use protob::PqrsDecoder;
-use stream::decode_leading_varint;
 use std::fs::File;
 use std::io::{self, Write, Read, BufReader};
 use std::process;
@@ -87,7 +85,7 @@ fn main() {
         None => Box::new(stdin.lock()),
     };
 
-    let mut buf = match args.flag_stream {
+    let buf = match args.flag_stream {
         false => {
             let mut buf = Vec::new();
             match infile.read_to_end(&mut buf) {
@@ -112,5 +110,5 @@ fn main() {
         }
     };
 
-    decode_single(&pqrs_decoder, &buf, &mut stdout.lock()).unwrap();
+    decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
 }
