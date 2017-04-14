@@ -85,7 +85,7 @@ fn main() {
         None => Box::new(stdin.lock()),
     };
 
-    if args.flag_stream {
+    if !args.flag_stream {
         let mut buf = Vec::new();
         match infile.read_to_end(&mut buf) {
             Ok(_) => (),
@@ -98,6 +98,7 @@ fn main() {
     } else {
         let (leading_varint_bytesize, mut size) = discover_leading_varint_size(&mut infile)
             .unwrap();
+        println!("{:?} {:?}", leading_varint_bytesize, size);
         loop {
             let mut buf = vec![0; size as usize];
             infile.read_exact(&mut buf).unwrap();

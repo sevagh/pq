@@ -33,10 +33,10 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
 
 pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<(), PqrsError> {
     let mut leading_varint: &'static [u8] = b"
-    K
-    leading_varint.protoxyz.sevag.pqrs\"#
-    \rLeadingVarint
-    size (Rsize";
+K
+leading_varint.protoxyz.sevag.pqrs\"#
+\rLeadingVarint
+size (Rsize";
 
     let proto = parse_from_reader(&mut leading_varint).unwrap();
     let descriptors = Descriptors::from_proto(&proto);
@@ -52,9 +52,7 @@ pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<()
                 Value::U16(ref y) => *y as u64,
                 Value::U32(ref y) => *y as u64,
                 Value::U64(ref y) => *y as u64,
-                _ => {
-                    return Err(PqrsError::NoLeadingVarintError());
-                }
+                _ => return Err(PqrsError::NoLeadingVarintError()),
             }
         }
         Ok(_) | Err(_) => return Err(PqrsError::CouldNotDecodeError()),
@@ -68,10 +66,7 @@ pub fn discover_leading_varint_size(infile: &mut Read) -> Result<(i32, u64), Pqr
     let mut buf = Vec::new();
     while !decode_leading_varint(&buf, &mut next_proto_size).is_ok() {
         let mut tmpbuf = vec![0; 1];
-        match infile.read_exact(&mut tmpbuf) {
-            Ok(_) => (),
-            Err(_) => return Err(PqrsError::NoLeadingVarintError()),
-        }
+        infile.read_exact(&mut tmpbuf).unwrap();
         buf.append(&mut tmpbuf);
         leading_varint_bytesize += 1;
     }
