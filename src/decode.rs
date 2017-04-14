@@ -38,7 +38,8 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
     Err(PqrsError::CouldNotDecodeError())
 }
 
-pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut i32) -> Result<(), PqrsError> {
+pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<(), PqrsError> {
+    println!("Contents of lead:\n\t{:?}", lead);
     let mut leading_varint = LEADING_VARINT.clone();
 
     let proto = parse_from_reader(&mut leading_varint).unwrap();
@@ -46,11 +47,20 @@ pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut i32) -> Result<()
     let byte_is = CodedInputStream::from_bytes(lead);
 
     let mut deserializer = Deserializer::for_named_message(&descriptors, ".xyz.sevag.pqrs.LeadingVarint", byte_is).unwrap();
-   let value = match Value::deserialize(&mut deserializer) {
-       Ok(x) => x,
-       Err(_) => return Err(PqrsError::CouldNotDecodeError()),
+    *resulting_size = match Value::deserialize(&mut deserializer) {
+        Ok(Value::Map(x)) => {
+            let val = match *x.values().nth(0).unwrap() {
+                Value::U8(ref y) => *y as u64,
+                Value::U16(ref y) => *y as u64,
+                Value::U32(ref y) => *y as u64,
+                Value::U64(ref y) => *y as u64,
+                _ => {
+                    return Err(PqrsError::NoLeadingVarintError());
+                }
+            };
+            val
+        }
+        Ok(_) | Err(_) => return Err(PqrsError::CouldNotDecodeError()),
     };
-    println!("{:?}", value);
-    *resulting_size = 1337;
     Ok(())
 }

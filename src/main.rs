@@ -21,6 +21,8 @@ use protob::PqrsDecoder;
 use std::fs::File;
 use std::io::{self, Write, Read, BufReader};
 use std::process;
+use std::thread::sleep;
+use std::time::Duration;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -100,11 +102,15 @@ fn main() {
         true => {
             let mut next_proto_size = 0;
             let mut buf = Vec::new();
+            println!("HERE: PRE");
             while !decode_leading_varint(&buf, &mut next_proto_size).is_ok() {
+                println!("HERE: Not ok");
                 let mut tmpbuf = vec![0; 1];
                 infile.read_exact(&mut tmpbuf);
                 buf.append(&mut tmpbuf);
+                sleep(Duration::new(1, 0));
             }
+            println!("HERE: OK");
             println!("RESULTING SIZE: {:#?}", next_proto_size);
             process::exit(0);
         }
