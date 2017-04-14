@@ -8,12 +8,6 @@ use serde_protobuf::de::Deserializer;
 use serde_protobuf::descriptor::Descriptors;
 use serde_value::Value;
 
-const LEADING_VARINT: &'static [u8] = b"
-K
-leading_varint.protoxyz.sevag.pqrs\"#
-\rLeadingVarint
-size (Rsize";
-
 pub fn decode_single(pqrs_decoder: &PqrsDecoder,
                      buf: &[u8],
                      mut out: &mut Write,
@@ -38,7 +32,11 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
 }
 
 pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<(), PqrsError> {
-    let mut leading_varint = LEADING_VARINT.clone();
+    let mut leading_varint: &'static [u8] = b"
+    K
+    leading_varint.protoxyz.sevag.pqrs\"#
+    \rLeadingVarint
+    size (Rsize";
 
     let proto = parse_from_reader(&mut leading_varint).unwrap();
     let descriptors = Descriptors::from_proto(&proto);
