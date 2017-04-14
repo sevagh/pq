@@ -10,14 +10,12 @@ extern crate serde_json;
 
 mod error;
 mod discovery;
-mod protob;
 mod decode;
 
-use decode::{decode_single, decode_size};
 use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
-use protob::PqrsDecoder;
+use decode::{PqrsDecoder, decode_size};
 use std::fs::File;
 use std::io::{self, Write, Read, BufReader};
 use std::process;
@@ -69,7 +67,7 @@ fn main() {
         Err(e) => panic!(e),
     };
 
-    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets).unwrap();
+    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets, false).unwrap();
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
@@ -94,7 +92,9 @@ fn main() {
                 process::exit(-1);
             }
         }
-        decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
+        pqrs_decoder
+            .decode_message(&buf, &mut stdout.lock())
+            .unwrap();
     } else {
         loop {
             let mut msg_size = 0;
@@ -107,7 +107,9 @@ fn main() {
             }
             let mut msg_buf = vec![0; msg_size as usize];
             infile.read_exact(&mut msg_buf).unwrap();
-            decode_single(&pqrs_decoder, &msg_buf, &mut stdout.lock(), true).unwrap();
+            pqrs_decoder
+                .decode_message(&msg_buf, &mut stdout.lock())
+                .unwrap();
         }
     }
 }
