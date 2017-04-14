@@ -26,11 +26,12 @@ const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [--fdsets=<path>] [<infile>] [--stream]
+  pq [--msgtype=<msgtype>] [--fdsets=<path>] [<infile>] [--stream] [--force]
   pq (--help | --version)
 
 Options:
   --stream              Varint size-delimited stream
+  --force               Force decode message
   --msgtype=<msgtype>   Message type e.g. com.example.Type
   --fdsets=<path>       Alternative path to fdsets
   --help                Show this screen.
@@ -43,6 +44,7 @@ struct Args {
     pub flag_msgtype: Option<String>,
     pub flag_fdsets: Option<String>,
     pub flag_stream: bool,
+    pub flag_force: bool,
     flag_version: bool,
 }
 
@@ -67,7 +69,7 @@ fn main() {
         Err(e) => panic!(e),
     };
 
-    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets, false).unwrap();
+    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets, args.flag_force).unwrap();
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {

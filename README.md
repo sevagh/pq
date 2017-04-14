@@ -46,7 +46,7 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 
 ### Forced decoding
 
-The default behavior of `pqrs` is to try to brute-force decode a message. Given a 20-byte message:
+Use `--force` to try to brute-force decode a message. E.g., given a 20-byte message:
 
 ```
 while (don't have decode result)
@@ -63,10 +63,6 @@ while (don't have decode result)
 
     # repeat until success or no bytes left
 ```
-
-I thought of making this option toggleable, but in practise it's rare to have a pristine proto message. It could have a leading varint, a trailing EOF, anything. Therefore, I'd prefer `pqrs` to be robust by default.
-
-This will lead to terrible performance for any protos that are off by more than 2 bytes.
 
 ### Message guessing
 
