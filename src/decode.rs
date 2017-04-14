@@ -1,5 +1,5 @@
 use protob::PqrsDecoder;
-use std::io::Write;
+use std::io::{Read, Write};
 use protobuf::{CodedInputStream, parse_from_reader};
 use error::PqrsError;
 use std::result::Result;
@@ -39,7 +39,6 @@ pub fn decode_single(pqrs_decoder: &PqrsDecoder,
 }
 
 pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<(), PqrsError> {
-    println!("Contents of lead:\n\t{:?}", lead);
     let mut leading_varint = LEADING_VARINT.clone();
 
     let proto = parse_from_reader(&mut leading_varint).unwrap();
@@ -63,4 +62,20 @@ pub fn decode_leading_varint(lead: &[u8], resulting_size: &mut u64) -> Result<()
         Ok(_) | Err(_) => return Err(PqrsError::CouldNotDecodeError()),
     };
     Ok(())
+}
+
+pub fn discover_leading_varint_size(infile: &mut Read) -> Result<(i32, u64), PqrsError> {
+    let mut leading_varint_bytesize = 0;
+    let mut next_proto_size = 0;
+    let mut buf = Vec::new();
+    while !decode_leading_varint(&buf, &mut next_proto_size).is_ok() {
+        let mut tmpbuf = vec![0; 1];
+        match infile.read_exact(&mut tmpbuf) {
+            Ok(_) => (),
+            Err(_) => return Err(PqrsError::NoLeadingVarintError()),
+        }
+        buf.append(&mut tmpbuf);
+        leading_varint_bytesize += 1;
+    }
+    Ok((leading_varint_bytesize, next_proto_size))
 }

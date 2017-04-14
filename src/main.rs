@@ -13,7 +13,7 @@ mod discovery;
 mod protob;
 mod decode;
 
-use decode::{decode_single, decode_leading_varint};
+use decode::{decode_single, decode_leading_varint, discover_leading_varint_size};
 use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
@@ -21,8 +21,6 @@ use protob::PqrsDecoder;
 use std::fs::File;
 use std::io::{self, Write, Read, BufReader};
 use std::process;
-use std::thread::sleep;
-use std::time::Duration;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -87,7 +85,7 @@ fn main() {
         None => Box::new(stdin.lock()),
     };
 
-    let buf = match args.flag_stream {
+    match args.flag_stream {
         false => {
             let mut buf = Vec::new();
             match infile.read_to_end(&mut buf) {
@@ -97,24 +95,14 @@ fn main() {
                     process::exit(-1);
                 }
             }
-            buf
+            decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
         }
         true => {
-            let mut next_proto_size = 0;
-            let mut buf = Vec::new();
-            println!("HERE: PRE");
-            while !decode_leading_varint(&buf, &mut next_proto_size).is_ok() {
-                println!("HERE: Not ok");
-                let mut tmpbuf = vec![0; 1];
-                infile.read_exact(&mut tmpbuf);
-                buf.append(&mut tmpbuf);
-                sleep(Duration::new(1, 0));
-            }
-            println!("HERE: OK");
-            println!("RESULTING SIZE: {:#?}", next_proto_size);
-            process::exit(0);
+            let (leading_varint_bytesize, first_proto_size) = discover_leading_varint_size(&mut infile).unwrap();
+            let mut buf = vec![0; first_proto_size as usize];
+            infile.read_exact(&mut buf).unwrap();
+            decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
         }
-    };
-
-    decode_single(&pqrs_decoder, &buf, &mut stdout.lock(), true).unwrap();
+    }
 }
+

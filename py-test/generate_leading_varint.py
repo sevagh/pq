@@ -2,11 +2,12 @@
 
 import leading_varint_pb2
 import sys
+import random
 
 
 def gen_leading_varint():
     lv = leading_varint_pb2.LeadingVarint()
-    lv.size = 1337
+    lv.size = random.choice(range(0, 1503))
     return lv.SerializeToString()
 
 
