@@ -10,12 +10,14 @@ extern crate serde_json;
 
 mod error;
 mod discovery;
-mod protob;
+mod decode;
+mod length;
 
 use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
-use protob::PqrsDecoder;
+use decode::PqrsDecoder;
+use length::{LengthDelimiter, Parse};
 use std::fs::File;
 use std::io::{self, Write, Read, BufReader};
 use std::process;
@@ -26,10 +28,12 @@ const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [--fdsets=<path>] [<infile>]
+  pq [--msgtype=<msgtype>] [--fdsets=<path>] [<infile>] [--stream] [--force]
   pq (--help | --version)
 
 Options:
+  --stream              Varint size-delimited stream
+  --force               Force decode message
   --msgtype=<msgtype>   Message type e.g. com.example.Type
   --fdsets=<path>       Alternative path to fdsets
   --help                Show this screen.
@@ -41,6 +45,8 @@ struct Args {
     pub arg_infile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_fdsets: Option<String>,
+    pub flag_stream: bool,
+    pub flag_force: bool,
     flag_version: bool,
 }
 
@@ -54,6 +60,18 @@ fn main() {
     let stderr = io::stderr();
 
     let mut stderr = stderr.lock();
+
+    let fdsets = match discover_fdsets(args.flag_fdsets) {
+        Ok(x) => x,
+        Err(PqrsError::InitError(_)) |
+        Err(PqrsError::EmptyFdsetError()) => {
+            writeln!(&mut stderr, "Could not find fdsets").unwrap();
+            process::exit(-1);
+        }
+        Err(e) => panic!(e),
+    };
+
+    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets, args.flag_force).unwrap();
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
@@ -69,44 +87,34 @@ fn main() {
         None => Box::new(stdin.lock()),
     };
 
-    let mut buf = Vec::new();
-    match infile.read_to_end(&mut buf) {
-        Ok(_) => (),
-        Err(_) => {
-            writeln!(&mut stderr, "Could not real file to end").unwrap();
-            process::exit(-1);
-        }
-    }
-
-    let fdsets = match discover_fdsets(args.flag_fdsets) {
-        Ok(x) => x,
-        Err(PqrsError::InitError(_)) |
-        Err(PqrsError::EmptyFdsetError()) => {
-            writeln!(&mut stderr, "Could not find fdsets").unwrap();
-            process::exit(-1);
-        }
-        Err(e) => panic!(e),
-    };
-
-    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets).unwrap();
-    forcefully_decode(&pqrs_decoder, &buf, &mut stdout.lock()).unwrap();
-}
-
-fn forcefully_decode(pqrs_decoder: &PqrsDecoder,
-                     buf: &[u8],
-                     mut out: &mut Write)
-                     -> Result<(), PqrsError> {
-    let mut offset = 0;
-    let buflen = buf.len();
-    while offset < buflen {
-        for n in 0..offset + 1 {
-            if pqrs_decoder
-                   .decode_message(&buf[n..(buflen - offset + n)], &mut out)
-                   .is_ok() {
-                return Ok(());
+    if !args.flag_stream {
+        let mut buf = Vec::new();
+        match infile.read_to_end(&mut buf) {
+            Ok(_) => (),
+            Err(_) => {
+                writeln!(&mut stderr, "Could not real file to end").unwrap();
+                process::exit(-1);
             }
         }
-        offset += 1;
+        pqrs_decoder
+            .decode_message(&buf, &mut stdout.lock())
+            .unwrap();
+    } else {
+        let mut delim = LengthDelimiter::U32();
+        loop {
+            let mut msg_size: usize = 0;
+            let mut msg_size_buf = vec![0; 0];
+            let mut temp_buf = vec![0; 1];
+            infile.read_exact(&mut msg_size_buf).unwrap();
+            while !delim.parse(&msg_size_buf, &mut msg_size).is_ok() {
+                infile.read_exact(&mut temp_buf).unwrap();
+                msg_size_buf.append(&mut temp_buf);
+            }
+            let mut msg_buf = vec![0; msg_size as usize];
+            infile.read_exact(&mut msg_buf).unwrap();
+            pqrs_decoder
+                .decode_message(&msg_buf, &mut stdout.lock())
+                .unwrap();
+        }
     }
-    Err(PqrsError::CouldNotDecodeError())
 }

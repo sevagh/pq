@@ -16,10 +16,14 @@ use protobuf::error::ProtobufError;
 pub struct PqrsDecoder {
     pub loaded_descs: LoadedDescriptors,
     pub message_type: String,
+    pub force: bool,
 }
 
 impl PqrsDecoder {
-    pub fn new(msgtype: &Option<String>, fdsets: &[PathBuf]) -> Result<PqrsDecoder, PqrsError> {
+    pub fn new(msgtype: &Option<String>,
+               fdsets: &[PathBuf],
+               force: bool)
+               -> Result<PqrsDecoder, PqrsError> {
         let mut load_mds = true;
         let loc_msg_type = match *msgtype {
             Some(ref x) => {
@@ -36,10 +40,11 @@ impl PqrsDecoder {
         Ok(PqrsDecoder {
                loaded_descs: loaded_descs,
                message_type: loc_msg_type,
+               force: force,
            })
     }
 
-    pub fn decode_message(&self, data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
+    fn decode_message_(&self, data: &[u8], out: &mut Write) -> Result<(), PqrsError> {
         let mut serializer = Serializer::new(out);
         if !self.loaded_descs.message_descriptors.is_empty() {
             let contenders = discover_contenders(data,
@@ -62,6 +67,24 @@ impl PqrsDecoder {
             }
         }
         Ok(())
+    }
+
+    pub fn decode_message(&self, buf: &[u8], mut out: &mut Write) -> Result<(), PqrsError> {
+        if !self.force {
+            return self.decode_message_(buf, &mut out);
+        }
+        let mut offset = 0;
+        let buflen = buf.len();
+        while offset < buflen {
+            for n in 0..offset + 1 {
+                if self.decode_message_(&buf[n..(buflen - offset + n)], &mut out)
+                       .is_ok() {
+                    return Ok(());
+                }
+            }
+            offset += 1;
+        }
+        Err(PqrsError::CouldNotDecodeError())
     }
 }
 

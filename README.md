@@ -9,11 +9,10 @@
 1. [Usage](#usage)
 2. [Forced decoding](#forced-decoding)
 3. [Message guessing](#message-guessing)
-4. [Portability with musl](#portability-with-musl)
-5. [Dependencies](#dependencies)
-6. [Tests](#tests)
-7. [Goals](#goals)
-8. [Todo](#todo)
+4. [Streaming](#streaming)
+5. [Portability with musl](#portability-with-musl)
+6. [Dependencies](#dependencies)
+7. [Tests](#tests)
 
 ### Usage
 
@@ -45,7 +44,7 @@ sevag:pqrs $ ./py-test/generate_random_proto.py | pq | jq
 
 ### Forced decoding
 
-The default behavior of `pqrs` is to try to brute-force decode a message. Given a 20-byte message:
+Use `--force` to try to brute-force decode a message. E.g., given a 20-byte message:
 
 ```
 while (don't have decode result)
@@ -63,10 +62,6 @@ while (don't have decode result)
     # repeat until success or no bytes left
 ```
 
-I thought of making this option toggleable, but in practise it's rare to have a pristine proto message. It could have a leading varint, a trailing EOF, anything. Therefore, I'd prefer `pqrs` to be robust by default.
-
-This will lead to terrible performance for any protos that are off by more than 2 bytes.
-
 ### Message guessing
 
 `pqrs` by default will guess the message type. You can make it use a specific type by passing the fully qualified message name, e.g. `pq --msgtype="com.example.dog.Dog"`.
@@ -80,6 +75,14 @@ This will lead to terrible performance for any protos that are off by more than 
 * Display the `BTreeMap` from the vector which has the most fields
 
 Since protobuf treats fields as positional, similar protos (e.g. Dog: <Int: age, String: breed>, Person: <Int: ssn, String: name>) are indistinguishable.
+
+### Streaming
+
+I treat streams the way it's done by Google in [delimited_message_util](https://github.com/google/protobuf/blob/master/src/google/protobuf/util/delimited_message_util.cc#L28).
+
+Basically, each message is preceded with a raw `varint32` containing the length of the message. Different streaming strategies are possible. I need to come up with a way to accomodate them all.
+
+In [length.rs](./src/length.rs) I got started on an enum to allow different types of length-delimiting. For instance I'm planning on adding `leb128` in addition to `varint32` which is implemented. This will probably be toggleable with a switch (i.e. `--delimiter="leb128|varint32"`).
 
 ### Portability with musl
 
@@ -126,12 +129,3 @@ There is no linting in the Travis-CI job because it takes too long, but there is
 ### Goals
 
 The original goal was to make a UNIX-y tool for generalized protobuf pretty-printing. Since `jq` already exists, I dropped the pretty-printing requirement and just output ugly JSON.
-
-A new goal is handling a stream of protobuf data.
-
-### Todo
-
-* Proper testing. CI with `py-test/`, Rust tests, etc.
-* Figure out how to handle streams (delimiters, etc.?)
-* Release on `crates.io`
-* Host static binary on github releases for download

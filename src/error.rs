@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum PqrsError {
+    NoLeadingVarintError(),
     NoContenderError(),
     EmptyFdsetError(),
     CouldNotDecodeError(),
