@@ -13,8 +13,6 @@
 5. [Portability with musl](#portability-with-musl)
 6. [Dependencies](#dependencies)
 7. [Tests](#tests)
-8. [Goals](#goals)
-9. [Todo](#todo)
 
 ### Usage
 
@@ -84,6 +82,8 @@ I treat streams the way it's done by Google in [delimited_message_util](https://
 
 Basically, each message is preceded with a raw `varint32` containing the length of the message. Different streaming strategies are possible. I need to come up with a way to accomodate them all.
 
+In [length.rs](./src/length.rs) I got started on an enum to allow different types of length-delimiting. For instance I'm planning on adding `leb128` in addition to `varint32` which is implemented. This will probably be toggleable with a switch (i.e. `--delimiter="leb128|varint32"`).
+
 ### Portability with musl
 
 First, clone and compile `musl-gcc` on your system:
@@ -129,12 +129,3 @@ There is no linting in the Travis-CI job because it takes too long, but there is
 ### Goals
 
 The original goal was to make a UNIX-y tool for generalized protobuf pretty-printing. Since `jq` already exists, I dropped the pretty-printing requirement and just output ugly JSON.
-
-A new goal is handling a stream of protobuf data.
-
-### Todo
-
-* Proper testing. CI with `py-test/`, Rust tests, etc.
-* Figure out how to handle streams (delimiters, etc.?)
-* Release on `crates.io`
-* Host static binary on github releases for download
