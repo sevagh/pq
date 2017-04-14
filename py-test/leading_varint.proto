@@ -1,5 +1,0 @@
-package xyz.sevag.pqrs;
-
-message LeadingVarint {
-    required uint64 size = 1;
-} 

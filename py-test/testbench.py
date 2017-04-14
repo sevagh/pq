@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import leading_varint_pb2
 import dog_pb2
 import person_pb2
 import sys
