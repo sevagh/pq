@@ -12,8 +12,8 @@ pub trait Parse {
 impl Parse for LengthDelimiter {
     fn parse(&mut self, buf: &[u8], size: &mut usize) -> Result<(), PqrsError> {
         let mut instream = CodedInputStream::from_bytes(buf);
-        match self {
-            &mut LengthDelimiter::U32() => {
+        match *self {
+            LengthDelimiter::U32() => {
                 *size = match instream.read_raw_varint32() {
                     Ok(y) => y as usize,
                     _ => return Err(PqrsError::NoLeadingVarintError()),
