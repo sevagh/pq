@@ -6,9 +6,7 @@
 
 ### Download
 
-`pqrs` is on [crates.io](https://crates.io/crates/pq): `cargo install pq`
-
-You can also download a static binary from the [releases page](https://github.com/sevagh/pqrs/releases).
+pqrs is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pqrs/releases).
 
 ### Usage
 
