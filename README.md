@@ -1,9 +1,8 @@
-# pqrs [![Travis](https://img.shields.io/travis/sevagh/pqrs.svg)](https://travis-ci.org/sevagh/pqrs) [![GitHub release](https://img.shields.io/github/release/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/releases) [![GitHub tag](https://img.shields.io/github/tag/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/releases) [![license](https://img.shields.io/github/license/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/blob/master/LICENSE)
+# pqrs [![Travis](https://img.shields.io/travis/sevagh/pqrs.svg)](https://travis-ci.org/sevagh/pqrs) [![GitHub tag](https://img.shields.io/github/tag/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/releases) [![license](https://img.shields.io/github/license/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/blob/master/LICENSE) [![Crates.io](https://img.shields.io/crates/d/pq.svg)](https://crates.io/crates/pq) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq)
+
 ### protobuf to json deserializer, written in Rust
 
 `pqrs` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
-
-### Now on crates.io [![Crates.io](https://img.shields.io/crates/d/pq.svg)](https://crates.io/crates/pq) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq)
 
 ### Usage
 
