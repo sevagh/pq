@@ -23,6 +23,12 @@ def gen_dog():
     return dog.SerializeToString()
 
 
+def gen_null_dog():
+    dog = dog_pb2.Dog(age=1337,
+                      breed='st.bernard')
+    return dog.SerializeToString()
+
+
 if __name__ == '__main__':
     gen_funcs = [gen_person, gen_dog]
     if len(sys.argv) != 2:
@@ -39,3 +45,5 @@ if __name__ == '__main__':
         sys.stdout.buffer.write([b'1zk&', b'ksfU', b'^M^M']
                                 [random.choice(range(0, 3))] +
                                 gen_funcs[random.choice(range(0, 2))]() + b'\n')
+    elif sys.argv[1] == 'null':
+        sys.stdout.buffer.write(gen_null_dog())
