@@ -43,9 +43,14 @@ pq - jq for protobuf - parse protobuf generically
       name e.g. 'com.example.dog.Dog'. Default behavior is to try to guess the
       message type. Guessing and msgtype apply to every message in a stream.
     <div style="height: 1.00em;">&#160;</div>
-    <b>**WARNING**:</b> since protobuf treats fields as positional, similar
+    <b>**WARNING 1**:</b> since protobuf treats fields as positional, similar
       protos (e.g. Dog: &lt;Int: age, String: breed&gt;, Person: &lt;Int: ssn,
-      String: name&gt;) are indistinguishable.</dd>
+      String: name&gt;) are indistinguishable.
+    <div style="height: 1.00em;">&#160;</div>
+    <b>**WARNING 2**:</b> guessing cannot distinguish between user-specified
+      nulls and empty fields. E.g., if you specify an &lt;Int, String,
+      String&gt; as &lt;5, &quot;hello&quot;, null&gt;, pqrs discards the
+      correct schema because of the null.</dd>
 </dl>
 <dl class="Bl-tag">
   <dt class="It-tag"><b>--stream</b></dt>

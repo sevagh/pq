@@ -21,8 +21,11 @@ Read message from a file. Default is stdin.
 .br
 Use this message type to decode protobuf - must be a fully qualified message name e.g. 'com.example.dog.Dog'. Default behavior is to try to guess the message type. Guessing and msgtype apply to every message in a stream.
 
-.B **WARNING**:
+.B **WARNING 1**:
 since protobuf treats fields as positional, similar protos (e.g. Dog: <Int: age, String: breed>, Person: <Int: ssn, String: name>) are indistinguishable.
+
+.B **WARNING 2**:
+guessing cannot distinguish between user-specified nulls and empty fields. E.g., if you specify an <Int, String, String> as <5, "hello", null>, pqrs discards the correct schema because of the null.
 .TP
 .BR \-\-stream\fR
 .br
