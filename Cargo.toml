@@ -1,11 +1,16 @@
 [package]
 name = "pq"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
 repository = "https://github.com/sevagh/pqrs"
 documentation = "http://pqrs.sevag.xyz"
+readme = "./README.md"
 license = "MIT"
+keywords = ["protobuf", "serde"]
+
+[badges]
+travis-ci = { repository = "https://travis-ci.org/sevagh/pqrs", branch = "master" }
 
 [dependencies]
 docopt = "0.7"
