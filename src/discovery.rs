@@ -55,7 +55,7 @@ impl LoadedDescriptors {
 pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
     let mut fdset_files = Vec::new();
 
-    let path = match env::var("FDSETS_PATH") {
+    let path = match env::var("FDSET_PATH") {
         Ok(x) => PathBuf::from(x),
         Err(_) => {
             let mut home = match env::home_dir() {
