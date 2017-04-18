@@ -27,9 +27,9 @@ impl Parse for StreamDelimiter {
                         let mut concat: u64 = 0;
                         for i in (0..varint_buf.len()).rev() {
                             let chop = varint_buf[i] & 0b01111111; //chop off msb
-                            let shift_amount: u32 = (i as u32)*8u32.pow(i as u32) - 1*(i as u32); 
+                            let shift_amount: u32 = (i as u32) * 8u32.pow(i as u32) - i as u32;
                             let shift: u64 = (chop as u64) << shift_amount;
-                            concat = concat + shift;
+                            concat += shift;
                         }
                         *size = concat as usize;
                         break;
@@ -52,7 +52,7 @@ mod tests {
         let mut delimiter = StreamDelimiter::Varint();
         delimiter.parse(&mut buf, &mut size).unwrap();
         assert_eq!(1, size);
-    } 
+    }
 
     #[test]
     fn test_varint_delimiter_longer() {
