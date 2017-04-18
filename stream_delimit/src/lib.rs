@@ -21,20 +21,18 @@ impl Parse for StreamDelimiter {
                 let mut tmpbuf = vec![0; 1];
                 loop {
                     read.read_exact(&mut tmpbuf).unwrap();
-                    let chopped_last = tmpbuf[0];
+                    let chopped_msb = (tmpbuf[0] & 0b10000000) >> 7;
                     varint_buf.append(&mut tmpbuf.clone());
-                    if chopped_last >> 7 != 0x1 as u8 {
-                        println!("No MSB! End found");
+                    if chopped_msb != 0x1 as u8 {
                         let mut concat: u64 = 0;
-                        println!("LEN: {:?}", varint_buf.len());
                         for i in (0..varint_buf.len()).rev() {
-                            println!("Concatenating: {:0>8b}", varint_buf[i]);
-                            concat = concat + ((varint_buf[i] << 8i32.pow(i as u32)) as u64) >> 1;
+                            let chop = varint_buf[i] & 0b01111111; //chop off msb
+                            let shift_amount: u32 = (i as u32)*8u32.pow(i as u32) - 1*(i as u32); 
+                            let shift: u64 = (chop as u64) << shift_amount;
+                            concat = concat + shift;
                         }
                         *size = concat as usize;
                         break;
-                    } else {
-                        println!("Still looking for no-MSB!");
                     }
                 }
             }
