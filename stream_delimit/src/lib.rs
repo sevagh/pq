@@ -6,7 +6,7 @@ pub enum StreamDelimitError {
 }
 
 pub enum StreamDelimiter {
-    Varint(u32),
+    Varint(usize),
 }
 
 pub trait Parse {
@@ -17,12 +17,11 @@ impl Parse for StreamDelimiter {
     fn parse(&mut self, read: &mut Read, size: &mut usize) -> Result<(), StreamDelimitError> {
         match *self {
             StreamDelimiter::Varint(max_attempts) => {
-                let mut varint_buf = Vec::new();
-                let mut tmpbuf = vec![0; 1];
-                for _ in 0..max_attempts {
-                    read.read_exact(&mut tmpbuf).unwrap();
-                    let chopped_msb = (tmpbuf[0] & 0b10000000) >> 7;
-                    varint_buf.append(&mut tmpbuf.clone());
+                let mut varint_buf: Vec<u8> = Vec::with_capacity(max_attempts);
+                for i in 0..max_attempts {
+                    varint_buf.push(0u8);
+                    read.read_exact(&mut varint_buf[i..]).unwrap();
+                    let chopped_msb = (varint_buf[i] & 0b10000000) >> 7;
                     if chopped_msb != 0x1 as u8 {
                         let mut concat: u64 = 0;
                         for i in (0..varint_buf.len()).rev() {
@@ -49,7 +48,7 @@ mod tests {
     fn test_simple() {
         let mut buf: &[u8] = &[0x01];
         let mut size: usize = 0;
-        let mut delimiter = StreamDelimiter::Varint();
+        let mut delimiter = StreamDelimiter::Varint(16);
         delimiter.parse(&mut buf, &mut size).unwrap();
         assert_eq!(1, size);
     }
@@ -58,7 +57,7 @@ mod tests {
     fn test_varint_delimiter_longer() {
         let mut buf: &[u8] = &[0xACu8, 0x02u8];
         let mut size: usize = 0;
-        let mut delimiter = StreamDelimiter::Varint();
+        let mut delimiter = StreamDelimiter::Varint(16);
         delimiter.parse(&mut buf, &mut size).unwrap();
         assert_eq!(300, size);
     }
