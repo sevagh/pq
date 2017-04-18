@@ -46,7 +46,6 @@ mod tests {
     use super::{StreamDelimiter, Parse};
 
     #[test]
-    #[ignore]
     fn test_simple() {
         let mut buf: &[u8] = &[0x01];
         let mut size: usize = 0;

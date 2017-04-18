@@ -98,16 +98,10 @@ fn main() {
             .decode_message(&buf, &mut stdout.lock())
             .unwrap();
     } else {
-        let mut delim = StreamDelimiter::U32();
+        let mut delim = StreamDelimiter::Varint();
+        let mut msg_size: usize = 0;
         loop {
-            let mut msg_size: usize = 0;
-            let mut msg_size_buf = vec![0; 0];
-            let mut temp_buf = vec![0; 1];
-            infile.read_exact(&mut msg_size_buf).unwrap();
-            while !delim.parse(&msg_size_buf, &mut msg_size).is_ok() {
-                infile.read_exact(&mut temp_buf).unwrap();
-                msg_size_buf.append(&mut temp_buf);
-            }
+            delim.parse(&mut infile, &mut msg_size).unwrap();
             let mut msg_buf = vec![0; msg_size as usize];
             infile.read_exact(&mut msg_buf).unwrap();
             pqrs_decoder
