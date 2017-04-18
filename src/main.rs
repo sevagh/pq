@@ -7,17 +7,17 @@ extern crate serde;
 extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
+extern crate stream_delimit;
 
 mod error;
 mod discovery;
 mod decode;
-mod length;
 
 use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::PqrsError;
 use decode::PqrsDecoder;
-use length::{LengthDelimiter, Parse};
+use stream_delimit::{StreamDelimiter, Parse};
 use std::fs::File;
 use std::io::{self, Write, Read, BufReader};
 use std::process;
@@ -98,16 +98,10 @@ fn main() {
             .decode_message(&buf, &mut stdout.lock())
             .unwrap();
     } else {
-        let mut delim = LengthDelimiter::U32();
+        let mut delim = StreamDelimiter::Varint(16);
+        let mut msg_size: usize = 0;
         loop {
-            let mut msg_size: usize = 0;
-            let mut msg_size_buf = vec![0; 0];
-            let mut temp_buf = vec![0; 1];
-            infile.read_exact(&mut msg_size_buf).unwrap();
-            while !delim.parse(&msg_size_buf, &mut msg_size).is_ok() {
-                infile.read_exact(&mut temp_buf).unwrap();
-                msg_size_buf.append(&mut temp_buf);
-            }
+            delim.parse(&mut infile, &mut msg_size).unwrap();
             let mut msg_buf = vec![0; msg_size as usize];
             infile.read_exact(&mut msg_buf).unwrap();
             pqrs_decoder

@@ -9,9 +9,6 @@ readme = "./README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
 
-[badges]
-travis-ci = { repository = "https://travis-ci.org/sevagh/pqrs", branch = "master" }
-
 [dependencies]
 docopt = "0.7"
 rustc-serialize = "0.3"
@@ -20,3 +17,12 @@ serde-value = "0.4.0"
 serde_json = "0.9.9"
 serde-protobuf = "0.5"
 protobuf = "1.2.1"
+stream_delimit = { path = "stream_delimit" }
+
+[workspace]
+members = ["stream_delimit"]
+
+[profile.release]
+debug = true
+lto = true
+panic = "abort"

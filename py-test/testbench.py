@@ -32,13 +32,17 @@ def gen_null_dog():
 if __name__ == '__main__':
     gen_funcs = [gen_person, gen_dog]
     if len(sys.argv) != 2:
-        print('Usage: {0} stream|single|dirty'.format(sys.argv[0]))
+        print('Usage: {0} stream|streamsingle|single|dirty'.format(sys.argv[0]))
         sys.exit(255)
     if sys.argv[1] == 'stream':
         while True:
             obj = gen_funcs[random.choice(range(0, 2))]()
             sys.stdout.buffer.write(encoder._VarintBytes(len(obj)) +
                                     obj)
+    if sys.argv[1] == 'streamsingle':
+        obj = gen_funcs[random.choice(range(0, 2))]()
+        print('LEN: {0}'.format(len(obj)))
+        sys.stdout.buffer.write(encoder._VarintBytes(len(obj)) + obj)
     elif sys.argv[1] == 'single':
         sys.stdout.buffer.write(gen_funcs[random.choice(range(0, 2))]())
     elif sys.argv[1] == 'dirty':

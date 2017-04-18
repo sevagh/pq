@@ -2,6 +2,7 @@ CARGO = $(PWD)/rust/bin/cargo
 export RUSTC = $(PWD)/rust/bin/rustc
 TARGET = x86_64-unknown-linux-musl
 CARGO_FLAGS += --target=$(TARGET)
+WORKSPACES = "./" "./stream_delimit/"
 
 RUSTUP_URL = https://static.rust-lang.org/rustup.sh
 
@@ -33,9 +34,12 @@ docs:
 	mandoc -Thtml pqrs.1 >docs/index.html
 
 lint:
-	rustup default stable && cargo fmt -- --write-mode=diff
-	rustup default nightly && cargo clippy
-	rustup default stable
+	@- $(foreach WORKSPACE,$(WORKSPACES), \
+		cd $(WORKSPACE) ;\
+		rustup default stable && cargo fmt -- --write-mode=diff ;\
+		rustup default nightly && cargo clippy ;\
+		rustup default stable ;\
+	)
 
 package: build
 	cd target/$(TARGET)/debug;\

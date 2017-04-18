@@ -1,15 +1,6 @@
 [root]
-name = "pq"
-version = "0.3.4"
-dependencies = [
- "docopt 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "protobuf 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 0.9.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde-protobuf 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde-value 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
-]
+name = "stream_delimit"
+version = "0.1.0"
 
 [[package]]
 name = "aho-corasick"
@@ -139,6 +130,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "num-traits 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
  "unreachable 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pq"
+version = "0.3.4"
+dependencies = [
+ "docopt 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "protobuf 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 0.9.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde-protobuf 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde-value 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 0.9.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "stream_delimit 0.1.0",
 ]
 
 [[package]]
