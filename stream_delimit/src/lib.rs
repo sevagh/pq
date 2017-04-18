@@ -6,7 +6,7 @@ pub enum StreamDelimitError {
 }
 
 pub enum StreamDelimiter {
-    Varint(),
+    Varint(u32),
 }
 
 pub trait Parse {
@@ -16,10 +16,10 @@ pub trait Parse {
 impl Parse for StreamDelimiter {
     fn parse(&mut self, read: &mut Read, size: &mut usize) -> Result<(), StreamDelimitError> {
         match *self {
-            StreamDelimiter::Varint() => {
+            StreamDelimiter::Varint(max_attempts) => {
                 let mut varint_buf = Vec::new();
                 let mut tmpbuf = vec![0; 1];
-                loop {
+                for _ in 0..max_attempts {
                     read.read_exact(&mut tmpbuf).unwrap();
                     let chopped_msb = (tmpbuf[0] & 0b10000000) >> 7;
                     varint_buf.append(&mut tmpbuf.clone());
@@ -32,12 +32,12 @@ impl Parse for StreamDelimiter {
                             concat += shift;
                         }
                         *size = concat as usize;
-                        break;
+                        return Ok(());
                     }
                 }
+                return Err(StreamDelimitError::NoLeadingVarintError())
             }
         }
-        Ok(())
     }
 }
 

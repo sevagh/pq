@@ -98,7 +98,7 @@ fn main() {
             .decode_message(&buf, &mut stdout.lock())
             .unwrap();
     } else {
-        let mut delim = StreamDelimiter::Varint();
+        let mut delim = StreamDelimiter::Varint(16);
         let mut msg_size: usize = 0;
         loop {
             delim.parse(&mut infile, &mut msg_size).unwrap();
