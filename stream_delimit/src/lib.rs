@@ -21,14 +21,11 @@ impl Parse for StreamDelimiter {
                 for i in 0..max_attempts {
                     varint_buf.push(0u8);
                     read.read_exact(&mut varint_buf[i..]).unwrap();
-                    let chopped_msb = (varint_buf[i] & 0b10000000) >> 7;
-                    if chopped_msb != 0x1 as u8 {
+                    if (varint_buf[i] & 0b10000000) >> 7 != 0x1 {
                         let mut concat: u64 = 0;
                         for i in (0..varint_buf.len()).rev() {
-                            let chop = varint_buf[i] & 0b01111111; //chop off msb
-                            let shift_amount: u32 = (i as u32) * 8u32.pow(i as u32) - i as u32;
-                            let shift: u64 = (chop as u64) << shift_amount;
-                            concat += shift;
+                            let i_ = i as u32;
+                            concat += ((varint_buf[i] & 0b01111111) as u64) << i_*(8u32.pow(i_) - 1);
                         }
                         *size = concat as usize;
                         return Ok(());
