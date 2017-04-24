@@ -67,11 +67,16 @@ pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
         }
     };
 
-    for p in read_dir(path.as_path()).unwrap() {
-        let path = p.unwrap().path();
-        if !path.is_dir() {
-            fdset_files.push(path);
+    match read_dir(path.as_path()) {
+        Ok(paths) => {
+            for p in paths {
+                let path = p.unwrap().path();
+                if !path.is_dir() {
+                    fdset_files.push(path);
+                }
+            }
         }
+        Err(_) => return Err(PqrsError::InitError(String::from("Could not open $HOME/.pq"))),
     }
     if fdset_files.is_empty() {
         return Err(PqrsError::EmptyFdsetError());
