@@ -1,4 +1,4 @@
-use error::PqrsError;
+use error::*;
 use std::env;
 use std::fs::{File, read_dir};
 use std::path::PathBuf;
@@ -14,7 +14,7 @@ pub struct LoadedDescriptors {
 impl LoadedDescriptors {
     pub fn from_fdsets(fdsets: &[PathBuf],
                        with_message_descriptors: bool)
-                       -> Result<LoadedDescriptors, PqrsError> {
+                       -> Result<LoadedDescriptors, LoadFdsetError> {
         let mut descriptors = Descriptors::new();
         let mut message_descriptors = Vec::new();
 
@@ -42,7 +42,7 @@ impl LoadedDescriptors {
         }
 
         if fdset_proto_load_ctr == 0 {
-            return Err(PqrsError::EmptyFdsetError());
+            return Err(LoadFdsetError::Error(String::from("No valid fdsets found")));
         }
         descriptors.resolve_refs();
         Ok(LoadedDescriptors {
@@ -52,7 +52,7 @@ impl LoadedDescriptors {
     }
 }
 
-pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
+pub fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
     let mut fdset_files = Vec::new();
 
     let path = match env::var("FDSET_PATH") {
@@ -60,7 +60,7 @@ pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
         Err(_) => {
             let mut home = match env::home_dir() {
                 Some(x) => x,
-                None => return Err(PqrsError::InitError(String::from("Could not find $HOME"))),
+                None => return Err(DiscoveryError::Error(String::from("$HOME not defined")))
             };
             home.push(".pq");
             home
@@ -76,10 +76,10 @@ pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
                 }
             }
         }
-        Err(_) => return Err(PqrsError::InitError(String::from("Could not open $HOME/.pq"))),
+        Err(_) => return Err(DiscoveryError::Error(format!("{} doesn't exist", path.to_string_lossy().into_owned().as_str())))
     }
     if fdset_files.is_empty() {
-        return Err(PqrsError::EmptyFdsetError());
+        return Err(DiscoveryError::Error(format!("No files in {}", path.to_string_lossy().into_owned().as_str())))
     }
     Ok(fdset_files)
 }

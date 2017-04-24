@@ -1,10 +1,14 @@
 #[derive(Debug)]
-pub enum PqrsError {
-    NoContenderError(),
-    EmptyFdsetError(),
-    CouldNotDecodeError(),
-    EofError(),
-    InitError(String),
-    SerdeError(String),
-    ProtobufError(String),
+pub enum DiscoveryError {
+    Error(String),
+}
+
+#[derive(Debug)]
+pub enum LoadFdsetError {
+    Error(String),
+}
+
+#[derive(Debug)]
+pub enum DecodeError {
+    Error(String),
 }
