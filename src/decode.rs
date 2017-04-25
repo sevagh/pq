@@ -2,7 +2,6 @@ use discovery::*;
 use error::*;
 use std::collections::BTreeMap;
 use std::io::Write;
-use std::path::PathBuf;
 use std::result::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
@@ -11,7 +10,6 @@ use serde_protobuf::error::{Error, ErrorKind};
 use serde_protobuf::descriptor::{Descriptors, MessageDescriptor};
 use serde_value::Value;
 use protobuf::CodedInputStream;
-use protobuf::error::ProtobufError;
 
 pub struct PqrsDecoder {
     pub loaded_descs: LoadedDescriptors,

@@ -14,7 +14,6 @@ mod discovery;
 mod decode;
 
 use docopt::Docopt;
-use error::*;
 use decode::PqrsDecoder;
 use stream_delimit::{StreamDelimiter, Parse};
 use std::fs::File;

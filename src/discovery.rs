@@ -73,6 +73,8 @@ fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
         }
     };
 
+    let path_str = path.to_string_lossy().into_owned();
+
     match read_dir(path.as_path()) {
         Ok(paths) => {
             for p in paths {
@@ -82,10 +84,10 @@ fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
                 }
             }
         }
-        Err(_) => return Err(DiscoveryError::NoFdsetPath(path.to_string_lossy().into_owned().as_str()))
+        Err(_) => return Err(DiscoveryError::NoFdsetPath(path_str))
     }
     if fdset_files.is_empty() {
-        return Err(DiscoveryError::NoFiles(path.to_string_lossy().into_owned().as_str()))
+        return Err(DiscoveryError::NoFiles(path_str))
     }
     Ok(fdset_files)
 }

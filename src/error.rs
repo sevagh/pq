@@ -13,8 +13,8 @@ pub enum PqrsError {
 #[derive(Debug)]
 pub enum DiscoveryError {
     NoHome,
-    NoFdsetPath(&'static str),
-    NoFiles(&'static str),
+    NoFdsetPath(String),
+    NoFiles(String),
 }
 
 #[derive(Debug)]
@@ -78,8 +78,8 @@ impl Error for DiscoveryError {
     fn description(&self) -> &str {
         match *self {
             DiscoveryError::NoHome => "$HOME not defined",
-            DiscoveryError::NoFdsetPath(ref path) => format!("Path {} doesn't exist", path).as_str(),
-            DiscoveryError::NoFiles(ref path) => format!("No files in path {}", path).as_str(),
+            DiscoveryError::NoFdsetPath(_) => "fdset_path doesn't exist",
+            DiscoveryError::NoFiles(_) => "no files in fdset_path",
         }
     }
 
@@ -91,35 +91,6 @@ impl Error for DiscoveryError {
         }
     }
 }
-
-/*
-#[derive(Debug)]
-pub enum DecodeError {
-    NoSuccessfulAttempts,
-    ProtobufError(ProtobufError),
-    SerdeProtobufError(serde_protobuf::error::Error),
-}
-
-impl Error for DiscoveryError {
-    fn description(&self) -> &str {
-        match *self {
-            DiscoveryError::NoHome => "$HOME not defined",
-            DiscoveryError::NoFdsetPath(ref path) => format!("Path {} doesn't exist", path).as_str(),
-            DiscoveryError::NoFiles(ref path) => format!("No files in path {}", path).as_str(),
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            DiscoveryError::NoHome => None,
-            DiscoveryError::NoFdsetPath(_) => None,
-            DiscoveryError::NoFiles(_) => None,
-        }
-    }
-}
-
-
-*/
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
