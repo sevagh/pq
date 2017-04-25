@@ -11,10 +11,16 @@ pub struct LoadedDescriptors {
     pub message_descriptors: Vec<MessageDescriptor>,
 }
 
+
+
 impl LoadedDescriptors {
-    pub fn from_fdsets(fdsets: &[PathBuf],
-                       with_message_descriptors: bool)
-                       -> Result<LoadedDescriptors, LoadFdsetError> {
+
+    pub fn new(with_message_descriptors: bool)
+               -> Result<LoadedDescriptors, PqrsError> {
+        let fdsets = match discover_fdsets() {
+            Ok(fdsets) => fdsets,
+            Err(e) => return Err(PqrsError::FdsetDiscoverError(e)),
+        };
         let mut descriptors = Descriptors::new();
         let mut message_descriptors = Vec::new();
 
@@ -42,7 +48,7 @@ impl LoadedDescriptors {
         }
 
         if fdset_proto_load_ctr == 0 {
-            return Err(LoadFdsetError::Error(String::from("No valid fdsets found")));
+            return Err(PqrsError::FdsetLoadError());
         }
         descriptors.resolve_refs();
         Ok(LoadedDescriptors {
@@ -52,7 +58,7 @@ impl LoadedDescriptors {
     }
 }
 
-pub fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
+fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
     let mut fdset_files = Vec::new();
 
     let path = match env::var("FDSET_PATH") {
@@ -60,7 +66,7 @@ pub fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
         Err(_) => {
             let mut home = match env::home_dir() {
                 Some(x) => x,
-                None => return Err(DiscoveryError::Error(String::from("$HOME not defined")))
+                None => return Err(DiscoveryError::NoHome),
             };
             home.push(".pq");
             home
@@ -76,10 +82,10 @@ pub fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
                 }
             }
         }
-        Err(_) => return Err(DiscoveryError::Error(format!("{} doesn't exist", path.to_string_lossy().into_owned().as_str())))
+        Err(_) => return Err(DiscoveryError::NoFdsetPath(path.to_string_lossy().into_owned().as_str()))
     }
     if fdset_files.is_empty() {
-        return Err(DiscoveryError::Error(format!("No files in {}", path.to_string_lossy().into_owned().as_str())))
+        return Err(DiscoveryError::NoFiles(path.to_string_lossy().into_owned().as_str()))
     }
     Ok(fdset_files)
 }

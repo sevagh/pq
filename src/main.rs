@@ -13,12 +13,12 @@ mod error;
 mod discovery;
 mod decode;
 
-use discovery::discover_fdsets;
 use docopt::Docopt;
 use error::*;
 use decode::PqrsDecoder;
 use stream_delimit::{StreamDelimiter, Parse};
 use std::fs::File;
+use std::error::Error;
 use std::io::{self, Write, Read, BufReader, StderrLock};
 use std::process;
 
@@ -59,21 +59,16 @@ fn main() {
 
     let stderr = stderr.lock();
 
-    let fdsets = match discover_fdsets() {
+    let pqrs_decoder = match PqrsDecoder::new(&args.flag_msgtype, args.flag_force) {
         Ok(x) => x,
-        Err(DiscoveryError::Error(msg)) => process::exit(errexit(stderr, format!("Could not find fdsets: {}", msg)))
-    };
-
-    let pqrs_decoder = match PqrsDecoder::new(&args.flag_msgtype, &fdsets, args.flag_force) {
-        Ok(x) => x,
-        Err(LoadFdsetError::Error(msg)) => process::exit(errexit(stderr, msg)),
+        Err(e) => process::exit(errexit(stderr, e.description())),
     };
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
             let file = match File::open(&x) {
                 Ok(x) => x,
-                Err(_) => process::exit(errexit(stderr, format!("Could not open file: {}", x))),
+                Err(_) => process::exit(errexit(stderr, format!("Could not open file: {}", x).as_str())),
             };
             Box::new(BufReader::new(file))
         }
@@ -84,12 +79,12 @@ fn main() {
         let mut buf = Vec::new();
         match infile.read_to_end(&mut buf) {
             Ok(_) => (),
-            Err(_) => process::exit(errexit(stderr, format!("Could not read file to end"))),
+            Err(_) => process::exit(errexit(stderr, format!("Could not read file to end").as_str())),
         }
         match pqrs_decoder
             .decode_message(&buf, &mut stdout.lock()) {
                 Ok(_) => (),
-                Err(DecodeError::Error(msg)) => process::exit(errexit(stderr, format!("Decode error: {}", msg))),
+                Err(e) => process::exit(errexit(stderr, e.description())),
             }
     } else {
         let mut delim = StreamDelimiter::Varint(16);
@@ -101,13 +96,13 @@ fn main() {
             match pqrs_decoder
                 .decode_message(&msg_buf, &mut stdout.lock()) {
                 Ok(_) => (),
-                Err(DecodeError::Error(msg)) => process::exit(errexit(stderr, format!("Decode error: {}", msg))),
+                Err(e) => process::exit(errexit(stderr, e.description())),
             }
         }
     }
 }
 
-fn errexit(mut stderr: StderrLock, msg: String) -> i32 {
+fn errexit(mut stderr: StderrLock, msg: &str) -> i32 {
     writeln!(&mut stderr, "{}", msg).unwrap();
     -1
 }

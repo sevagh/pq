@@ -1,4 +1,4 @@
-use discovery::LoadedDescriptors;
+use discovery::*;
 use error::*;
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -21,9 +21,8 @@ pub struct PqrsDecoder {
 
 impl PqrsDecoder {
     pub fn new(msgtype: &Option<String>,
-               fdsets: &[PathBuf],
                force: bool)
-               -> Result<PqrsDecoder, LoadFdsetError> {
+               -> Result<PqrsDecoder, PqrsError> {
         let mut load_mds = true;
         let loc_msg_type = match *msgtype {
             Some(ref x) => {
@@ -32,7 +31,7 @@ impl PqrsDecoder {
             }
             None => String::from(""),
         };
-        let loaded_descs = match LoadedDescriptors::from_fdsets(fdsets, load_mds) {
+        let loaded_descs = match LoadedDescriptors::new(load_mds) {
             Err(e) => return Err(e),
             Ok(x) => x,
         };
@@ -50,7 +49,7 @@ impl PqrsDecoder {
                                                  &self.loaded_descs.descriptors,
                                                  &self.loaded_descs.message_descriptors);
             if contenders.is_empty() {
-                return Err(DecodeError::Error(String::from("Couldn't decode with any fdset")));
+                return Err(DecodeError::NoSuccessfulAttempts);
             }
             let contender_max = contenders.iter().max_by_key(|x| x.len());
             contender_max.serialize(&mut serializer).unwrap();
@@ -68,9 +67,12 @@ impl PqrsDecoder {
         Ok(())
     }
 
-    pub fn decode_message(&self, buf: &[u8], mut out: &mut Write) -> Result<(), DecodeError> {
+    pub fn decode_message(&self, buf: &[u8], mut out: &mut Write) -> Result<(), PqrsError> {
         if !self.force {
-            return self.decode_message_(buf, &mut out);
+            return match self.decode_message_(buf, &mut out) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(PqrsError::DecodeError(e)),
+            }
         }
         let mut offset = 0;
         let buflen = buf.len();
@@ -83,7 +85,7 @@ impl PqrsDecoder {
             }
             offset += 1;
         }
-        Err(DecodeError::Error(String::from("Couldn't decode message")))
+        Err(PqrsError::DecodeError(DecodeError::NoSuccessfulAttempts))
     }
 }
 
@@ -127,7 +129,7 @@ fn discover_contenders(data: &[u8],
 fn deser(deserializer: &mut Deserializer) -> Result<Value, DecodeError> {
     match Value::deserialize(deserializer) {
         Ok(x) => Ok(x),
-        Err(Error(ErrorKind::Protobuf(ProtobufError::WireError(msg)), _)) => Err(DecodeError::Error(msg)),
-        Err(e) => Err(DecodeError::Error(String::from(e.description()))),
+        Err(Error(ErrorKind::Protobuf(e), _)) => Err(DecodeError::ProtobufError(e)),
+        Err(e) => Err(DecodeError::SerdeProtobufError(e)),
     }
 }
