@@ -7,8 +7,21 @@ use std::io::Read;
 use std::fs::File;
 use runner::Runner;
 
+fn for_nonexistent_fdset_dir(work: &mut Runner) {
+    work.cmd.env("FDSET_PATH", "fdset-doesnt-exist");
+    work.cmd.arg(&work.tests_path.join("samples/dog"));
+}
+
+fn for_no_valid_fdsets(work: &mut Runner) {
+    work.cmd.env("FDSET_PATH", &work.tests_path.join("fdsets-invalid"));
+}
+
 fn for_nonexistent_file(work: &mut Runner) {
     work.cmd.arg("file-doesnt-exist");
+}
+
+fn for_bad_input(work: &mut Runner) {
+    work.cmd.arg(&work.tests_path.join("samples/bad"));
 }
 
 fn for_dog_file(work: &mut Runner) {
@@ -31,10 +44,8 @@ fn run_pqrs<F>(modify_in: F) -> Output
 {
     let mut work = Runner::new();
 
-    work.cmd
-        .arg("--fdsets")
-        .arg(&work.tests_path.join("fdsets"));
-
+    work.cmd.env("FDSET_PATH", &work.tests_path.join("fdsets"));
+    
     modify_in(&mut work);
 
     work.spawn();
@@ -66,6 +77,35 @@ fn test_dog_decode_from_stdin() {
 }
 
 #[test]
+fn test_nonexistent_fdset_dir() {
+    let out = run_pqrs(for_nonexistent_fdset_dir);
+
+    //check if success
+    assert_eq!(out.status.code().unwrap(), 255);
+
+    //check output
+    assert_eq!(String::from_utf8_lossy(&out.stdout), "");
+
+    //check stderr
+    assert_eq!(String::from_utf8_lossy(&out.stderr),
+               "Could not find fdsets: fdset-doesnt-exist doesn\'t exist\n");
+}
+
+#[test]
+fn test_no_fdset_files() {
+    let out = run_pqrs(for_no_valid_fdsets);
+
+    //check if success
+    assert_eq!(out.status.code().unwrap(), 255);
+
+    //check output
+    assert_eq!(String::from_utf8_lossy(&out.stdout), "");
+
+    //check stderr
+    assert!(String::from_utf8_lossy(&out.stderr).starts_with("Could not find fdsets: No files in"));
+}
+
+#[test]
 fn test_person_decode() {
     let out = run_pqrs(for_person);
 
@@ -90,4 +130,19 @@ fn test_nonexistent_file() {
     //check stderr
     assert_eq!(String::from_utf8_lossy(&out.stderr),
                "Could not open file: file-doesnt-exist\n");
+}
+
+#[test]
+fn test_bad_input() {
+    let out = run_pqrs(for_bad_input);
+
+    //check if success
+    assert_eq!(out.status.code().unwrap(), 255);
+
+    //check output
+    assert_eq!(String::from_utf8_lossy(&out.stdout), "");
+
+    //check stderr
+    assert_eq!(String::from_utf8_lossy(&out.stderr),
+               "Decode error: Couldn\'t decode with any fdset\n");
 }

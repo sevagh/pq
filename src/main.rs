@@ -13,13 +13,12 @@ mod error;
 mod discovery;
 mod decode;
 
-use discovery::discover_fdsets;
 use docopt::Docopt;
-use error::PqrsError;
 use decode::PqrsDecoder;
 use stream_delimit::{StreamDelimiter, Parse};
 use std::fs::File;
-use std::io::{self, Write, Read, BufReader};
+use std::error::Error;
+use std::io::{self, Write, Read, BufReader, StderrLock};
 use std::process;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -57,28 +56,18 @@ fn main() {
     let stdout = io::stdout();
     let stderr = io::stderr();
 
-    let mut stderr = stderr.lock();
+    let stderr = stderr.lock();
 
-    let fdsets = match discover_fdsets() {
+    let pqrs_decoder = match PqrsDecoder::new(&args.flag_msgtype, args.flag_force) {
         Ok(x) => x,
-        Err(PqrsError::InitError(_)) |
-        Err(PqrsError::EmptyFdsetError()) => {
-            writeln!(&mut stderr, "Could not find fdsets").unwrap();
-            process::exit(-1);
-        }
-        Err(e) => panic!(e),
+        Err(e) => process::exit(errexit(stderr, e.description())),
     };
-
-    let pqrs_decoder = PqrsDecoder::new(&args.flag_msgtype, &fdsets, args.flag_force).unwrap();
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
             let file = match File::open(&x) {
                 Ok(x) => x,
-                Err(_) => {
-                    writeln!(&mut stderr, "Could not open file: {}", x).unwrap();
-                    process::exit(-1);
-                }
+                Err(_) => process::exit(errexit(stderr, format!("Could not open file: {}", x).as_str())),
             };
             Box::new(BufReader::new(file))
         }
@@ -89,14 +78,13 @@ fn main() {
         let mut buf = Vec::new();
         match infile.read_to_end(&mut buf) {
             Ok(_) => (),
-            Err(_) => {
-                writeln!(&mut stderr, "Could not real file to end").unwrap();
-                process::exit(-1);
-            }
+            Err(_) => process::exit(errexit(stderr, format!("Could not read file to end").as_str())),
         }
-        pqrs_decoder
-            .decode_message(&buf, &mut stdout.lock())
-            .unwrap();
+        match pqrs_decoder
+            .decode_message(&buf, &mut stdout.lock()) {
+                Ok(_) => (),
+                Err(e) => process::exit(errexit(stderr, e.description())),
+            }
     } else {
         let mut delim = StreamDelimiter::Varint(16);
         let mut msg_size: usize = 0;
@@ -104,9 +92,16 @@ fn main() {
             delim.parse(&mut infile, &mut msg_size).unwrap();
             let mut msg_buf = vec![0; msg_size as usize];
             infile.read_exact(&mut msg_buf).unwrap();
-            pqrs_decoder
-                .decode_message(&msg_buf, &mut stdout.lock())
-                .unwrap();
+            match pqrs_decoder
+                .decode_message(&msg_buf, &mut stdout.lock()) {
+                Ok(_) => (),
+                Err(e) => process::exit(errexit(stderr, e.description())),
+            }
         }
     }
+}
+
+fn errexit(mut stderr: StderrLock, msg: &str) -> i32 {
+    writeln!(&mut stderr, "{}", msg).unwrap();
+    -1
 }

@@ -1,4 +1,4 @@
-use error::PqrsError;
+use error::*;
 use std::env;
 use std::fs::{File, read_dir};
 use std::path::PathBuf;
@@ -11,10 +11,16 @@ pub struct LoadedDescriptors {
     pub message_descriptors: Vec<MessageDescriptor>,
 }
 
+
+
 impl LoadedDescriptors {
-    pub fn from_fdsets(fdsets: &[PathBuf],
-                       with_message_descriptors: bool)
-                       -> Result<LoadedDescriptors, PqrsError> {
+
+    pub fn new(with_message_descriptors: bool)
+               -> Result<LoadedDescriptors, PqrsError> {
+        let fdsets = match discover_fdsets() {
+            Ok(fdsets) => fdsets,
+            Err(e) => return Err(PqrsError::FdsetDiscoverError(e)),
+        };
         let mut descriptors = Descriptors::new();
         let mut message_descriptors = Vec::new();
 
@@ -42,7 +48,7 @@ impl LoadedDescriptors {
         }
 
         if fdset_proto_load_ctr == 0 {
-            return Err(PqrsError::EmptyFdsetError());
+            return Err(PqrsError::FdsetLoadError());
         }
         descriptors.resolve_refs();
         Ok(LoadedDescriptors {
@@ -52,7 +58,7 @@ impl LoadedDescriptors {
     }
 }
 
-pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
+fn discover_fdsets() -> Result<Vec<PathBuf>, DiscoveryError> {
     let mut fdset_files = Vec::new();
 
     let path = match env::var("FDSET_PATH") {
@@ -60,21 +66,28 @@ pub fn discover_fdsets() -> Result<Vec<PathBuf>, PqrsError> {
         Err(_) => {
             let mut home = match env::home_dir() {
                 Some(x) => x,
-                None => return Err(PqrsError::InitError(String::from("Could not find $HOME"))),
+                None => return Err(DiscoveryError::NoHome),
             };
             home.push(".pq");
             home
         }
     };
 
-    for p in read_dir(path.as_path()).unwrap() {
-        let path = p.unwrap().path();
-        if !path.is_dir() {
-            fdset_files.push(path);
+    let path_str = path.to_string_lossy().into_owned();
+
+    match read_dir(path.as_path()) {
+        Ok(paths) => {
+            for p in paths {
+                let path = p.unwrap().path();
+                if !path.is_dir() {
+                    fdset_files.push(path);
+                }
+            }
         }
+        Err(_) => return Err(DiscoveryError::NoFdsetPath(path_str))
     }
     if fdset_files.is_empty() {
-        return Err(PqrsError::EmptyFdsetError());
+        return Err(DiscoveryError::NoFiles(path_str))
     }
     Ok(fdset_files)
 }
