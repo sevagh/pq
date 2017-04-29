@@ -2,19 +2,12 @@ use std::fmt;
 use protobuf::ProtobufError;
 use std::error::Error;
 use serde_protobuf;
+use fdset_discovery::error::DiscoveryError;
 
 #[derive(Debug)]
 pub enum PqrsError {
-    FdsetDiscoverError(DiscoveryError),
-    FdsetLoadError(),
+    FdsetDiscoveryError(DiscoveryError),
     DecodeError(DecodeError),
-}
-
-#[derive(Debug)]
-pub enum DiscoveryError {
-    NoHome,
-    NoFdsetPath(String),
-    NoFiles(String),
 }
 
 #[derive(Debug)]
@@ -27,9 +20,8 @@ pub enum DecodeError {
 impl fmt::Display for PqrsError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            PqrsError::FdsetDiscoverError(ref err) => err.fmt(f),
+            PqrsError::FdsetDiscoveryError(ref err) => err.fmt(f),
             PqrsError::DecodeError(ref err) => err.fmt(f),
-            PqrsError::FdsetLoadError() => write!(f, "No loadable fdset files found"),
         }
     }
 }
@@ -37,58 +29,28 @@ impl fmt::Display for PqrsError {
 impl Error for PqrsError {
     fn description(&self) -> &str {
         match *self {
-            PqrsError::FdsetDiscoverError(ref err) => err.description(),
+            PqrsError::FdsetDiscoveryError(ref err) => err.description(),
             PqrsError::DecodeError(ref err) => err.description(),
-            PqrsError::FdsetLoadError() => "no loadable fdsets",
         }
     }
 
     fn cause(&self) -> Option<&Error> {
         match *self {
-            PqrsError::FdsetDiscoverError(ref err) => Some(err),
+            PqrsError::FdsetDiscoveryError(ref err) => Some(err),
             PqrsError::DecodeError(ref err) => Some(err),
-            PqrsError::FdsetLoadError() => None,
         }
     }
 }
 
 impl From<DiscoveryError> for PqrsError {
     fn from(err: DiscoveryError) -> PqrsError {
-        PqrsError::FdsetDiscoverError(err)
+        PqrsError::FdsetDiscoveryError(err)
     }
 }
 
 impl From<DecodeError> for PqrsError {
     fn from(err: DecodeError) -> PqrsError {
         PqrsError::DecodeError(err)
-    }
-}
-
-impl fmt::Display for DiscoveryError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            DiscoveryError::NoHome => write!(f, "$HOME not defined"),
-            DiscoveryError::NoFdsetPath(ref path) => write!(f, "Path {} doesn't exist", path),
-            DiscoveryError::NoFiles(ref path) => write!(f, "No files in path {}", path),
-        }
-    }
-}
-
-impl Error for DiscoveryError {
-    fn description(&self) -> &str {
-        match *self {
-            DiscoveryError::NoHome => "$HOME not defined",
-            DiscoveryError::NoFdsetPath(_) => "fdset_path doesn't exist",
-            DiscoveryError::NoFiles(_) => "no files in fdset_path",
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            DiscoveryError::NoHome => None,
-            DiscoveryError::NoFdsetPath(_) => None,
-            DiscoveryError::NoFiles(_) => None,
-        }
     }
 }
 

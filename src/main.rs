@@ -8,9 +8,9 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
+extern crate fdset_discovery;
 
 mod error;
-mod discovery;
 mod decode;
 
 use docopt::Docopt;
@@ -56,7 +56,7 @@ fn main() {
 
     let stderr = stderr.lock();
 
-    let pqrs_decoder = match PqrsDecoder::new(&args.flag_msgtype) {
+    let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
         Ok(x) => x,
         Err(e) => process::exit(errexit(stderr, e.description())),
     };

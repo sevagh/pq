@@ -1,0 +1,11 @@
+[package]
+name = "fdset_discovery"
+version = "0.1.0"
+authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
+description = "browse a filesystem for fdsets"
+repository = "https://github.com/sevagh/pqrs/tree/master/fdset_discovery"
+license = "MIT"
+keywords = ["protobuf", "serde"]
+
+[dependencies]
+protobuf = "1.2.1"

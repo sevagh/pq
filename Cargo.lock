@@ -72,6 +72,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fdset_discovery"
+version = "0.1.0"
+dependencies = [
+ "protobuf 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "gcc"
 version = "0.3.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -137,6 +144,7 @@ name = "pq"
 version = "0.3.5"
 dependencies = [
  "docopt 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fdset_discovery 0.1.0",
  "protobuf 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 0.9.12 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -18,9 +18,10 @@ serde_json = "0.9.9"
 serde-protobuf = "0.5"
 protobuf = "1.2.1"
 stream_delimit = { path = "stream_delimit", version = "0.1.0" }
+fdset_discovery = { path = "fdset_discovery", version = "0.1.0" }
 
 [workspace]
-members = ["stream_delimit"]
+members = ["stream_delimit", "fdset_discovery"]
 
 [profile.release]
 debug = true
