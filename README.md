@@ -39,7 +39,7 @@ $ ./py-test/testbench.py single | pq | jq
 Pipe a dirty (extra leading/trailing chars) to pq:
 
 ```
-$ ./py-test/testbench.py dirty | pq --force | jq
+$ ./py-test/testbench.py dirty | pq | jq
 {
   "id": 1,
   "name": "vahaken"
