@@ -14,12 +14,10 @@ use protobuf::CodedInputStream;
 pub struct PqrsDecoder {
     pub loaded_descs: LoadedDescriptors,
     pub message_type: String,
-    pub force: bool,
 }
 
 impl PqrsDecoder {
-    pub fn new(msgtype: &Option<String>,
-               force: bool)
+    pub fn new(msgtype: &Option<String>)
                -> Result<PqrsDecoder, PqrsError> {
         let mut load_mds = true;
         let loc_msg_type = match *msgtype {
@@ -36,7 +34,6 @@ impl PqrsDecoder {
         Ok(PqrsDecoder {
                loaded_descs: loaded_descs,
                message_type: loc_msg_type,
-               force: force,
            })
     }
 
@@ -66,12 +63,6 @@ impl PqrsDecoder {
     }
 
     pub fn decode_message(&self, buf: &[u8], mut out: &mut Write) -> Result<(), PqrsError> {
-        if !self.force {
-            return match self.decode_message_(buf, &mut out) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(PqrsError::DecodeError(e)),
-            }
-        }
         let mut offset = 0;
         let buflen = buf.len();
         while offset < buflen {
