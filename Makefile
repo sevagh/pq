@@ -42,9 +42,9 @@ lint:
 	)
 
 package: build
-	cd target/$(TARGET)/debug;\
+	cd target/$(TARGET)/release;\
 		tar -czvf pq-bin.tar.gz pq;\
 		cd -;\
-		mv target/$(TARGET)/debug/pq-bin.tar.gz ./pq-bin.tar.gz 
+		mv target/$(TARGET)/release/pq-bin.tar.gz ./pq-bin.tar.gz 
 
 .PHONY: all message build test clean distclean docs
