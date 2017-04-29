@@ -5,7 +5,6 @@ pq \- jq for protobuf - parse protobuf generically
 .B pq
 [\fB\-\-msgtype=STRING\fR]
 [\fB\-\-stream\fR]
-[\fB\-\-force\fR]
 .IR [file]
 .SH DESCRIPTION
 .B pq
@@ -31,8 +30,6 @@ guessing cannot distinguish between user-specified nulls and empty fields. E.g.,
 .br
 Parse varint32-delimited stream. This is the way it's done by Google in delimited_message_util.
 .TP
-.BR \-\-force\fR
-Forcefully decode by removing bytes until success (or no bytes are left). This will apply to every message in a stream.
 .SH ENVIRONMENT VARIABLES
 .TP
 .BR FDSET_PATH\fR

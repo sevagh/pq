@@ -27,12 +27,11 @@ const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [<infile>] [--stream] [--force]
+  pq [--msgtype=<msgtype>] [<infile>] [--stream]
   pq (--help | --version)
 
 Options:
   --stream              Varint size-delimited stream
-  --force               Force decode message
   --msgtype=<msgtype>   Message type e.g. com.example.Type
   --help                Show this screen.
   --version             Show version.
@@ -43,7 +42,6 @@ struct Args {
     pub arg_infile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_stream: bool,
-    pub flag_force: bool,
     flag_version: bool,
 }
 
@@ -58,7 +56,7 @@ fn main() {
 
     let stderr = stderr.lock();
 
-    let pqrs_decoder = match PqrsDecoder::new(&args.flag_msgtype, args.flag_force) {
+    let pqrs_decoder = match PqrsDecoder::new(&args.flag_msgtype) {
         Ok(x) => x,
         Err(e) => process::exit(errexit(stderr, e.description())),
     };

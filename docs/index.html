@@ -22,8 +22,7 @@
 <h1 class="Sh">NAME</h1>
 pq - jq for protobuf - parse protobuf generically
 <h1 class="Sh">SYNOPSIS</h1>
-<b>pq</b> [ <b>--msgtype=STRING</b>] [ <b>--stream</b>] [ <b>--force</b>]
-  <i>[file]</i>
+<b>pq</b> [ <b>--msgtype=STRING</b>] [ <b>--stream</b>] <i>[file]</i>
 <h1 class="Sh">DESCRIPTION</h1>
 <b>pq</b> parses a compiled protobuf message with .fdset files located in
   '~/.pq/'. see more at https://github.com/sevagh/pqrs
@@ -58,11 +57,6 @@ pq - jq for protobuf - parse protobuf generically
     <div style="height: 0.00em;">&#160;</div>
     Parse varint32-delimited stream. This is the way it's done by Google in
       delimited_message_util.</dd>
-</dl>
-<dl class="Bl-tag">
-  <dt class="It-tag"><b>--force</b></dt>
-  <dd class="It-tag">Forcefully decode by removing bytes until success (or no
-      bytes are left). This will apply to every message in a stream.</dd>
 </dl>
 <h1 class="Sh">ENVIRONMENT VARIABLES</h1>
 <dl class="Bl-tag">
