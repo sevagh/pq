@@ -17,9 +17,7 @@ use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::{StreamDelimiter, Parse};
 use std::fs::File;
-use std::error::Error;
-use std::io::{self, Write, Read, BufReader, StderrLock};
-use std::process;
+use std::io::{self, Read, BufReader};
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -52,20 +50,17 @@ fn main() {
 
     let stdin = io::stdin();
     let stdout = io::stdout();
-    let stderr = io::stderr();
-
-    let stderr = stderr.lock();
 
     let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
         Ok(x) => x,
-        Err(e) => process::exit(errexit(stderr, e.description())),
+        Err(e) => panic!(e),
     };
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
             let file = match File::open(&x) {
                 Ok(x) => x,
-                Err(_) => process::exit(errexit(stderr, format!("Could not open file: {}", x).as_str())),
+                Err(e) => panic!(e),
             };
             Box::new(BufReader::new(file))
         }
@@ -76,13 +71,12 @@ fn main() {
         let mut buf = Vec::new();
         match infile.read_to_end(&mut buf) {
             Ok(_) => (),
-            Err(_) => process::exit(errexit(stderr, format!("Could not read file to end").as_str())),
+            Err(e) => panic!(e),
         }
-        match pqrs_decoder
-            .decode_message(&buf, &mut stdout.lock()) {
-                Ok(_) => (),
-                Err(e) => process::exit(errexit(stderr, e.description())),
-            }
+        match pqrs_decoder.decode_message(&buf, &mut stdout.lock()) {
+            Ok(_) => (),
+            Err(e) => panic!(e),
+        }
     } else {
         let mut delim = StreamDelimiter::Varint(16);
         let mut msg_size: usize = 0;
@@ -90,16 +84,10 @@ fn main() {
             delim.parse(&mut infile, &mut msg_size).unwrap();
             let mut msg_buf = vec![0; msg_size as usize];
             infile.read_exact(&mut msg_buf).unwrap();
-            match pqrs_decoder
-                .decode_message(&msg_buf, &mut stdout.lock()) {
+            match pqrs_decoder.decode_message(&msg_buf, &mut stdout.lock()) {
                 Ok(_) => (),
-                Err(e) => process::exit(errexit(stderr, e.description())),
+                Err(e) => panic!(e),
             }
         }
     }
-}
-
-fn errexit(mut stderr: StderrLock, msg: &str) -> i32 {
-    writeln!(&mut stderr, "{}", msg).unwrap();
-    -1
 }

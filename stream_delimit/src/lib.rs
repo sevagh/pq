@@ -17,7 +17,7 @@ impl Parse for StreamDelimiter {
     fn parse(&mut self, read: &mut Read, size: &mut usize) -> Result<(), StreamDelimitError> {
         match *self {
             StreamDelimiter::Varint(max_attempts) => {
-                let mut varint_buf: Vec<u8> = Vec::with_capacity(max_attempts);
+                let mut varint_buf: Vec<u8> = Vec::new();
                 for i in 0..max_attempts {
                     varint_buf.push(0u8);
                     read.read_exact(&mut varint_buf[i..]).unwrap();
@@ -25,13 +25,14 @@ impl Parse for StreamDelimiter {
                         let mut concat: u64 = 0;
                         for i in (0..varint_buf.len()).rev() {
                             let i_ = i as u32;
-                            concat += ((varint_buf[i] & 0b01111111) as u64) << i_*(8u32.pow(i_) - 1);
+                            concat += ((varint_buf[i] & 0b01111111) as u64) <<
+                                      (i_ * (8u32.pow(i_) - 1));
                         }
                         *size = concat as usize;
                         return Ok(());
                     }
                 }
-                return Err(StreamDelimitError::NoLeadingVarintError())
+                Err(StreamDelimitError::NoLeadingVarintError())
             }
         }
     }

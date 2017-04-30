@@ -13,7 +13,8 @@ fn for_nonexistent_fdset_dir(work: &mut Runner) {
 }
 
 fn for_no_valid_fdsets(work: &mut Runner) {
-    work.cmd.env("FDSET_PATH", &work.tests_path.join("fdsets-invalid"));
+    work.cmd
+        .env("FDSET_PATH", &work.tests_path.join("fdsets-invalid"));
 }
 
 fn for_nonexistent_file(work: &mut Runner) {
@@ -44,8 +45,9 @@ fn run_pqrs<F>(modify_in: F) -> Output
 {
     let mut work = Runner::new();
 
-    work.cmd.env("FDSET_PATH", &work.tests_path.join("fdsets"));
-    
+    work.cmd
+        .env("FDSET_PATH", &work.tests_path.join("fdsets"));
+
     modify_in(&mut work);
 
     work.spawn();

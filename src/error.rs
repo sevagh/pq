@@ -2,7 +2,7 @@ use std::fmt;
 use protobuf::ProtobufError;
 use std::error::Error;
 use serde_protobuf;
-use fdset_discovery::error::DiscoveryError;
+use fdset_discovery::DiscoveryError;
 
 #[derive(Debug)]
 pub enum PqrsError {
