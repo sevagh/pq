@@ -8,8 +8,8 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
-extern crate fdset_discovery;
 
+mod fdset_discovery;
 mod error;
 mod decode;
 
