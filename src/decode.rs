@@ -59,7 +59,7 @@ impl PqrsDecoder {
             Some(ref x) => {
                 let stream = CodedInputStream::from_bytes(data);
                 let mut deserializer = Deserializer::for_named_message(&self.descriptors,
-                                                                       &adjust_message_type(&x),
+                                                                       &(format!(".{}", x)),
                                                                        stream)
                         .unwrap();
                 match deser(&mut deserializer) {
@@ -85,16 +85,6 @@ impl PqrsDecoder {
         }
         Err(PqrsError::DecodeError(DecodeError::NoSuccessfulAttempts))
     }
-}
-
-fn adjust_message_type(m: &str) -> String {
-    let mut loc_msg_type = String::new();
-    let ch = m.chars().nth(0).unwrap();
-    if ch != '.' {
-        loc_msg_type.push('.');
-    }
-    loc_msg_type.push_str(m);
-    loc_msg_type
 }
 
 fn discover_contenders(data: &[u8],
