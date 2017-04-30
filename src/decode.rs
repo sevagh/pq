@@ -1,4 +1,4 @@
-use discovery::*;
+use fdset_discovery::get_loaded_descriptors;
 use error::*;
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -12,51 +12,60 @@ use serde_value::Value;
 use protobuf::CodedInputStream;
 
 pub struct PqrsDecoder {
-    pub loaded_descs: LoadedDescriptors,
-    pub message_type: String,
+    pub descriptors: Descriptors,
+    pub message_descriptors: Vec<MessageDescriptor>,
+    pub message_type: Option<String>,
 }
 
 impl PqrsDecoder {
-    pub fn new(msgtype: &Option<String>)
-               -> Result<PqrsDecoder, PqrsError> {
-        let mut load_mds = true;
-        let loc_msg_type = match *msgtype {
-            Some(ref x) => {
-                load_mds = false;
-                adjust_message_type(x)
-            }
-            None => String::from(""),
-        };
-        let loaded_descs = match LoadedDescriptors::new(load_mds) {
-            Err(e) => return Err(e),
+    pub fn new(msgtype: Option<String>) -> Result<PqrsDecoder, PqrsError> {
+        let loaded_descs = match get_loaded_descriptors() {
+            Err(e) => return Err(PqrsError::FdsetDiscoveryError(e)),
             Ok(x) => x,
         };
+        let mut descriptors = Descriptors::new();
+        let mut message_descriptors = Vec::new();
+        for (fdset_path, fdset) in loaded_descs {
+            descriptors.add_file_set_proto(&fdset);
+            match msgtype {
+                None => {
+                    message_descriptors.append(&mut fdset.get_file().iter().flat_map(|x| {
+                        x.get_message_type().iter().map(|y| MessageDescriptor::from_proto(fdset_path.to_string_lossy().into_owned().as_str(), y)).collect::<Vec<_>>()
+                    }).collect::<Vec<_>>());
+                }
+                Some(_) => (),
+            }
+        }
+        descriptors.resolve_refs();
         Ok(PqrsDecoder {
-               loaded_descs: loaded_descs,
-               message_type: loc_msg_type,
+               descriptors: descriptors,
+               message_descriptors: message_descriptors,
+               message_type: msgtype,
            })
     }
 
     fn decode_message_(&self, data: &[u8], out: &mut Write) -> Result<(), DecodeError> {
         let mut serializer = Serializer::new(out);
-        if !self.loaded_descs.message_descriptors.is_empty() {
-            let contenders = discover_contenders(data,
-                                                 &self.loaded_descs.descriptors,
-                                                 &self.loaded_descs.message_descriptors);
-            if contenders.is_empty() {
-                return Err(DecodeError::NoSuccessfulAttempts);
+        match self.message_type {
+            None => {
+                let contenders =
+                    discover_contenders(data, &self.descriptors, &self.message_descriptors);
+                if contenders.is_empty() {
+                    return Err(DecodeError::NoSuccessfulAttempts);
+                }
+                let contender_max = contenders.iter().max_by_key(|x| x.len());
+                contender_max.serialize(&mut serializer).unwrap();
             }
-            let contender_max = contenders.iter().max_by_key(|x| x.len());
-            contender_max.serialize(&mut serializer).unwrap();
-        } else {
-            let stream = CodedInputStream::from_bytes(data);
-            let mut deserializer = Deserializer::for_named_message(&self.loaded_descs.descriptors,
-                                                                   &self.message_type,
-                                                                   stream)
-                    .unwrap();
-            match deser(&mut deserializer) {
-                Ok(value) => value.serialize(&mut serializer).unwrap(),
-                Err(e) => return Err(e),
+            Some(ref x) => {
+                let stream = CodedInputStream::from_bytes(data);
+                let mut deserializer = Deserializer::for_named_message(&self.descriptors,
+                                                                       &(format!(".{}", x)),
+                                                                       stream)
+                        .unwrap();
+                match deser(&mut deserializer) {
+                    Ok(value) => value.serialize(&mut serializer).unwrap(),
+                    Err(e) => return Err(e),
+                }
             }
         }
         Ok(())
@@ -76,16 +85,6 @@ impl PqrsDecoder {
         }
         Err(PqrsError::DecodeError(DecodeError::NoSuccessfulAttempts))
     }
-}
-
-fn adjust_message_type(m: &str) -> String {
-    let mut loc_msg_type = String::new();
-    let ch = m.chars().nth(0).unwrap();
-    if ch != '.' {
-        loc_msg_type.push('.');
-    }
-    loc_msg_type.push_str(m);
-    loc_msg_type
 }
 
 fn discover_contenders(data: &[u8],
