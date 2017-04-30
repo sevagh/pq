@@ -37,8 +37,8 @@ impl Error for DiscoveryError {
 
     fn cause(&self) -> Option<&Error> {
         match *self {
-            DiscoveryError::NoHome => None,
-            DiscoveryError::NoFdsetPath(_) => None,
+            DiscoveryError::NoHome |
+            DiscoveryError::NoFdsetPath(_) |
             DiscoveryError::NoFiles(_) => None,
         }
     }
@@ -92,10 +92,10 @@ fn discover_fdsets() -> Result<(Vec<PathBuf>, String), DiscoveryError> {
                 }
             }
         }
-        Err(_) => return Err(DiscoveryError::NoFdsetPath(path_str))
+        Err(_) => return Err(DiscoveryError::NoFdsetPath(path_str)),
     }
     if fdset_files.is_empty() {
-        return Err(DiscoveryError::NoFiles(path_str))
+        return Err(DiscoveryError::NoFiles(path_str));
     }
     Ok((fdset_files, path_str))
 }

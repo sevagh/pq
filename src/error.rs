@@ -57,7 +57,9 @@ impl From<DecodeError> for PqrsError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            DecodeError::NoSuccessfulAttempts => write!(f, "Couldn't decode with any message descriptor"),
+            DecodeError::NoSuccessfulAttempts => {
+                write!(f, "Couldn't decode with any message descriptor")
+            }
             DecodeError::ProtobufError(ref err) => err.fmt(f),
             DecodeError::SerdeProtobufError(ref err) => err.fmt(f),
         }

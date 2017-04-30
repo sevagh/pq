@@ -75,7 +75,8 @@ fn test_nonexistent_fdset_dir() {
     let out = run_pqrs(for_nonexistent_fdset_dir);
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains("Path fdset-doesnt-exist doesn\'t exist"));
+    assert!(String::from_utf8_lossy(&out.stderr)
+            .contains("Path fdset-doesnt-exist doesn\'t exist"));
 }
 
 #[test]
@@ -99,7 +100,8 @@ fn test_nonexistent_file() {
     let out = run_pqrs(for_nonexistent_file);
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains("No such file or directory (os error 2)"));
+    assert!(String::from_utf8_lossy(&out.stderr)
+            .contains("No such file or directory (os error 2)"));
 }
 
 #[test]
@@ -107,5 +109,6 @@ fn test_bad_input() {
     let out = run_pqrs(for_bad_input);
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains("Couldn\'t decode with any message descriptor\n"));
+    assert!(String::from_utf8_lossy(&out.stderr)
+            .contains("Couldn\'t decode with any message descriptor\n"));
 }

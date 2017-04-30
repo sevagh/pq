@@ -29,9 +29,22 @@ impl PqrsDecoder {
             descriptors.add_file_set_proto(&fdset);
             match msgtype {
                 None => {
-                    message_descriptors.append(&mut fdset.get_file().iter().flat_map(|x| {
-                        x.get_message_type().iter().map(|y| MessageDescriptor::from_proto(fdset_path.to_string_lossy().into_owned().as_str(), y)).collect::<Vec<_>>()
-                    }).collect::<Vec<_>>());
+                    message_descriptors.append(&mut fdset
+                                                        .get_file()
+                                                        .iter()
+                                                        .flat_map(|x| {
+                        x.get_message_type()
+                            .iter()
+                            .map(|y| {
+                                     MessageDescriptor::from_proto(fdset_path
+                                                                       .to_string_lossy()
+                                                                       .into_owned()
+                                                                       .as_str(),
+                                                                   y)
+                                 })
+                            .collect::<Vec<_>>()
+                    })
+                                                        .collect::<Vec<_>>());
                 }
                 Some(_) => (),
             }

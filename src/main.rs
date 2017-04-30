@@ -12,7 +12,8 @@ extern crate stream_delimit;
 mod fdset_discovery;
 mod error;
 mod decode;
-#[macro_use] mod macros;
+#[macro_use]
+mod macros;
 
 use docopt::Docopt;
 use decode::PqrsDecoder;
