@@ -23,13 +23,13 @@ $ cp *.fdset ~/.pq/
 Pipe a single compiled protobuf message to pq:
 
 ```
-$ ./py-test/testbench.py single | pq | jq
+$ ./tests/python/testbench.py single | pq | jq
 {
   "age": 4,
   "breed": "poodle",
   "temperament": "excited"
 }
-$ ./py-test/testbench.py single | pq | jq
+$ ./tests/python/testbench.py single | pq | jq
 {
   "id": 2,
   "name": "raffi"
@@ -39,7 +39,7 @@ $ ./py-test/testbench.py single | pq | jq
 Pipe a dirty (extra leading/trailing chars) to pq:
 
 ```
-$ ./py-test/testbench.py dirty | pq | jq
+$ ./tests/python/testbench.py dirty | pq | jq
 {
   "id": 1,
   "name": "vahaken"
@@ -49,7 +49,7 @@ $ ./py-test/testbench.py dirty | pq | jq
 Pipe a `varint32`-delimited stream to pq:
 
 ```
-$ ./py-test/testbench.py stream | pq --stream | jq
+$ ./tests/python/testbench.py stream | pq --stream | jq
 {
   "age": 10,
   "breed": "gsd",
