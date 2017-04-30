@@ -31,7 +31,7 @@ rust/bin/cargo: rust/rustup.sh
 		--with-target=$(TARGET)
 
 docs:
-	mandoc -Thtml pqrs.1 >docs/index.html
+	mandoc -Thtml docs/_pqrs.1 >docs/index.html
 
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
