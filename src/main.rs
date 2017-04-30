@@ -12,12 +12,14 @@ extern crate stream_delimit;
 mod fdset_discovery;
 mod error;
 mod decode;
+#[macro_use] mod macros;
 
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::{StreamDelimiter, Parse};
 use std::fs::File;
-use std::io::{self, Read, BufReader};
+use std::io::{self, Read, BufReader, Write, stderr};
+use std::process;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -53,14 +55,14 @@ fn main() {
 
     let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
         Ok(x) => x,
-        Err(e) => panic!(e),
+        Err(e) => errexit!(e),
     };
 
     let mut infile: Box<Read> = match args.arg_infile {
         Some(x) => {
             let file = match File::open(&x) {
                 Ok(x) => x,
-                Err(e) => panic!(e),
+                Err(e) => errexit!(e),
             };
             Box::new(BufReader::new(file))
         }
@@ -71,11 +73,11 @@ fn main() {
         let mut buf = Vec::new();
         match infile.read_to_end(&mut buf) {
             Ok(_) => (),
-            Err(e) => panic!(e),
+            Err(e) => errexit!(e),
         }
         match pqrs_decoder.decode_message(&buf, &mut stdout.lock()) {
             Ok(_) => (),
-            Err(e) => panic!(e),
+            Err(e) => errexit!(e),
         }
     } else {
         let mut delim = StreamDelimiter::Varint(16);
@@ -86,7 +88,7 @@ fn main() {
             infile.read_exact(&mut msg_buf).unwrap();
             match pqrs_decoder.decode_message(&msg_buf, &mut stdout.lock()) {
                 Ok(_) => (),
-                Err(e) => panic!(e),
+                Err(e) => errexit!(e),
             }
         }
     }

@@ -57,11 +57,7 @@ fn run_pqrs<F>(modify_in: F) -> Output
 #[test]
 fn test_dog_decode_from_file() {
     let out = run_pqrs(for_dog_file);
-
-    //check if success
     assert!(out.status.success());
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
 }
@@ -69,11 +65,7 @@ fn test_dog_decode_from_file() {
 #[test]
 fn test_dog_decode_from_stdin() {
     let out = run_pqrs(for_dog_stdin);
-
-    //check if success
     assert!(out.status.success());
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
 }
@@ -81,40 +73,23 @@ fn test_dog_decode_from_stdin() {
 #[test]
 fn test_nonexistent_fdset_dir() {
     let out = run_pqrs(for_nonexistent_fdset_dir);
-
-    //check if success
     assert_eq!(out.status.code().unwrap(), 255);
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-
-    //check stderr
-    assert_eq!(String::from_utf8_lossy(&out.stderr),
-               "Could not find fdsets: fdset-doesnt-exist doesn\'t exist\n");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("Path fdset-doesnt-exist doesn\'t exist"));
 }
 
 #[test]
 fn test_no_fdset_files() {
     let out = run_pqrs(for_no_valid_fdsets);
-
-    //check if success
     assert_eq!(out.status.code().unwrap(), 255);
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-
-    //check stderr
-    assert!(String::from_utf8_lossy(&out.stderr).starts_with("Could not find fdsets: No files in"));
+    assert!(String::from_utf8_lossy(&out.stderr).contains("No valid fdset files in path"));
 }
 
 #[test]
 fn test_person_decode() {
     let out = run_pqrs(for_person);
-
-    //check if success
     assert!(out.status.success());
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"id\":0,\"name\":\"khosrov\"}");
 }
@@ -122,29 +97,15 @@ fn test_person_decode() {
 #[test]
 fn test_nonexistent_file() {
     let out = run_pqrs(for_nonexistent_file);
-
-    //check if success
     assert_eq!(out.status.code().unwrap(), 255);
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-
-    //check stderr
-    assert_eq!(String::from_utf8_lossy(&out.stderr),
-               "Could not open file: file-doesnt-exist\n");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("No such file or directory (os error 2)"));
 }
 
 #[test]
 fn test_bad_input() {
     let out = run_pqrs(for_bad_input);
-
-    //check if success
     assert_eq!(out.status.code().unwrap(), 255);
-
-    //check output
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-
-    //check stderr
-    assert_eq!(String::from_utf8_lossy(&out.stderr),
-               "Decode error: Couldn\'t decode with any fdset\n");
+    assert!(String::from_utf8_lossy(&out.stderr).contains("Couldn\'t decode with any message descriptor\n"));
 }
