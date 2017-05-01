@@ -23,7 +23,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         let trail = self.trail.clone();
-        match self.delim {
+        let ret = match self.delim {
             "varint" => {
                 let mut varint_buf: Vec<u8> = Vec::new();
                 for i in 0..MAX_ATTEMPTS {
@@ -41,13 +41,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                         }
                         let mut msg_buf = vec![0; concat as usize];
                         self.read.read_exact(&mut msg_buf).unwrap();
-                        if let Some(x) = trail {
-                            let mut trail_buf: Vec<u8> = vec![0u8; x.len()];
-                            match self.read.read_exact(&mut trail_buf) {
-                                Ok(_) => (),
-                                Err(_) => return None,
-                            }
-                        }
+         
                         return Some(msg_buf);
                     }
                 }
@@ -55,7 +49,15 @@ impl<'a> Iterator for StreamDelimiter<'a> {
             }
             "leb128" => unimplemented!(),
             _ => panic!("Unknown delimiter"),
+        };
+        if let Some(x) = trail {
+            let mut trail_buf: Vec<u8> = vec![0u8; x.len()];
+            match self.read.read_exact(&mut trail_buf) {
+                Ok(_) => (),
+                Err(_) => return None,
+            }
         }
+        ret
     }
 }
 

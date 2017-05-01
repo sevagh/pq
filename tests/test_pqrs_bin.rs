@@ -34,6 +34,12 @@ fn for_dog_stream(work: &mut Runner) {
     work.cmd.arg(&work.tests_path.join("samples/dog_stream"));
 }
 
+fn for_dog_stream_with_trail(work: &mut Runner) {
+    work.cmd.arg("--stream=varint");
+    work.cmd.arg("--trail=\\n");
+    work.cmd.arg(&work.tests_path.join("samples/dog_stream_trail"));
+}
+
 fn for_person(work: &mut Runner) {
     work.cmd.arg(&work.tests_path.join("samples/person"));
 }
@@ -78,6 +84,14 @@ fn test_dog_decode_from_stdin() {
 #[test]
 fn test_dog_decode_stream() {
     let out = run_pqrs(for_dog_stream);
+    assert!(out.status.success());
+    assert_eq!(String::from_utf8_lossy(&out.stdout),
+               "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}");
+}
+#[test]
+fn test_dog_decode_stream_with_trail() {
+    let out = run_pqrs(for_dog_stream_with_trail);
+    println!("{:?}", String::from_utf8_lossy(&out.stderr));
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}");
