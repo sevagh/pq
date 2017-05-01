@@ -4,7 +4,8 @@ pq \- jq for protobuf - parse protobuf generically
 .SH SYNOPSIS
 .B pq
 [\fB\-\-msgtype=STRING\fR]
-[\fB\-\-stream\fR]
+[\fB\-\-stream=DELIMITER\fR]
+[\fB\-\-trail=DELIMITER\fR]
 .IR [file]
 .SH DESCRIPTION
 .B pq
@@ -26,9 +27,13 @@ since protobuf treats fields as positional, similar protos (e.g. Dog: <Int: age,
 .B **WARNING 2**:
 guessing cannot distinguish between user-specified nulls and empty fields. E.g., if you specify an <Int, String, String> as <5, "hello", null>, pqrs discards the correct schema because of the null.
 .TP
-.BR \-\-stream\fR
+.BR \-\-stream=DELIMITER\fR
 .br
-Parse varint32-delimited stream. This is the way it's done by Google in delimited_message_util.
+Parse a delimited stream. The delimiter is specified as a string. For now the only supported delimiter is "varint" (this is the way it's done by Google in delimited_message_util).
+.TP
+.BR \-\-trail=DELIMITER\fR
+.br
+Delete trailing delimiter characters between messages, e.g. "\\r\\n". Must be used in conjunction with '--stream'.
 .TP
 .SH ENVIRONMENT VARIABLES
 .TP

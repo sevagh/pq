@@ -28,11 +28,12 @@ const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [<infile>] [--stream]
+  pq [--msgtype=<msgtype>] [<infile>] [--stream=<delim>] [--trail=<delim>]
   pq (--help | --version)
 
 Options:
-  --stream              Varint size-delimited stream
+  --stream=<delim>      Stream delimiter e.g. \"varint\", \"leb128\"
+  --trail=<delim>       Trail delimiter e.g. \"\r\n\"
   --msgtype=<msgtype>   Message type e.g. com.example.Type
   --help                Show this screen.
   --version             Show version.
@@ -42,7 +43,8 @@ Options:
 struct Args {
     pub arg_infile: Option<String>,
     pub flag_msgtype: Option<String>,
-    pub flag_stream: bool,
+    pub flag_stream: Option<String>,
+    pub flag_trail: Option<String>,
     flag_version: bool,
 }
 
@@ -70,7 +72,15 @@ fn main() {
         None => Box::new(stdin.lock()),
     };
 
-    if !args.flag_stream {
+    if let Some(lead_delim) = args.flag_stream {
+        let delim = StreamDelimiter::new(&lead_delim, &mut infile, args.flag_trail);
+        for chunk in delim {
+            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock()) {
+                Ok(_) => (),
+                Err(e) => errexit!(e),
+            }
+        }
+    } else {
         let mut buf = Vec::new();
         match infile.read_to_end(&mut buf) {
             Ok(_) => (),
@@ -79,14 +89,6 @@ fn main() {
         match pqrs_decoder.decode_message(&buf, &mut stdout.lock()) {
             Ok(_) => (),
             Err(e) => errexit!(e),
-        }
-    } else {
-        let delim = StreamDelimiter::new("varint", &mut infile, None);
-        for chunk in delim {
-            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock()) {
-                Ok(_) => (),
-                Err(e) => errexit!(e),
-            }
         }
     }
 }
