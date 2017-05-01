@@ -15,6 +15,9 @@ cargo: rust/bin/cargo
 build: cargo
 	$(CARGO) build $(CARGO_FLAGS)
 
+build-release: cargo
+	$(CARGO) build $(CARGO_FLAGS) --release
+
 clean:
 	$(CARGO) clean $(CARGO_FLAGS)
 
@@ -41,7 +44,7 @@ lint:
 		rustup default stable ;\
 	)
 
-package: build
+package: build-release
 	cd target/$(TARGET)/release;\
 		tar -czvf pq-bin.tar.gz pq;\
 		cd -;\
