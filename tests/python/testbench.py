@@ -41,7 +41,6 @@ if __name__ == '__main__':
                                     obj)
     if sys.argv[1] == 'streamsingle':
         obj = gen_funcs[random.choice(range(0, 2))]()
-        print('LEN: {0}'.format(len(obj)))
         sys.stdout.buffer.write(encoder._VarintBytes(len(obj)) + obj)
     elif sys.argv[1] == 'single':
         sys.stdout.buffer.write(gen_funcs[random.choice(range(0, 2))]())

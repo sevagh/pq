@@ -22,7 +22,8 @@
 <h1 class="Sh">NAME</h1>
 pq - jq for protobuf - parse protobuf generically
 <h1 class="Sh">SYNOPSIS</h1>
-<b>pq</b> [ <b>--msgtype=STRING</b>] [ <b>--stream</b>] <i>[file]</i>
+<b>pq</b> [ <b>--msgtype=STRING</b>] [ <b>--stream=DELIMITER</b>] [
+  <b>--trail=DELIMITER</b>] <i>[file]</i>
 <h1 class="Sh">DESCRIPTION</h1>
 <b>pq</b> parses a compiled protobuf message with .fdset files located in
   '~/.pq/'. see more at https://github.com/sevagh/pqrs
@@ -52,11 +53,19 @@ pq - jq for protobuf - parse protobuf generically
       correct schema because of the null.</dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--stream</b></dt>
+  <dt class="It-tag"><b>--stream=DELIMITER</b></dt>
   <dd class="It-tag">
     <div style="height: 0.00em;">&#160;</div>
-    Parse varint32-delimited stream. This is the way it's done by Google in
-      delimited_message_util.</dd>
+    Parse a delimited stream. The delimiter is specified as a string. For now
+      the only supported delimiter is &quot;varint&quot; (this is the way it's
+      done by Google in delimited_message_util).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--trail=DELIMITER</b></dt>
+  <dd class="It-tag">
+    <div style="height: 0.00em;">&#160;</div>
+    Delete trailing delimiter characters between messages, e.g.
+      &quot;\r\n&quot;. Must be used in conjunction with '--stream'.</dd>
 </dl>
 <h1 class="Sh">ENVIRONMENT VARIABLES</h1>
 <dl class="Bl-tag">

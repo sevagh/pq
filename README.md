@@ -49,7 +49,7 @@ $ ./tests/python/testbench.py dirty | pq | jq
 Pipe a `varint32`-delimited stream to pq:
 
 ```
-$ ./tests/python/testbench.py stream | pq --stream | jq
+$ ./tests/python/testbench.py stream | pq --stream="varint" | jq
 {
   "age": 10,
   "breed": "gsd",
@@ -69,3 +69,9 @@ $ ./tests/python/testbench.py stream | pq --stream | jq
   "name": "vahaken"
 }
 ```
+
+### Experimental feature - trailing delimiter
+
+Sometimes protobuf is sent in ways that add their own delimiters. E.g. if you send varint-delimited Protobuf over kafka, to use `pqrs`, you would need to deal with the message delimiters inserted by `kafka-console-consumer.sh` or whatever your command-line kafka consumer is that you are piping to pq.
+
+Tentative support for this is added in the form of a `--trail="\n\n"` command-line option.
