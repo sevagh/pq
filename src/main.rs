@@ -17,7 +17,7 @@ mod macros;
 
 use docopt::Docopt;
 use decode::PqrsDecoder;
-use stream_delimit::{StreamDelimiter, Parse};
+use stream_delimit::StreamDelimiter;
 use std::fs::File;
 use std::io::{self, Read, BufReader, Write, stderr};
 use std::process;
@@ -81,13 +81,9 @@ fn main() {
             Err(e) => errexit!(e),
         }
     } else {
-        let mut delim = StreamDelimiter::Varint(16);
-        let mut msg_size: usize = 0;
-        loop {
-            delim.parse(&mut infile, &mut msg_size).unwrap();
-            let mut msg_buf = vec![0; msg_size as usize];
-            infile.read_exact(&mut msg_buf).unwrap();
-            match pqrs_decoder.decode_message(&msg_buf, &mut stdout.lock()) {
+        let delim = StreamDelimiter::new("varint", &mut infile, None);
+        for chunk in delim {
+            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock()) {
                 Ok(_) => (),
                 Err(e) => errexit!(e),
             }
