@@ -33,7 +33,7 @@ Usage:
 
 Options:
   --stream=<delim>      Stream delimiter e.g. \"varint\", \"leb128\"
-  --trail=<delim>       Trail delimiter e.g. \"\r\n\"
+  --trail=<num>         Number of chars to chomp from tail
   --msgtype=<msgtype>   Message type e.g. com.example.Type
   --help                Show this screen.
   --version             Show version.
@@ -44,7 +44,7 @@ struct Args {
     pub arg_infile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_stream: Option<String>,
-    pub flag_trail: Option<String>,
+    pub flag_trail: Option<usize>,
     flag_version: bool,
 }
 
