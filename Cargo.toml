@@ -1,6 +1,6 @@
 [package]
 name = "pq"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
 repository = "https://github.com/sevagh/pqrs"
@@ -17,7 +17,7 @@ serde-value = "0.4.0"
 serde_json = "0.9.9"
 serde-protobuf = "0.5"
 protobuf = "1.2.1"
-stream_delimit = { path = "stream_delimit", version = "0.1.0" }
+stream_delimit = { path = "stream_delimit", version = "0.1.2" }
 
 [workspace]
 members = ["stream_delimit"]

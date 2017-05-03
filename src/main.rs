@@ -18,8 +18,7 @@ mod macros;
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::StreamDelimiter;
-use std::fs::File;
-use std::io::{self, Read, BufReader, Write, stderr};
+use std::io::{self, Read, Write, stderr};
 use std::process;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -28,7 +27,7 @@ const USAGE: &'static str = "
 pq - Protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [<infile>] [--stream=<delim>] [--trail=<delim>]
+  pq [--msgtype=<msgtype>] [--stream=<delim>] [--trail=<delim>]
   pq (--help | --version)
 
 Options:
@@ -41,7 +40,6 @@ Options:
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
-    pub arg_infile: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_stream: Option<String>,
     pub flag_trail: Option<usize>,
@@ -61,16 +59,7 @@ fn main() {
         Err(e) => errexit!(e),
     };
 
-    let mut infile: Box<Read> = match args.arg_infile {
-        Some(x) => {
-            let file = match File::open(&x) {
-                Ok(x) => x,
-                Err(e) => errexit!(e),
-            };
-            Box::new(BufReader::new(file))
-        }
-        None => Box::new(stdin.lock()),
-    };
+    let mut infile: Box<Read> = Box::new(stdin.lock());
 
     if let Some(lead_delim) = args.flag_stream {
         let delim = StreamDelimiter::new(&lead_delim, &mut infile, args.flag_trail);

@@ -23,17 +23,12 @@
 pq - jq for protobuf - parse protobuf generically
 <h1 class="Sh">SYNOPSIS</h1>
 <b>pq</b> [ <b>--msgtype=STRING</b>] [ <b>--stream=DELIMITER</b>] [
-  <b>--trail=DELIMITER</b>] <i>[file]</i>
+  <b>--trail=DELIMITER</b>]
 <h1 class="Sh">DESCRIPTION</h1>
 <b>pq</b> parses a compiled protobuf message with .fdset files located in
-  '~/.pq/'. see more at https://github.com/sevagh/pqrs
-<h1 class="Sh">POSITIONAL ARGS</h1>
-<dl class="Bl-tag">
-  <dt class="It-tag"><b>(OPTIONAL)file</b></dt>
-  <dd class="It-tag">
-    <div style="height: 0.00em;">&#160;</div>
-    Read message from a file. Default is stdin.</dd>
-</dl>
+  '~/.pq/'. See more at https://github.com/sevagh/pqrs.
+<div style="height: 1.00em;">&#160;</div>
+<b>pq</b> operates on stdin by default. Use files with the &lt;filename pipe.
 <h1 class="Sh">OPTIONS</h1>
 <dl class="Bl-tag">
   <dt class="It-tag"><b>--msgtype=STRING</b></dt>
@@ -61,11 +56,10 @@ pq - jq for protobuf - parse protobuf generically
       done by Google in delimited_message_util).</dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--trail=DELIMITER</b></dt>
+  <dt class="It-tag"><b>--trail=NUM</b></dt>
   <dd class="It-tag">
     <div style="height: 0.00em;">&#160;</div>
-    Delete trailing delimiter characters between messages, e.g.
-      &quot;\r\n&quot;. Must be used in conjunction with '--stream'.</dd>
+    Delete NUM number of trailing characters between streamed messages.</dd>
 </dl>
 <h1 class="Sh">ENVIRONMENT VARIABLES</h1>
 <dl class="Bl-tag">

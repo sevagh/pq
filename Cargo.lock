@@ -1,6 +1,6 @@
 [root]
 name = "stream_delimit"
-version = "0.1.1"
+version = "0.1.2"
 
 [[package]]
 name = "aho-corasick"
@@ -134,7 +134,7 @@ dependencies = [
 
 [[package]]
 name = "pq"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "docopt 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -143,7 +143,7 @@ dependencies = [
  "serde-protobuf 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-value 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
- "stream_delimit 0.1.1",
+ "stream_delimit 0.1.2",
 ]
 
 [[package]]

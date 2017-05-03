@@ -6,15 +6,12 @@ pq \- jq for protobuf - parse protobuf generically
 [\fB\-\-msgtype=STRING\fR]
 [\fB\-\-stream=DELIMITER\fR]
 [\fB\-\-trail=DELIMITER\fR]
-.IR [file]
 .SH DESCRIPTION
 .B pq
-parses a compiled protobuf message with .fdset files located in '~/.pq/'. see more at https://github.com/sevagh/pqrs
-.SH POSITIONAL ARGS
-.TP
-.BR (OPTIONAL)file\fR
-.br
-Read message from a file. Default is stdin.
+parses a compiled protobuf message with .fdset files located in '~/.pq/'. See more at https://github.com/sevagh/pqrs.
+
+.B pq
+operates on stdin by default. Use files with the <filename pipe.
 .SH OPTIONS
 .TP
 .BR \-\-msgtype=STRING\fR
@@ -31,9 +28,9 @@ guessing cannot distinguish between user-specified nulls and empty fields. E.g.,
 .br
 Parse a delimited stream. The delimiter is specified as a string. For now the only supported delimiter is "varint" (this is the way it's done by Google in delimited_message_util).
 .TP
-.BR \-\-trail=DELIMITER\fR
+.BR \-\-trail=NUM\fR
 .br
-Delete trailing delimiter characters between messages, e.g. "\\r\\n". Must be used in conjunction with '--stream'.
+Delete NUM number of trailing characters between streamed messages.
 .TP
 .SH ENVIRONMENT VARIABLES
 .TP

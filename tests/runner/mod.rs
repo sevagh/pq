@@ -2,8 +2,9 @@
 
 use std::env;
 use std::path::PathBuf;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::process::{Command, Output, Child, Stdio};
+use std::fs::File;
 
 pub struct Runner {
     pub cmd: Command,
@@ -33,7 +34,7 @@ impl Runner {
         }
     }
 
-    pub fn with_stdin(&mut self, contents: &[u8]) {
+    fn with_stdin(&mut self, contents: &[u8]) {
         self.cmd.stdin(Stdio::piped());
         let mut chld = self._spawn();
         chld.stdin
@@ -42,6 +43,13 @@ impl Runner {
             .write_all(contents)
             .unwrap();
         self.chld = Some(chld);
+    }
+
+    pub fn stdin_from_file(&mut self, path: &str) {
+        let mut file = File::open(&self.tests_path.join(path)).unwrap();
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf).unwrap();
+        self.with_stdin(&buf);
     }
 
     pub fn _spawn(&mut self) -> Child {
