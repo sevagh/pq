@@ -1,17 +1,20 @@
 .TH PQ 1
 .SH NAME
-pq \- jq for protobuf - parse protobuf generically
+pq \- jq for protobuf - parse protobuf generically. See more at https://github.com/sevagh/pqrs
 .SH SYNOPSIS
 .B pq
+.R [file]
 [\fB\-\-msgtype=STRING\fR]
 [\fB\-\-stream=DELIMITER\fR]
 [\fB\-\-trail=DELIMITER\fR]
 .SH DESCRIPTION
 .B pq
-parses a compiled protobuf message with .fdset files located in '~/.pq/'. See more at https://github.com/sevagh/pqrs.
-
-.B pq
-operates on stdin by default. Use files with the <filename pipe.
+parses a compiled protobuf message with .fdset files located in '~/.pq/'.
+.SH POSITIONAL ARGS
+.TP
+.BR (OPTIONAL)file\fR
+.br
+Read message from a file. Operates on stdin by default.
 .SH OPTIONS
 .TP
 .BR \-\-msgtype=STRING\fR

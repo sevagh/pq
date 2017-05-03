@@ -19,6 +19,10 @@ fn for_dog(work: &mut Runner) {
     work.stdin_from_file("samples/dog");
 }
 
+fn for_dog_file(work: &mut Runner) {
+    work.cmd.arg(&work.tests_path.join("samples/dog"));
+}
+
 fn for_nonexistent_fdset_dir(work: &mut Runner) {
     work.cmd.env("FDSET_PATH", "fdset-doesnt-exist");
     work.stdin_from_file("samples/dog");
@@ -56,6 +60,14 @@ fn run_pqrs<F>(modify_in: F) -> Output
 #[test]
 fn test_dog_decode() {
     let out = run_pqrs(for_dog);
+    assert!(out.status.success());
+    assert_eq!(String::from_utf8_lossy(&out.stdout),
+               "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
+}
+
+#[test]
+fn test_dog_decode_file() {
+    let out = run_pqrs(for_dog_file);
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
