@@ -20,7 +20,7 @@ $ protoc -o person.fdset person.proto
 $ cp *.fdset ~/.pq/
 ```
 
-Pipe a single compiled protobuf message to pq:
+Pipe a single compiled protobuf message:
 
 ```
 $ ./tests/python/testbench.py "single()" | pq | jq
@@ -31,7 +31,7 @@ $ ./tests/python/testbench.py "single()" | pq | jq
 }
 ```
 
-Pipe a dirty (extra leading/trailing chars) to pq:
+Pipe a dirty (extra leading/trailing chars):
 
 ```
 $ (printf hello && ./tests/python/testbench.py "single()") | pq | jq
@@ -41,7 +41,7 @@ $ (printf hello && ./tests/python/testbench.py "single()") | pq | jq
 }
 ```
 
-Pipe a `varint`-delimited stream to pq:
+Pipe a `varint`-delimited stream:
 
 ```
 $ ./tests/python/testbench.py "stream(limit=2)" | pq --stream="varint" | jq
@@ -56,8 +56,17 @@ $ ./tests/python/testbench.py "stream(limit=2)" | pq --stream="varint" | jq
 }
 ```
 
-### Experimental feature - trailing delimiter
+Pipe a `varint`-delimited stream with trailing newlines:
 
-Sometimes protobuf is sent in ways that add their own delimiters. E.g. if you send varint-delimited Protobuf over kafka, to use `pqrs`, you would need to deal with the message delimiters inserted by `kafka-console-consumer.sh` or whatever your command-line kafka consumer is that you are piping to pq.
-
-Tentative support for this is added in the form of a `--trail="\n\n"` command-line option.
+```
+$ ./tests/python/testbench.py "trail(trail=b'\n',limit=2)" | ./target/debug/pq --stream=varint --trail=1 | jq
+{
+  "age": 16,
+  "breed": "gsd",
+  "temperament": "chill"
+}
+{
+  "id": 3,
+  "name": "raffi"
+}
+```
