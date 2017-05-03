@@ -46,18 +46,17 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                             Err(_) => break,
                         }
                         ret = Some(msg_buf);
+                        break;
                     }
                 }
             }
             "leb128" => unimplemented!(),
             _ => panic!("Unknown delimiter"),
         }
-        println!("Now we're here!");
         if let Some(x) = trail {
             let mut trail_buf: Vec<u8> = vec![0u8; x];
             match self.read.read_exact(&mut trail_buf) {
-                Ok(_) => (),
-                Err(_) => return None,
+                Ok(_) | Err(_) => (),
             }
         }
         ret
