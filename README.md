@@ -23,7 +23,7 @@ $ cp *.fdset ~/.pq/
 Pipe a single compiled protobuf message:
 
 ```
-$ ./tests/python/testbench.py "single()" | pq | jq
+$ testbench.py "single()" | pq | jq
 {
   "age": 4,
   "breed": "poodle",
@@ -34,7 +34,7 @@ $ ./tests/python/testbench.py "single()" | pq | jq
 Pipe a dirty (extra leading/trailing chars):
 
 ```
-$ (printf hello && ./tests/python/testbench.py "single()") | pq | jq
+$ (printf hello && testbench.py "single()") | pq | jq
 {
   "id": 1,
   "name": "vahaken"
@@ -44,7 +44,7 @@ $ (printf hello && ./tests/python/testbench.py "single()") | pq | jq
 Pipe a `varint`-delimited stream:
 
 ```
-$ ./tests/python/testbench.py "stream(limit=2)" | pq --stream="varint" | jq
+$ testbench.py "stream(limit=2)" | pq --stream="varint" | jq
 {
   "age": 10,
   "breed": "gsd",
@@ -59,7 +59,7 @@ $ ./tests/python/testbench.py "stream(limit=2)" | pq --stream="varint" | jq
 Pipe a `varint`-delimited stream with trailing newlines:
 
 ```
-$ ./tests/python/testbench.py "trail(trail=b'\n',limit=2)" | ./target/debug/pq --stream=varint --trail=1 | jq
+$ testbench.py "trail(trail=b'\n',limit=2)" | pq --stream=varint --trail=1 | jq
 {
   "age": 16,
   "breed": "gsd",
