@@ -84,7 +84,11 @@ impl PqrsDecoder {
         Ok(())
     }
 
-    pub fn decode_message(&self, buf: &[u8], mut out: &mut Write) -> Result<(), PqrsError> {
+    pub fn decode_message(&self,
+                          buf: &[u8],
+                          mut out: &mut Write,
+                          _: bool)
+                          -> Result<(), PqrsError> {
         let mut offset = 0;
         let buflen = buf.len();
         while offset < buflen {

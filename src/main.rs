@@ -1,6 +1,7 @@
 #![crate_type = "bin"]
 
 extern crate rustc_serialize;
+extern crate atty;
 extern crate docopt;
 extern crate protobuf;
 extern crate serde;
@@ -24,7 +25,7 @@ use std::process;
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const USAGE: &'static str = "
-pq - Protobuf to json
+pq - protobuf to json
 
 Usage:
   pq [--msgtype=<msgtype>] [--stream=<delim>] [--trail=<delim>]
@@ -47,12 +48,22 @@ struct Args {
 }
 
 fn main() {
+    let mut stdout = io::stdout();
+
+    if atty::is(atty::Stream::Stdin) {
+        writeln!(stdout,
+                 "pq expects input to be piped from stdin - run with --help for more info")
+                .unwrap();
+        process::exit(0);
+    }
+
+    let out_is_tty = atty::is(atty::Stream::Stdout);
+
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.version(Some(String::from(VERSION))).decode())
         .unwrap_or_else(|e| e.exit());
 
     let stdin = io::stdin();
-    let stdout = io::stdout();
 
     let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
         Ok(x) => x,
@@ -64,7 +75,7 @@ fn main() {
     if let Some(lead_delim) = args.flag_stream {
         let delim = StreamDelimiter::new(&lead_delim, &mut infile, args.flag_trail);
         for chunk in delim {
-            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock()) {
+            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
                 Ok(_) => (),
                 Err(e) => errexit!(e),
             }
@@ -75,7 +86,7 @@ fn main() {
             Ok(_) => (),
             Err(e) => errexit!(e),
         }
-        match pqrs_decoder.decode_message(&buf, &mut stdout.lock()) {
+        match pqrs_decoder.decode_message(&buf, &mut stdout.lock(), out_is_tty) {
             Ok(_) => (),
             Err(e) => errexit!(e),
         }
