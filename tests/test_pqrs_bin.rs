@@ -73,7 +73,9 @@ fn test_dog_decode_stream_with_trail() {
     println!("{:?}", String::from_utf8_lossy(&out.stderr));
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout),
-               "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}{\"age\":9,\"breed\":\"poodle\",\"temperament\":\"aggressive\"}");
+               "{\"age\":2,\"breed\":\"rottweiler\",\
+               \"temperament\":\"chill\"}{\"age\":9,\
+               \"breed\":\"poodle\",\"temperament\":\"aggressive\"}");
 }
 
 #[test]
