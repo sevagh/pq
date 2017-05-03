@@ -1,6 +1,5 @@
 use fdset_discovery::get_loaded_descriptors;
 use error::*;
-use std::collections::BTreeMap;
 use std::io::Write;
 use std::result::Result;
 use serde::{Deserialize, Serialize};
@@ -57,17 +56,17 @@ impl PqrsDecoder {
            })
     }
 
-    fn decode_message_(&self, data: &[u8], out: &mut Write) -> Result<(), DecodeError> {
-        let mut serializer = Serializer::new(out);
-        match self.message_type {
+    fn decode_message_(&self,
+                       data: &[u8],
+                       out: &mut Write,
+                       is_tty: bool)
+                       -> Result<(), DecodeError> {
+        let value = match self.message_type {
             None => {
-                let contenders =
-                    discover_contenders(data, &self.descriptors, &self.message_descriptors);
-                if contenders.is_empty() {
-                    return Err(DecodeError::NoSuccessfulAttempts);
+                match discover_contenders(data, &self.descriptors, &self.message_descriptors) {
+                    Ok(value) => value,
+                    Err(e) => return Err(e),
                 }
-                let contender_max = contenders.iter().max_by_key(|x| x.len());
-                contender_max.serialize(&mut serializer).unwrap();
             }
             Some(ref x) => {
                 let stream = CodedInputStream::from_bytes(data);
@@ -76,20 +75,34 @@ impl PqrsDecoder {
                                                                        stream)
                         .unwrap();
                 match deser(&mut deserializer) {
-                    Ok(value) => value.serialize(&mut serializer).unwrap(),
+                    Ok(value) => value,
                     Err(e) => return Err(e),
                 }
             }
+        };
+        if is_tty {
+            match value.serialize(&mut Serializer::pretty(out)) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(DecodeError::SerializeError(e)),
+            }
+        } else {
+            match value.serialize(&mut Serializer::new(out)) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(DecodeError::SerializeError(e)),
+            }
         }
-        Ok(())
     }
 
-    pub fn decode_message(&self, buf: &[u8], mut out: &mut Write) -> Result<(), PqrsError> {
+    pub fn decode_message(&self,
+                          buf: &[u8],
+                          mut out: &mut Write,
+                          is_tty: bool)
+                          -> Result<(), PqrsError> {
         let mut offset = 0;
         let buflen = buf.len();
         while offset < buflen {
             for n in 0..offset + 1 {
-                if self.decode_message_(&buf[n..(buflen - offset + n)], &mut out)
+                if self.decode_message_(&buf[n..(buflen - offset + n)], &mut out, is_tty)
                        .is_ok() {
                     return Ok(());
                 }
@@ -103,7 +116,7 @@ impl PqrsDecoder {
 fn discover_contenders(data: &[u8],
                        d: &Descriptors,
                        mds: &[MessageDescriptor])
-                       -> Vec<BTreeMap<Value, Value>> {
+                       -> Result<Value, DecodeError> {
     let mut contenders = Vec::new();
     for md in mds {
         let stream = CodedInputStream::from_bytes(data);
@@ -124,7 +137,10 @@ fn discover_contenders(data: &[u8],
             Ok(_) | Err(_) => continue,
         }
     }
-    contenders
+    if contenders.is_empty() {
+        return Err(DecodeError::NoSuccessfulAttempts);
+    }
+    Ok(Value::Map(contenders.into_iter().max_by_key(|x| x.len()).unwrap()))
 }
 
 fn deser(deserializer: &mut Deserializer) -> Result<Value, DecodeError> {

@@ -2,6 +2,7 @@ use std::fmt;
 use protobuf::ProtobufError;
 use std::error::Error;
 use serde_protobuf;
+use serde_json;
 use fdset_discovery::DiscoveryError;
 
 #[derive(Debug)]
@@ -15,6 +16,7 @@ pub enum DecodeError {
     NoSuccessfulAttempts,
     ProtobufError(ProtobufError),
     SerdeProtobufError(serde_protobuf::error::Error),
+    SerializeError(serde_json::Error),
 }
 
 impl fmt::Display for PqrsError {
@@ -62,6 +64,7 @@ impl fmt::Display for DecodeError {
             }
             DecodeError::ProtobufError(ref err) => err.fmt(f),
             DecodeError::SerdeProtobufError(ref err) => err.fmt(f),
+            DecodeError::SerializeError(ref err) => err.fmt(f),
         }
     }
 }
@@ -72,6 +75,7 @@ impl Error for DecodeError {
             DecodeError::NoSuccessfulAttempts => "no suitable message descriptor",
             DecodeError::ProtobufError(ref err) => err.description(),
             DecodeError::SerdeProtobufError(ref err) => err.description(),
+            DecodeError::SerializeError(ref err) => err.description(),
         }
     }
 
@@ -80,6 +84,7 @@ impl Error for DecodeError {
             DecodeError::NoSuccessfulAttempts => None,
             DecodeError::ProtobufError(ref err) => Some(err),
             DecodeError::SerdeProtobufError(ref err) => Some(err),
+            DecodeError::SerializeError(ref err) => Some(err),
         }
     }
 }

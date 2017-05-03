@@ -27,6 +27,7 @@ fn for_nonexistent_fdset_dir(work: &mut Runner) {
 fn for_no_valid_fdsets(work: &mut Runner) {
     work.cmd
         .env("FDSET_PATH", &work.tests_path.join("fdsets-invalid"));
+    work.stdin_from_file("samples/dog");
 }
 
 fn for_bad_input(work: &mut Runner) {
