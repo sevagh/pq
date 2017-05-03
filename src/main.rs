@@ -76,8 +76,13 @@ fn main() {
         let delim = StreamDelimiter::new(&lead_delim, &mut infile, args.flag_trail);
         for chunk in delim {
             match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
-                Ok(_) => (),
+                Ok(_) => {
+                    
+                },
                 Err(e) => errexit!(e),
+            }
+            if out_is_tty {
+                writeln!(&mut stdout, "").unwrap();
             }
         }
     } else {
