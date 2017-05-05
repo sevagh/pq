@@ -31,16 +31,6 @@ $ testbench.py "single()" | pq | jq
 }
 ```
 
-Pipe a dirty (extra leading/trailing chars):
-
-```
-$ (printf hello && testbench.py "single()") | pq | jq
-{
-  "id": 1,
-  "name": "vahaken"
-}
-```
-
 Pipe a `varint`-delimited stream:
 
 ```

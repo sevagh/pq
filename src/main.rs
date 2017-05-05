@@ -104,5 +104,8 @@ fn main() {
             Ok(_) => (),
             Err(e) => errexit!(e),
         }
+        if out_is_tty {
+            writeln!(&mut stdout, "").unwrap();
+        }
     }
 }

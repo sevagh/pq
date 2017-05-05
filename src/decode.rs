@@ -56,7 +56,7 @@ impl PqrsDecoder {
            })
     }
 
-    fn decode_message_(&self,
+    pub fn decode_message(&self,
                        data: &[u8],
                        out: &mut Write,
                        is_tty: bool)
@@ -91,25 +91,6 @@ impl PqrsDecoder {
                 Err(e) => Err(DecodeError::SerializeError(e)),
             }
         }
-    }
-
-    pub fn decode_message(&self,
-                          buf: &[u8],
-                          mut out: &mut Write,
-                          is_tty: bool)
-                          -> Result<(), PqrsError> {
-        let mut offset = 0;
-        let buflen = buf.len();
-        while offset < buflen {
-            for n in 0..offset + 1 {
-                if self.decode_message_(&buf[n..(buflen - offset + n)], &mut out, is_tty)
-                       .is_ok() {
-                    return Ok(());
-                }
-            }
-            offset += 1;
-        }
-        Err(PqrsError::DecodeError(DecodeError::NoSuccessfulAttempts))
     }
 }
 
