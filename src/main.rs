@@ -11,6 +11,7 @@ extern crate serde_json;
 extern crate stream_delimit;
 
 mod fdset_discovery;
+mod newline_pretty_formatter;
 mod error;
 mod decode;
 #[macro_use]
@@ -90,9 +91,6 @@ fn main() {
                 Ok(_) => (),
                 Err(e) => errexit!(e),
             }
-            if out_is_tty {
-                writeln!(&mut stdout, "").unwrap();
-            }
         }
     } else {
         let mut buf = Vec::new();
@@ -103,9 +101,6 @@ fn main() {
         match pqrs_decoder.decode_message(&buf, &mut stdout.lock(), out_is_tty) {
             Ok(_) => (),
             Err(e) => errexit!(e),
-        }
-        if out_is_tty {
-            writeln!(&mut stdout, "").unwrap();
         }
     }
 }

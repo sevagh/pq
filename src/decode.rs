@@ -9,6 +9,7 @@ use serde_protobuf::error::{Error, ErrorKind};
 use serde_protobuf::descriptor::{Descriptors, MessageDescriptor};
 use serde_value::Value;
 use protobuf::CodedInputStream;
+use newline_pretty_formatter::NewlineFormatter;
 
 pub struct PqrsDecoder {
     pub descriptors: Descriptors,
@@ -81,7 +82,8 @@ impl PqrsDecoder {
             }
         };
         if is_tty {
-            match value.serialize(&mut Serializer::pretty(out)) {
+            let formatter = NewlineFormatter::default();
+            match value.serialize(&mut Serializer::with_formatter(out, formatter)) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(DecodeError::SerializeError(e)),
             }
