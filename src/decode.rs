@@ -58,10 +58,10 @@ impl PqrsDecoder {
     }
 
     pub fn decode_message(&self,
-                       data: &[u8],
-                       out: &mut Write,
-                       is_tty: bool)
-                       -> Result<(), DecodeError> {
+                          data: &[u8],
+                          out: &mut Write,
+                          is_tty: bool)
+                          -> Result<(), DecodeError> {
         let value = match self.message_type {
             None => {
                 match discover_contenders(data, &self.descriptors, &self.message_descriptors) {
