@@ -1,16 +1,16 @@
-# pqrs [![Travis](https://img.shields.io/travis/sevagh/pqrs.svg)](https://travis-ci.org/sevagh/pqrs) [![license](https://img.shields.io/github/license/sevagh/pqrs.svg)](https://github.com/sevagh/pqrs/blob/master/LICENSE) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq)
+# pqrs [![Travis](https://img.shields.io/travis/sevagh/pq.svg)](https://travis-ci.org/sevagh/pq) [![license](https://img.shields.io/github/license/sevagh/pq.svg)](https://github.com/sevagh/pq/blob/master/LICENSE) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq)
 
 ### protobuf to json deserializer, written in Rust
 
-`pqrs` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
+`pq` is a tool which deserializes compiled protobuf messages given a set of pre-compiled `.fdset` files.
 
 ### Download
 
-pqrs is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pqrs/releases).
+pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pq/releases).
 
 ### Usage
 
-**Read the [manpage!](https://sevagh.github.io/pqrs/)**
+**Read the [manpage!](https://sevagh.github.io/pq/)**
 
 To set up, put your `*.fdset` files in `~/.pq`:
 
