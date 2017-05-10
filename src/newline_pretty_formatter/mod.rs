@@ -1,5 +1,4 @@
 use serde_json::ser::{Formatter, PrettyFormatter};
-use serde_json::error::Error;
 use std::io::{self, Write};
 
 #[derive(Default)]
