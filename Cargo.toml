@@ -3,22 +3,28 @@ name = "pq"
 version = "0.4.3"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
-repository = "https://github.com/sevagh/pqrs"
+repository = "https://github.com/sevagh/pq"
 documentation = "http://pqrs.sevag.xyz"
 readme = "./README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
+include = [
+    "**/*.rs",
+    "Cargo.toml",
+]
 
 [dependencies]
 docopt = "0.7"
 rustc-serialize = "0.3"
-serde = "0.9.12"
-serde-value = "0.4.0"
-serde_json = "0.9.9"
-serde-protobuf = "0.5"
+serde = "1.0.2"
+serde-value = "0.5.0"
+serde_json = "1.0.1"
 protobuf = "1.2.1"
 atty = "0.2.2"
 stream_delimit = { path = "stream_delimit", version = "0.1.2" }
+
+[dependencies.serde-protobuf]
+git = "https://github.com/dflemstr/rq"
 
 [workspace]
 members = ["stream_delimit"]
