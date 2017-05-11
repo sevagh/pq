@@ -10,6 +10,7 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
+extern crate rdkafka;
 
 mod fdset_discovery;
 mod newline_pretty_formatter;
@@ -19,6 +20,7 @@ mod decode;
 mod macros;
 
 use futures::stream::Stream;
+use rdkafka::consumer::{Consumer, CommitMode};
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::StreamDelimiter;
@@ -74,15 +76,28 @@ fn main() {
     if args.cmd_kafka {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
             match StreamDelimiter::for_kafka(&brokers, &topic, args.flag_from_beginning) {
-                Ok(x) => {
-                    let kfc = x.kafka_consumer.unwrap();
-                    let result = kfc.message_stream.map(|y| kfc.consume_single(y).unwrap());
-                    result.for_each(|inner| {
-                        match pqrs_decoder.decode_message(&inner, &mut stdout.lock(), out_is_tty) {
-                            Ok(_) => (),
-                            Err(e) => errexit!(e),
+                Ok(delim) => {
+                    let kfc = match delim.kafka_consumer {
+                        Some(x) => x,
+                        None => errexit!(PqrsError::ArgumentError),
+                    };
+                    for message in kfc.message_stream.wait() {
+                        match message {
+                            Ok(Ok(x)) => {
+                                match x.payload_view::<[u8]>() {
+                                    Some(Ok(s)) => {
+                                        match pqrs_decoder.decode_message(&s.to_vec(), &mut stdout.lock(), out_is_tty) {
+                                            Ok(_) => (),
+                                            Err(e) => errexit!(e),
+                                        }
+                                    }
+                                    _ => (),
+                                }
+                                kfc.consumer.commit_message(&x, CommitMode::Async).unwrap();
+                            },
+                            _ => (),
                         }
-                    });
+                    } 
                 }
                 Err(e) => errexit!(e),
             }

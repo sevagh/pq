@@ -25,6 +25,10 @@ atty = "0.2.2"
 stream_delimit = { path = "stream_delimit", version = "0.2.0" }
 futures = "0.1.7"
 
+[dependencies.rdkafka]
+version = "^0.9.1"
+features = ["ssl", "sasl"]
+
 [replace]
 "serde-protobuf:0.5.0" = { git = 'https://github.com/sevagh/rq' }
 

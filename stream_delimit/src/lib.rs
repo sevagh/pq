@@ -4,14 +4,10 @@ extern crate rdkafka_sys;
 
 mod error;
 
-use futures::stream::Stream;
-
 use rdkafka::client::{Context};
-use rdkafka::consumer::{Consumer, ConsumerContext, CommitMode, Rebalance};
+use rdkafka::consumer::{Consumer, ConsumerContext, Rebalance};
 use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
 use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
-use rdkafka::message::Message;
-use rdkafka::error::KafkaError;
 use error::StreamDelimitError;
 
 use std::io::Read;
@@ -87,7 +83,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
     }
 }
 
-struct ConsumerContextExample;
+pub struct ConsumerContextExample;
 
 impl Context for ConsumerContextExample {}
 
@@ -100,7 +96,7 @@ impl ConsumerContext for ConsumerContextExample {
 type LoggingConsumer = StreamConsumer<ConsumerContextExample>;
 
 pub struct KafkaConsumer {
-    consumer: LoggingConsumer,
+    pub consumer: LoggingConsumer,
     pub message_stream: MessageStream,
 }
 
@@ -137,21 +133,4 @@ impl <'a>KafkaConsumer {
             message_stream: message_stream,
         })
     }
-
-    pub fn consume_single(&self, message: Result<Message, KafkaError>) -> Option<Vec<u8>> {
-        let ret: Option<Vec<u8>>;
-        match message {
-            Ok(x) => {
-                match x.payload_view::<[u8]>() {
-                    None => ret = None,
-                    Some(Ok(s)) => ret = Some(s.to_vec()),
-                    Some(Err(_)) => ret= None,
-                }
-                self.consumer.commit_message(&x, CommitMode::Async).unwrap();
-            },
-            Err(_) => ret = None,
-        }        
-        ret
-    }
 }
-
