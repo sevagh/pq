@@ -45,18 +45,3 @@ $ testbench.py "stream(limit=2)" | pq --stream="varint" | jq
   "name": "khosrov"
 }
 ```
-
-Pipe a `varint`-delimited stream with trailing newlines:
-
-```
-$ testbench.py "trail(trail=b'\n',limit=2)" | pq --stream=varint --trail=1 | jq
-{
-  "age": 16,
-  "breed": "gsd",
-  "temperament": "chill"
-}
-{
-  "id": 3,
-  "name": "raffi"
-}
-```
