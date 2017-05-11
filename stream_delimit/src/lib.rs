@@ -4,9 +4,14 @@ extern crate rdkafka_sys;
 
 mod error;
 
+use futures::stream::Stream;
+
 use rdkafka::client::{Context};
-use rdkafka::consumer::{BaseConsumer, ConsumerContext, CommitMode, Rebalance};
+use rdkafka::consumer::{Consumer, ConsumerContext, CommitMode, Rebalance};
+use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
 use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
+use rdkafka::message::Message;
+use rdkafka::error::KafkaError;
 use error::StreamDelimitError;
 
 use std::io::Read;
@@ -16,7 +21,7 @@ const MAX_ATTEMPTS: usize = 10;
 pub struct StreamDelimiter<'a> {
     delim: &'a str,
     read: Option<&'a mut Read>,
-    kafka_consumer: Option<KafkaConsumer>,
+    pub kafka_consumer: Option<KafkaConsumer>,
 }
 
 impl<'a> StreamDelimiter<'a> {
@@ -75,13 +80,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                 }
             }
             "leb128" => unimplemented!(),
-            "kafka" => {
-                if let Some(ref kfc) = self.kafka_consumer {
-                    ret = kfc.consume_single();
-                } else {
-                    ret = None
-                }
-            }
+            "kafka" => panic!("Don't use iterator with kafka"),
             _ => panic!("Unknown delimiter"),
         }
         ret
@@ -98,10 +97,11 @@ impl ConsumerContext for ConsumerContextExample {
     fn post_rebalance(&self, _: &Rebalance) {}
 }
 
-type LoggingConsumer = BaseConsumer<ConsumerContextExample>;
+type LoggingConsumer = StreamConsumer<ConsumerContextExample>;
 
-struct KafkaConsumer {
+pub struct KafkaConsumer {
     consumer: LoggingConsumer,
+    pub message_stream: MessageStream,
 }
 
 impl <'a>KafkaConsumer {
@@ -115,7 +115,7 @@ impl <'a>KafkaConsumer {
             auto_offset_reset = "smallest";
         }
 
-        let consumer = ClientConfig::new()
+        let mut consumer = ClientConfig::new()
             .set("group.id", "pq-consumer-group-id")
             .set("bootstrap.servers", brokers)
             .set("enable.partition.eof", "false")
@@ -130,26 +130,28 @@ impl <'a>KafkaConsumer {
             .expect("Consumer creation failed");
 
         consumer.subscribe(&vec![topic]).expect("Can't subscribe to specified topics");
+        let message_stream = consumer.start();
 
         Ok(KafkaConsumer{
             consumer: consumer,
+            message_stream: message_stream,
         })
     }
 
-    fn consume_single(&self) -> Option<Vec<u8>> {
+    pub fn consume_single(&self, message: Result<Message, KafkaError>) -> Option<Vec<u8>> {
         let ret: Option<Vec<u8>>;
-        match self.consumer.poll(500) {
-            Ok(Some(s)) => {
-                match s.payload_view::<[u8]>() {
+        match message {
+            Ok(x) => {
+                match x.payload_view::<[u8]>() {
                     None => ret = None,
-                    Some(Ok(x)) => ret = Some(x.to_vec()),
-                    Some(Err(_)) => ret = None,
+                    Some(Ok(s)) => ret = Some(s.to_vec()),
+                    Some(Err(_)) => ret= None,
                 }
-                self.consumer.commit_message(&s, CommitMode::Async).unwrap();
-            }
+                self.consumer.commit_message(&x, CommitMode::Async).unwrap();
+            },
             Err(_) => ret = None,
-            Ok(None) => ret = None,
-        }
+        }        
         ret
     }
 }
+
