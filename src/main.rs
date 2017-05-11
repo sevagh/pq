@@ -30,23 +30,28 @@ const USAGE: &'static str = "
 pq - protobuf to json
 
 Usage:
-  pq [<infile>] [--msgtype=<msgtype>] [--stream=<delim>] [--trail=<delim>]
+  pq [<infile>] [--msgtype=<msgtype>] [--stream=<delim>]
+  pq kafka <topic> --brokers=<brokers> [--from-beginning]
   pq (--help | --version)
 
 Options:
   --stream=<delim>      Stream delimiter e.g. \"varint\", \"leb128\"
-  --trail=<num>         Number of chars to chomp from tail
   --msgtype=<msgtype>   Message type e.g. com.example.Type
+  --brokers=<brokers>   1.2.3.4:9092,5.6.7.8:9092
+  --from-beginning      Consume kafka from beginning
   --help                Show this screen.
   --version             Show version.
 ";
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
+    pub cmd_kafka: bool,
     pub arg_infile: Option<String>,
+    pub arg_topic: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_stream: Option<String>,
-    pub flag_trail: Option<usize>,
+    pub flag_from_beginning: bool,
+    pub flag_brokers: Option<String>,
     flag_version: bool,
 }
 
@@ -85,7 +90,15 @@ fn main() {
     };
 
     if let Some(lead_delim) = args.flag_stream {
-        let delim = StreamDelimiter::new(&lead_delim, &mut infile, args.flag_trail);
+        let delim = StreamDelimiter::new(&lead_delim, &mut infile);
+        for chunk in delim {
+            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
+                Ok(_) => (),
+                Err(e) => errexit!(e),
+            }
+        }
+    } else if args.cmd_kafka {
+        let delim = StreamDelimiter::for_kafka(args.flag_brokers, args.arg_topic, args.flag_from_beginning);
         for chunk in delim {
             match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
                 Ok(_) => (),
