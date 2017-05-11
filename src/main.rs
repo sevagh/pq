@@ -1,5 +1,6 @@
 #![crate_type = "bin"]
 
+extern crate futures;
 extern crate rustc_serialize;
 extern crate atty;
 extern crate docopt;
@@ -17,11 +18,13 @@ mod decode;
 #[macro_use]
 mod macros;
 
+use futures::stream::Stream;
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::StreamDelimiter;
 use std::io::{self, Read, Write, stderr};
 use std::process;
+use error::PqrsError;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -63,21 +66,28 @@ fn main() {
         .and_then(|d| d.version(Some(String::from(VERSION))).decode())
         .unwrap_or_else(|e| e.exit());
 
-    println!("{:#?}", args);
-
     let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
         Ok(x) => x,
         Err(e) => errexit!(e),
     };
 
-
     if args.cmd_kafka {
-        let delim = StreamDelimiter::for_kafka(args.flag_brokers, args.arg_topic, args.flag_from_beginning);
-        for chunk in delim {
-            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
-                Ok(_) => (),
+        if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
+            match StreamDelimiter::for_kafka(&brokers, &topic, args.flag_from_beginning) {
+                Ok(x) => {
+                    let kfc = x.kafka_consumer.unwrap();
+                    let result = kfc.message_stream.map(|y| kfc.consume_single(y).unwrap());
+                    result.for_each(|inner| {
+                        match pqrs_decoder.decode_message(&inner, &mut stdout.lock(), out_is_tty) {
+                            Ok(_) => (),
+                            Err(e) => errexit!(e),
+                        }
+                    });
+                }
                 Err(e) => errexit!(e),
             }
+        } else {
+            errexit!(PqrsError::ArgumentError)
         }
     } else {
         if atty::is(atty::Stream::Stdin) {

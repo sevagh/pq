@@ -2,12 +2,17 @@ extern crate futures;
 extern crate rdkafka;
 extern crate rdkafka_sys;
 
+mod error;
+
 use futures::stream::Stream;
 
 use rdkafka::client::{Context};
 use rdkafka::consumer::{Consumer, ConsumerContext, CommitMode, Rebalance};
 use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
 use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
+use rdkafka::message::Message;
+use rdkafka::error::KafkaError;
+use error::StreamDelimitError;
 
 use std::io::Read;
 
@@ -16,7 +21,7 @@ const MAX_ATTEMPTS: usize = 10;
 pub struct StreamDelimiter<'a> {
     delim: &'a str,
     read: Option<&'a mut Read>,
-    kafka_consumer: Option<&'a KafkaConsumer<'a>>,
+    pub kafka_consumer: Option<KafkaConsumer>,
 }
 
 impl<'a> StreamDelimiter<'a> {
@@ -28,11 +33,15 @@ impl<'a> StreamDelimiter<'a> {
         }
     }
 
-    pub fn for_kafka(brokers: Option<String>, topic: Option<String>, from_beginning: bool) -> StreamDelimiter<'a> {
-        StreamDelimiter {
-            delim: "kafka",
-            read: None,
-            kafka_consumer: Some(&KafkaConsumer::new(topic, brokers, from_beginning)),
+    pub fn for_kafka(brokers: &'a str, topic: &'a str, from_beginning: bool) -> Result<StreamDelimiter<'a>, StreamDelimitError> {
+        if let Ok(kafka_consumer) = KafkaConsumer::new(topic, brokers, from_beginning) {
+            Ok(StreamDelimiter {
+                        delim: "kafka",
+                        read: None,
+                        kafka_consumer: Some(kafka_consumer),
+            })
+        } else {
+            return Err(StreamDelimitError::KafkaInitializeError)
         }
     }
 }
@@ -71,9 +80,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                 }
             }
             "leb128" => unimplemented!(),
-            "kafka" => {
-                    return self.kafka_consumer.unwrap().consume_single();
-            }
+            "kafka" => panic!("Don't use iterator with kafka"),
             _ => panic!("Unknown delimiter"),
         }
         ret
@@ -92,13 +99,13 @@ impl ConsumerContext for ConsumerContextExample {
 
 type LoggingConsumer = StreamConsumer<ConsumerContextExample>;
 
-struct KafkaConsumer<'a> {
-    consumer: &'a LoggingConsumer,
-    message_stream: &'a MessageStream,
+pub struct KafkaConsumer {
+    consumer: LoggingConsumer,
+    pub message_stream: MessageStream,
 }
 
-impl <'a>KafkaConsumer<'a> {
-    fn new(brokers: Option<String>, topic: Option<String>, from_beginning: bool) -> KafkaConsumer<'a> {
+impl <'a>KafkaConsumer {
+    fn new(brokers: &'a str, topic: &'a str, from_beginning: bool) -> Result<KafkaConsumer, StreamDelimitError> {
         let context = ConsumerContextExample;
 
         let auto_offset_reset: &str;
@@ -108,12 +115,9 @@ impl <'a>KafkaConsumer<'a> {
             auto_offset_reset = "smallest";
         }
 
-        let Some(ref brokers_) = brokers;
-        let Some(ref topic_) = topic;
-
         let mut consumer = ClientConfig::new()
             .set("group.id", "pq-consumer-group-id")
-            .set("bootstrap.servers", brokers_)
+            .set("bootstrap.servers", brokers)
             .set("enable.partition.eof", "false")
             .set("session.timeout.ms", "6000")
             .set("enable.auto.commit", "true")
@@ -125,31 +129,29 @@ impl <'a>KafkaConsumer<'a> {
             .create_with_context::<_, LoggingConsumer>(context)
             .expect("Consumer creation failed");
 
-        consumer.subscribe(&vec![topic_]).expect("Can't subscribe to specified topics");
+        consumer.subscribe(&vec![topic]).expect("Can't subscribe to specified topics");
         let message_stream = consumer.start();
 
-        KafkaConsumer{
-            consumer: &consumer,
-            message_stream: &message_stream,
-        }
+        Ok(KafkaConsumer{
+            consumer: consumer,
+            message_stream: message_stream,
+        })
     }
 
-    fn consume_single(&mut self) -> Option<Vec<u8>> {
+    pub fn consume_single(&self, message: Result<Message, KafkaError>) -> Option<Vec<u8>> {
         let ret: Option<Vec<u8>>;
-        for message in self.message_stream.take(1).wait() {
-            match message {
-                Err(_) => ret = None,
-                Ok(Ok(m)) => {
-                    let _ = match m.payload_view::<[u8]>() {
-                        None => ret = None,
-                        Some(Ok(s)) => ret = Some(s.to_vec()),
-                        Some(Err(e)) => ret = None,
-                    };
-                    self.consumer.commit_message(&m, CommitMode::Async).unwrap();
-                },
-                Ok(Err(e)) => ret = None,
-            };
-        }
-        return ret
+        match message {
+            Ok(x) => {
+                match x.payload_view::<[u8]>() {
+                    None => ret = None,
+                    Some(Ok(s)) => ret = Some(s.to_vec()),
+                    Some(Err(_)) => ret= None,
+                }
+                self.consumer.commit_message(&x, CommitMode::Async).unwrap();
+            },
+            Err(_) => ret = None,
+        }        
+        ret
     }
 }
+
