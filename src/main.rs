@@ -20,8 +20,7 @@ mod macros;
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::StreamDelimiter;
-use std::fs::File;
-use std::io::{self, Read, BufReader, Write, stderr};
+use std::io::{self, Read, Write, stderr};
 use std::process;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -30,7 +29,7 @@ const USAGE: &'static str = "
 pq - protobuf to json
 
 Usage:
-  pq [<infile>] [--msgtype=<msgtype>] [--stream=<delim>]
+  pq [--msgtype=<msgtype>] [--stream=<delim>]
   pq kafka <topic> --brokers=<brokers> [--from-beginning]
   pq (--help | --version)
 
@@ -46,7 +45,6 @@ Options:
 #[derive(Debug, RustcDecodable)]
 struct Args {
     pub cmd_kafka: bool,
-    pub arg_infile: Option<String>,
     pub arg_topic: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_stream: Option<String>,
@@ -70,34 +68,8 @@ fn main() {
         Err(e) => errexit!(e),
     };
 
-    let mut infile: Box<Read> = match args.arg_infile {
-        Some(x) => {
-            let file = match File::open(&x) {
-                Ok(x) => x,
-                Err(e) => errexit!(e),
-            };
-            Box::new(BufReader::new(file))
-        }
-        None => {
-            if atty::is(atty::Stream::Stdin) {
-                writeln!(stdout,
-                         "pq expects input to be piped from stdin - run with --help for more info")
-                        .unwrap();
-                process::exit(0);
-            }
-            Box::new(stdin.lock())
-        }
-    };
 
-    if let Some(lead_delim) = args.flag_stream {
-        let delim = StreamDelimiter::new(&lead_delim, &mut infile);
-        for chunk in delim {
-            match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
-                Ok(_) => (),
-                Err(e) => errexit!(e),
-            }
-        }
-    } else if args.cmd_kafka {
+    if args.cmd_kafka {
         let delim = StreamDelimiter::for_kafka(args.flag_brokers, args.arg_topic, args.flag_from_beginning);
         for chunk in delim {
             match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
@@ -106,14 +78,32 @@ fn main() {
             }
         }
     } else {
-        let mut buf = Vec::new();
-        match infile.read_to_end(&mut buf) {
-            Ok(_) => (),
-            Err(e) => errexit!(e),
+        if atty::is(atty::Stream::Stdin) {
+            writeln!(stdout,
+                    "pq expects input to be piped from stdin - run with --help for more info")
+                    .unwrap();
+            process::exit(0);
         }
-        match pqrs_decoder.decode_message(&buf, &mut stdout.lock(), out_is_tty) {
-            Ok(_) => (),
-            Err(e) => errexit!(e),
+        let mut in_ = stdin.lock();
+
+        if let Some(lead_delim) = args.flag_stream {
+            let delim = StreamDelimiter::new(&lead_delim, &mut in_);
+            for chunk in delim {
+                match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
+                    Ok(_) => (),
+                    Err(e) => errexit!(e),
+                }
+            }
+        } else {
+            let mut buf = Vec::new();
+            match in_.read_to_end(&mut buf) {
+                Ok(_) => (),
+                Err(e) => errexit!(e),
+            }
+            match pqrs_decoder.decode_message(&buf, &mut stdout.lock(), out_is_tty) {
+                Ok(_) => (),
+                Err(e) => errexit!(e),
+            }
         }
     }
 }

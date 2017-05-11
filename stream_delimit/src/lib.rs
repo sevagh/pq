@@ -110,6 +110,7 @@ fn consume_and_print(brokers: &str, topic: &str) {
     let context = ConsumerContextExample;
 
     let mut consumer = ClientConfig::new()
+        .set("group.id", "pq-consumer-group-id")
         .set("bootstrap.servers", brokers)
         .set("enable.partition.eof", "false")
         .set("session.timeout.ms", "6000")
