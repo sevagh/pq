@@ -1,6 +1,5 @@
 #![crate_type = "bin"]
 
-extern crate futures;
 extern crate rustc_serialize;
 extern crate atty;
 extern crate docopt;
@@ -18,7 +17,6 @@ mod decode;
 #[macro_use]
 mod macros;
 
-use futures::stream::Stream;
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::StreamDelimiter;
@@ -74,15 +72,13 @@ fn main() {
     if args.cmd_kafka {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
             match StreamDelimiter::for_kafka(&brokers, &topic, args.flag_from_beginning) {
-                Ok(x) => {
-                    let kfc = x.kafka_consumer.unwrap();
-                    let result = kfc.message_stream.map(|y| kfc.consume_single(y).unwrap());
-                    result.for_each(|inner| {
-                        match pqrs_decoder.decode_message(&inner, &mut stdout.lock(), out_is_tty) {
+                Ok(delim) => {
+                    for chunk in delim {
+                        match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
                             Ok(_) => (),
                             Err(e) => errexit!(e),
                         }
-                    });
+                    }
                 }
                 Err(e) => errexit!(e),
             }
