@@ -63,6 +63,8 @@ fn main() {
         .and_then(|d| d.version(Some(String::from(VERSION))).decode())
         .unwrap_or_else(|e| e.exit());
 
+    println!("{:#?}", args);
+
     let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
         Ok(x) => x,
         Err(e) => errexit!(e),

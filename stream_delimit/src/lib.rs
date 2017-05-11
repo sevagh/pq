@@ -6,7 +6,7 @@ use futures::stream::Stream;
 
 use rdkafka::client::{Context};
 use rdkafka::consumer::{Consumer, ConsumerContext, CommitMode, Rebalance};
-use rdkafka::consumer::stream_consumer::StreamConsumer;
+use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
 use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
 
 use std::io::Read;
@@ -16,9 +16,7 @@ const MAX_ATTEMPTS: usize = 10;
 pub struct StreamDelimiter<'a> {
     delim: &'a str,
     read: Option<&'a mut Read>,
-    topic: Option<String>,
-    brokers: Option<String>,
-    from_beginning: Option<bool>,
+    kafka_consumer: Option<&'a KafkaConsumer<'a>>,
 }
 
 impl<'a> StreamDelimiter<'a> {
@@ -26,9 +24,7 @@ impl<'a> StreamDelimiter<'a> {
         StreamDelimiter {
             delim: delim,
             read: Some(read),
-            topic: None,
-            brokers: None,
-            from_beginning: None,
+            kafka_consumer: None,
         }
     }
 
@@ -36,9 +32,7 @@ impl<'a> StreamDelimiter<'a> {
         StreamDelimiter {
             delim: "kafka",
             read: None,
-            topic: topic,
-            brokers: brokers,
-            from_beginning: Some(from_beginning),
+            kafka_consumer: Some(&KafkaConsumer::new(topic, brokers, from_beginning)),
         }
     }
 }
@@ -78,11 +72,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
             }
             "leb128" => unimplemented!(),
             "kafka" => {
-                if let Some(ref brokers) = self.brokers {
-                    if let Some(ref topic) = self.topic {
-                        consume_and_print(brokers, topic);
-                    }
-                }
+                    return self.kafka_consumer.unwrap().consume_single();
             }
             _ => panic!("Unknown delimiter"),
         }
@@ -95,67 +85,71 @@ struct ConsumerContextExample;
 impl Context for ConsumerContextExample {}
 
 impl ConsumerContext for ConsumerContextExample {
-    fn pre_rebalance(&self, rebalance: &Rebalance) {
-        println!("Pre rebalance {:?}", rebalance);
-    }
+    fn pre_rebalance(&self, _: &Rebalance) {}
 
-    fn post_rebalance(&self, rebalance: &Rebalance) {
-        println!("Post rebalance {:?}", rebalance);
-    }
+    fn post_rebalance(&self, _: &Rebalance) {}
 }
 
 type LoggingConsumer = StreamConsumer<ConsumerContextExample>;
 
-fn consume_and_print(brokers: &str, topic: &str) {
-    let context = ConsumerContextExample;
+struct KafkaConsumer<'a> {
+    consumer: &'a LoggingConsumer,
+    message_stream: &'a MessageStream,
+}
 
-    let mut consumer = ClientConfig::new()
-        .set("group.id", "pq-consumer-group-id")
-        .set("bootstrap.servers", brokers)
-        .set("enable.partition.eof", "false")
-        .set("session.timeout.ms", "6000")
-        .set("enable.auto.commit", "true")
-        .set("statistics.interval.ms", "5000")
-        .set_default_topic_config(TopicConfig::new()
-            .set("auto.offset.reset", "smallest")
-            .finalize())
-        .set_log_level(RDKafkaLogLevel::Debug)
-        .create_with_context::<_, LoggingConsumer>(context)
-        .expect("Consumer creation failed");
+impl <'a>KafkaConsumer<'a> {
+    fn new(brokers: Option<String>, topic: Option<String>, from_beginning: bool) -> KafkaConsumer<'a> {
+        let context = ConsumerContextExample;
 
-    consumer.subscribe(&vec![topic]).expect("Can't subscribe to specified topics");
+        let auto_offset_reset: &str;
+        if from_beginning {
+            auto_offset_reset = "earliest";
+        } else {
+            auto_offset_reset = "smallest";
+        }
 
-    let message_stream = consumer.start();
+        let Some(ref brokers_) = brokers;
+        let Some(ref topic_) = topic;
 
-    for message in message_stream.take(5).wait() {
-        match message {
-            Err(_) => {
-                println!("Error while reading from stream.");
-            },
-            Ok(Ok(m)) => {
-                let key = match m.key_view::<[u8]>() {
-                    None => &[],
-                    Some(Ok(s)) => s,
-                    Some(Err(e)) => {
-                        println!("Error while deserializing message key: {:?}", e);
-                        &[]
-                    },
-                };
-                let payload = match m.payload_view::<str>() {
-                    None => "",
-                    Some(Ok(s)) => s,
-                    Some(Err(e)) => {
-                        println!("Error while deserializing message payload: {:?}", e);
-                        ""
-                    },
-                };
-                println!("key: '{:?}', payload: '{}', partition: {}, offset: {}",
-                      key, payload, m.partition(), m.offset());
-                consumer.commit_message(&m, CommitMode::Async).unwrap();
-            },
-            Ok(Err(e)) => {
-                println!("Kafka error: {}", e);
-            },
-        };
+        let mut consumer = ClientConfig::new()
+            .set("group.id", "pq-consumer-group-id")
+            .set("bootstrap.servers", brokers_)
+            .set("enable.partition.eof", "false")
+            .set("session.timeout.ms", "6000")
+            .set("enable.auto.commit", "true")
+            .set("statistics.interval.ms", "5000")
+            .set_default_topic_config(TopicConfig::new()
+                .set("auto.offset.reset", auto_offset_reset)
+                .finalize())
+            .set_log_level(RDKafkaLogLevel::Debug)
+            .create_with_context::<_, LoggingConsumer>(context)
+            .expect("Consumer creation failed");
+
+        consumer.subscribe(&vec![topic_]).expect("Can't subscribe to specified topics");
+        let message_stream = consumer.start();
+
+        KafkaConsumer{
+            consumer: &consumer,
+            message_stream: &message_stream,
+        }
+    }
+
+    fn consume_single(&mut self) -> Option<Vec<u8>> {
+        let ret: Option<Vec<u8>>;
+        for message in self.message_stream.take(1).wait() {
+            match message {
+                Err(_) => ret = None,
+                Ok(Ok(m)) => {
+                    let _ = match m.payload_view::<[u8]>() {
+                        None => ret = None,
+                        Some(Ok(s)) => ret = Some(s.to_vec()),
+                        Some(Err(e)) => ret = None,
+                    };
+                    self.consumer.commit_message(&m, CommitMode::Async).unwrap();
+                },
+                Ok(Err(e)) => ret = None,
+            };
+        }
+        return ret
     }
 }
