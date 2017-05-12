@@ -1,6 +1,5 @@
 #![crate_type = "bin"]
 
-extern crate futures;
 extern crate rustc_serialize;
 extern crate atty;
 extern crate docopt;
@@ -10,7 +9,6 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
-extern crate rdkafka;
 
 mod fdset_discovery;
 mod newline_pretty_formatter;
@@ -19,12 +17,11 @@ mod decode;
 #[macro_use]
 mod macros;
 
-use futures::stream::Stream;
-use rdkafka::consumer::{Consumer, CommitMode};
+use std::fs::File;
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::StreamDelimiter;
-use std::io::{self, Read, Write, stderr};
+use std::io::{self, Read, BufReader, Write, stderr};
 use std::process;
 use error::PqrsError;
 
@@ -34,7 +31,7 @@ const USAGE: &'static str = "
 pq - protobuf to json
 
 Usage:
-  pq [--msgtype=<msgtype>] [--stream=<delim>]
+  pq <infile> [--msgtype=<msgtype>] [--stream=<delim>]
   pq kafka <topic> --brokers=<brokers> [--from-beginning]
   pq (--help | --version)
 
@@ -50,6 +47,7 @@ Options:
 #[derive(Debug, RustcDecodable)]
 struct Args {
     pub cmd_kafka: bool,
+    pub arg_infile: Option<String>,
     pub arg_topic: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_stream: Option<String>,
@@ -77,27 +75,12 @@ fn main() {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
             match StreamDelimiter::for_kafka(&brokers, &topic, args.flag_from_beginning) {
                 Ok(delim) => {
-                    let kfc = match delim.kafka_consumer {
-                        Some(x) => x,
-                        None => errexit!(PqrsError::ArgumentError),
-                    };
-                    for message in kfc.message_stream.wait() {
-                        match message {
-                            Ok(Ok(x)) => {
-                                match x.payload_view::<[u8]>() {
-                                    Some(Ok(s)) => {
-                                        match pqrs_decoder.decode_message(&s.to_vec(), &mut stdout.lock(), out_is_tty) {
-                                            Ok(_) => (),
-                                            Err(e) => errexit!(e),
-                                        }
-                                    }
-                                    _ => (),
-                                }
-                                kfc.consumer.commit_message(&x, CommitMode::Async).unwrap();
-                            },
-                            _ => (),
+                    for chunk in delim {
+                        match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
+                            Ok(_) => (),
+                            Err(e) => errexit!(e),
                         }
-                    } 
+                    }
                 }
                 Err(e) => errexit!(e),
             }
@@ -105,16 +88,27 @@ fn main() {
             errexit!(PqrsError::ArgumentError)
         }
     } else {
-        if atty::is(atty::Stream::Stdin) {
-            writeln!(stdout,
-                    "pq expects input to be piped from stdin - run with --help for more info")
-                    .unwrap();
-            process::exit(0);
-        }
-        let mut in_ = stdin.lock();
+        let mut infile: Box<Read> = match args.arg_infile {
+            Some(x) => {
+                let file = match File::open(&x) {
+                    Ok(x) => x,
+                    Err(e) => errexit!(e),
+                };
+                Box::new(BufReader::new(file))
+            }
+            None => {
+                if atty::is(atty::Stream::Stdin) {
+                    writeln!(stdout,
+                            "pq expects input to be piped from stdin - run with --help for more info")
+                            .unwrap();
+                    process::exit(0);
+                }
+                Box::new(stdin.lock())
+            }
+        };
 
         if let Some(lead_delim) = args.flag_stream {
-            let delim = StreamDelimiter::new(&lead_delim, &mut in_);
+            let delim = StreamDelimiter::new(&lead_delim, &mut infile);
             for chunk in delim {
                 match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
                     Ok(_) => (),
@@ -123,7 +117,7 @@ fn main() {
             }
         } else {
             let mut buf = Vec::new();
-            match in_.read_to_end(&mut buf) {
+            match infile.read_to_end(&mut buf) {
                 Ok(_) => (),
                 Err(e) => errexit!(e),
             }

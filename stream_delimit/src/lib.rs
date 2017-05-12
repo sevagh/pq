@@ -4,8 +4,9 @@ extern crate rdkafka_sys;
 
 mod error;
 
+use futures::stream::{Stream, Wait};
 use rdkafka::client::{Context};
-use rdkafka::consumer::{Consumer, ConsumerContext, Rebalance};
+use rdkafka::consumer::{Consumer, ConsumerContext, Rebalance, CommitMode};
 use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
 use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
 use error::StreamDelimitError;
@@ -17,7 +18,8 @@ const MAX_ATTEMPTS: usize = 10;
 pub struct StreamDelimiter<'a> {
     delim: &'a str,
     read: Option<&'a mut Read>,
-    pub kafka_consumer: Option<KafkaConsumer>,
+    kafka_consumer: Option<KafkaConsumer>,
+    wait: Option<Wait<MessageStream>>,
 }
 
 impl<'a> StreamDelimiter<'a> {
@@ -26,15 +28,18 @@ impl<'a> StreamDelimiter<'a> {
             delim: delim,
             read: Some(read),
             kafka_consumer: None,
+            wait: None,
         }
     }
 
     pub fn for_kafka(brokers: &'a str, topic: &'a str, from_beginning: bool) -> Result<StreamDelimiter<'a>, StreamDelimitError> {
-        if let Ok(kafka_consumer) = KafkaConsumer::new(topic, brokers, from_beginning) {
+        if let Ok(mut kafka_consumer) = KafkaConsumer::new(brokers, topic,from_beginning) {
+            let wait = kafka_consumer.consumer.start().wait();
             Ok(StreamDelimiter {
-                        delim: "kafka",
-                        read: None,
-                        kafka_consumer: Some(kafka_consumer),
+                delim: "kafka",
+                read: None,
+                kafka_consumer: Some(kafka_consumer),
+                wait: Some(wait),
             })
         } else {
             return Err(StreamDelimitError::KafkaInitializeError)
@@ -76,7 +81,18 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                 }
             }
             "leb128" => unimplemented!(),
-            "kafka" => panic!("Don't use iterator with kafka"),
+            "kafka" => {
+                match self.wait.as_mut().unwrap().next() {
+                    Some(Ok(Ok(message))) => {
+                        match message.payload_view::<[u8]>() {
+                            Some(Ok(s)) => ret = Some(s.to_vec()),
+                            _ => ret = None,
+                        }
+                        self.kafka_consumer.as_mut().unwrap().consumer.commit_message(&message, CommitMode::Async).unwrap();
+                    }
+                    _ => ret = None,
+                }
+            }
             _ => panic!("Unknown delimiter"),
         }
         ret
@@ -95,9 +111,8 @@ impl ConsumerContext for ConsumerContextExample {
 
 type LoggingConsumer = StreamConsumer<ConsumerContextExample>;
 
-pub struct KafkaConsumer {
-    pub consumer: LoggingConsumer,
-    pub message_stream: MessageStream,
+struct KafkaConsumer {
+    consumer: LoggingConsumer,
 }
 
 impl <'a>KafkaConsumer {
@@ -111,7 +126,7 @@ impl <'a>KafkaConsumer {
             auto_offset_reset = "smallest";
         }
 
-        let mut consumer = ClientConfig::new()
+        let consumer = ClientConfig::new()
             .set("group.id", "pq-consumer-group-id")
             .set("bootstrap.servers", brokers)
             .set("enable.partition.eof", "false")
@@ -126,11 +141,9 @@ impl <'a>KafkaConsumer {
             .expect("Consumer creation failed");
 
         consumer.subscribe(&vec![topic]).expect("Can't subscribe to specified topics");
-        let message_stream = consumer.start();
 
         Ok(KafkaConsumer{
-            consumer: consumer,
-            message_stream: message_stream,
+            consumer,
         })
     }
 }

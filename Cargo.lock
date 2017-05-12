@@ -246,7 +246,6 @@ version = "0.5.0"
 dependencies = [
  "atty 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "docopt 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rdkafka 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
