@@ -51,7 +51,7 @@ struct Args {
     pub arg_infile: Option<String>,
     pub arg_topic: Option<String>,
     pub flag_msgtype: Option<String>,
-    pub flag_count: Option<i32>,
+    pub flag_count: Option<usize>,
     pub flag_stream: Option<String>,
     pub flag_from_beginning: bool,
     pub flag_brokers: Option<String>,
@@ -77,15 +77,13 @@ fn main() {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
             match StreamDelimiter::for_kafka(&brokers, &topic, args.flag_from_beginning) {
                 Ok(delim) => {
-                    let mut ctr = 0;
-                    for chunk in delim {
+                    for (ctr, item) in delim.enumerate() {
                         if let Some(count) = args.flag_count {
                             if ctr >= count {
                                 process::exit(0);
                             }
                         }
-                        ctr += 1;
-                        match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
+                        match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
                             Ok(_) => (),
                             Err(e) => errexit!(e),
                         }
@@ -107,9 +105,7 @@ fn main() {
             }
             None => {
                 if atty::is(atty::Stream::Stdin) {
-                    writeln!(stdout,
-                            "pq expects input to be piped from stdin - run with --help for more info")
-                            .unwrap();
+                    writeln!(stdout, "pq expects input to be piped from stdin").unwrap();
                     process::exit(0);
                 }
                 Box::new(stdin.lock())
@@ -118,15 +114,13 @@ fn main() {
 
         if let Some(lead_delim) = args.flag_stream {
             let delim = StreamDelimiter::new(&lead_delim, &mut infile);
-            let mut ctr = 0;
-            for chunk in delim {
+            for (ctr, item) in delim.enumerate() {
                 if let Some(count) = args.flag_count {
                     if ctr >= count {
                         process::exit(0);
                     }
                 }
-                ctr += 1;
-                match pqrs_decoder.decode_message(&chunk, &mut stdout.lock(), out_is_tty) {
+                match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
                     Ok(_) => (),
                     Err(e) => errexit!(e),
                 }

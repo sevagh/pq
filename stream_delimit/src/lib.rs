@@ -5,7 +5,7 @@ extern crate rdkafka_sys;
 mod error;
 
 use futures::stream::{Stream, Wait};
-use rdkafka::client::{Context};
+use rdkafka::client::Context;
 use rdkafka::consumer::{Consumer, ConsumerContext, Rebalance, CommitMode};
 use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
 use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
@@ -32,17 +32,20 @@ impl<'a> StreamDelimiter<'a> {
         }
     }
 
-    pub fn for_kafka(brokers: &'a str, topic: &'a str, from_beginning: bool) -> Result<StreamDelimiter<'a>, StreamDelimitError> {
-        if let Ok(mut kafka_consumer) = KafkaConsumer::new(brokers, topic,from_beginning) {
+    pub fn for_kafka(brokers: &'a str,
+                     topic: &'a str,
+                     from_beginning: bool)
+                     -> Result<StreamDelimiter<'a>, StreamDelimitError> {
+        if let Ok(mut kafka_consumer) = KafkaConsumer::new(brokers, topic, from_beginning) {
             let wait = kafka_consumer.consumer.start().wait();
             Ok(StreamDelimiter {
-                delim: "kafka",
-                read: None,
-                kafka_consumer: Some(kafka_consumer),
-                wait: Some(wait),
-            })
+                   delim: "kafka",
+                   read: None,
+                   kafka_consumer: Some(kafka_consumer),
+                   wait: Some(wait),
+               })
         } else {
-            return Err(StreamDelimitError::KafkaInitializeError)
+            return Err(StreamDelimitError::KafkaInitializeError);
         }
     }
 }
@@ -67,7 +70,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                             for i in (0..varint_buf.len()).rev() {
                                 let i_ = i as u32;
                                 concat += ((varint_buf[i] & 0b01111111) as u64) <<
-                                        (i_ * (8u32.pow(i_) - 1));
+                                          (i_ * (8u32.pow(i_) - 1));
                             }
                             let mut msg_buf = vec![0; concat as usize];
                             match read_.read_exact(&mut msg_buf) {
@@ -88,7 +91,12 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                             Some(Ok(s)) => ret = Some(s.to_vec()),
                             _ => ret = None,
                         }
-                        self.kafka_consumer.as_mut().unwrap().consumer.commit_message(&message, CommitMode::Async).unwrap();
+                        self.kafka_consumer
+                            .as_mut()
+                            .unwrap()
+                            .consumer
+                            .commit_message(&message, CommitMode::Async)
+                            .unwrap();
                     }
                     _ => ret = None,
                 }
@@ -115,16 +123,18 @@ struct KafkaConsumer {
     consumer: LoggingConsumer,
 }
 
-impl <'a>KafkaConsumer {
-    fn new(brokers: &'a str, topic: &'a str, from_beginning: bool) -> Result<KafkaConsumer, StreamDelimitError> {
+impl<'a> KafkaConsumer {
+    fn new(brokers: &'a str,
+           topic: &'a str,
+           from_beginning: bool)
+           -> Result<KafkaConsumer, StreamDelimitError> {
         let context = ConsumerContextExample;
 
-        let auto_offset_reset: &str;
-        if from_beginning {
-            auto_offset_reset = "earliest";
+        let auto_offset_reset = if from_beginning {
+            "earliest"
         } else {
-            auto_offset_reset = "smallest";
-        }
+            "smallest"
+        };
 
         let consumer = ClientConfig::new()
             .set("group.id", "pq-consumer-group-id")
@@ -134,16 +144,16 @@ impl <'a>KafkaConsumer {
             .set("enable.auto.commit", "true")
             .set("statistics.interval.ms", "5000")
             .set_default_topic_config(TopicConfig::new()
-                .set("auto.offset.reset", auto_offset_reset)
-                .finalize())
+                                          .set("auto.offset.reset", auto_offset_reset)
+                                          .finalize())
             .set_log_level(RDKafkaLogLevel::Debug)
             .create_with_context::<_, LoggingConsumer>(context)
             .expect("Consumer creation failed");
 
-        consumer.subscribe(&vec![topic]).expect("Can't subscribe to specified topics");
+        consumer
+            .subscribe(&vec![topic])
+            .expect("Can't subscribe to specified topics");
 
-        Ok(KafkaConsumer{
-            consumer,
-        })
+        Ok(KafkaConsumer { consumer })
     }
 }

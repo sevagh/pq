@@ -23,9 +23,7 @@ pub enum DecodeError {
 impl fmt::Display for PqrsError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            PqrsError::ArgumentError => {
-                writeln!(f, "Invalid arguments")
-            }
+            PqrsError::ArgumentError => writeln!(f, "Invalid arguments"),
             PqrsError::FdsetDiscoveryError(ref err) => err.fmt(f),
             PqrsError::DecodeError(ref err) => err.fmt(f),
         }
