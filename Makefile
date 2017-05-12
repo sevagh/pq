@@ -4,9 +4,6 @@ build:
 	docker pull clux/muslrust
 	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo build $(CARGOFLAGS)
 
-docs:
-	mandoc -Thtml docs/_pqrs.1 >docs/index.html
-
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
 		cd $(WORKSPACE) ;\

@@ -10,7 +10,23 @@ pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can a
 
 ### Usage
 
-**Read the [manpage!](https://sevagh.github.io/pq/)**
+```
+pq - protobuf to json
+
+Usage:
+  pq <infile> [--msgtype=<msgtype>] [--stream=<delim>] [--count=<count>]
+  pq kafka <topic> --brokers=<brokers> [--from-beginning] [--count=<count>]
+  pq (--help | --version)
+
+Options:
+  --stream=<delim>      Stream delimiter e.g. "varint", "leb128"
+  --msgtype=<msgtype>   Message type e.g. com.example.Type
+  --brokers=<brokers>   1.2.3.4:9092,5.6.7.8:9092
+  --from-beginning      Consume kafka from beginning
+  --count=<count>       Stop after count messages
+  --help                Show this screen.
+  --version             Show version.
+```
 
 To set up, put your `*.fdset` files in `~/.pq`:
 
@@ -43,5 +59,16 @@ $ testbench.py "stream(limit=2)" | pq --stream="varint" | jq
 {
   "id": 3,
   "name": "khosrov"
+}
+```
+
+Consume from a Kafka stream:
+
+```
+$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 | jq
+{
+  "age": 10,
+  "breed": "gsd",
+  "temperament": "aggressive"
 }
 ```
