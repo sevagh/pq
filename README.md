@@ -14,7 +14,7 @@ pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can a
 pq - protobuf to json
 
 Usage:
-  pq <infile> [--msgtype=<msgtype>] [--stream=<delim>] [--count=<count>]
+  pq [<infile>] [--msgtype=<msgtype>] [--stream=<delim>] [--count=<count>]
   pq kafka <topic> --brokers=<brokers> [--from-beginning] [--msgtype=<msgtype>] [--count=<count>]
   pq (--help | --version)
 
