@@ -12,7 +12,7 @@ build-release: docker
 	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo build --release
 
 test: docker
-	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo test --verbose
+	docker run -v $(PWD):/volume:Z -e USERID=1000 -e PQ_TESTS_PATH=/volume/tests/ -w /volume -t clux/muslrust cargo test --verbose
 	
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
