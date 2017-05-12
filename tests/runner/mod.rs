@@ -22,8 +22,7 @@ impl Runner {
         if root.ends_with("deps") {
             root.pop();
         }
-        let mut tests_path = root.parent().unwrap().parent().unwrap().to_path_buf();
-        tests_path.push("tests");
+        let tests_path = PathBuf::from(env!("PQ_TESTS_PATH"));
         let mut cmd = Command::new(root.join("pq"));
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());

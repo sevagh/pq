@@ -2,14 +2,18 @@ WORKSPACES = "./" "./stream_delimit/"
 
 all: build
 
-build-debug:
+docker:
 	docker pull clux/muslrust
+
+build-debug: docker
 	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo build
 
-build-release:
-	docker pull clux/muslrust
+build-release: docker
 	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo build --release
 
+test: docker
+	docker run -v $(PWD):/volume:Z -e USERID=1000 -e PQ_TESTS_PATH=/volume/tests/ -w /volume -t clux/muslrust cargo test --verbose
+	
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
 		cd $(WORKSPACE) ;\
