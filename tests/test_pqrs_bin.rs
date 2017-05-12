@@ -5,12 +5,6 @@ mod runner;
 use std::process::Output;
 use runner::Runner;
 
-fn for_dog_stream_with_trail(work: &mut Runner) {
-    work.cmd.arg("--stream=varint");
-    work.cmd.arg("--trail=1");
-    work.stdin_from_file("samples/dog_stream_trail");
-}
-
 fn for_person(work: &mut Runner) {
     work.stdin_from_file("samples/person");
 }
@@ -79,16 +73,6 @@ fn test_dog_decode_stream() {
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}");
-}
-#[test]
-fn test_dog_decode_stream_with_trail() {
-    let out = run_pqrs(for_dog_stream_with_trail);
-    println!("{:?}", String::from_utf8_lossy(&out.stderr));
-    assert!(out.status.success());
-    assert_eq!(String::from_utf8_lossy(&out.stdout),
-               "{\"age\":2,\"breed\":\"rottweiler\",\
-               \"temperament\":\"chill\"}{\"age\":9,\
-               \"breed\":\"poodle\",\"temperament\":\"aggressive\"}");
 }
 
 #[test]
