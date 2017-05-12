@@ -9,6 +9,7 @@ use fdset_discovery::DiscoveryError;
 pub enum PqrsError {
     FdsetDiscoveryError(DiscoveryError),
     DecodeError(DecodeError),
+    ArgumentError,
 }
 
 #[derive(Debug)]
@@ -22,6 +23,9 @@ pub enum DecodeError {
 impl fmt::Display for PqrsError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            PqrsError::ArgumentError => {
+                writeln!(f, "Invalid arguments")
+            }
             PqrsError::FdsetDiscoveryError(ref err) => err.fmt(f),
             PqrsError::DecodeError(ref err) => err.fmt(f),
         }
@@ -31,6 +35,7 @@ impl fmt::Display for PqrsError {
 impl Error for PqrsError {
     fn description(&self) -> &str {
         match *self {
+            PqrsError::ArgumentError => "Invalid arguments",
             PqrsError::FdsetDiscoveryError(ref err) => err.description(),
             PqrsError::DecodeError(ref err) => err.description(),
         }
@@ -38,6 +43,7 @@ impl Error for PqrsError {
 
     fn cause(&self) -> Option<&Error> {
         match *self {
+            PqrsError::ArgumentError => None,
             PqrsError::FdsetDiscoveryError(ref err) => Some(err),
             PqrsError::DecodeError(ref err) => Some(err),
         }

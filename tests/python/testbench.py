@@ -26,11 +26,5 @@ def stream(limit=10):
         single(varint=True)
 
 
-def trail(trail=b'', limit=10):
-    for _ in range(0, limit):
-        single(varint=True)
-        sys.stdout.buffer.write(trail)
-
-
 if __name__ == '__main__':
     eval(sys.argv[1])
