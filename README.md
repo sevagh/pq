@@ -10,23 +10,7 @@ pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can a
 
 ### Usage
 
-```
-pq - protobuf to json
-
-Usage:
-  pq [<infile>] [--msgtype=<msgtype>] [--stream=<delim>] [--count=<count>]
-  pq kafka <topic> --brokers=<brokers> [--from-beginning] [--msgtype=<msgtype>] [--count=<count>]
-  pq (--help | --version)
-
-Options:
-  --stream=<delim>      Stream delimiter e.g. "varint", "leb128"
-  --msgtype=<msgtype>   Message type e.g. com.example.Type
-  --brokers=<brokers>   1.2.3.4:9092,5.6.7.8:9092
-  --from-beginning      Consume kafka from beginning
-  --count=<count>       Stop after count messages
-  --help                Show this screen.
-  --version             Show version.
-```
+[Docopt usage string](https://raw.githubusercontent.com/sevagh/pq/master/src/usage.txt).
 
 To set up, put your `*.fdset` files in `~/.pq`:
 
