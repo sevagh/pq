@@ -27,24 +27,6 @@ use error::PqrsError;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
-const USAGE: &'static str = "
-pq - protobuf to json
-
-Usage:
-  pq [<infile>] [--msgtype=<msgtype>] [--stream=<delim>] [--count=<count>]
-  pq kafka <topic> --brokers=<brokers> [--from-beginning] [--msgtype=<msgtype>] [--count=<count>]
-  pq (--help | --version)
-
-Options:
-  --stream=<delim>      Stream delimiter e.g. \"varint\", \"leb128\"
-  --msgtype=<msgtype>   Message type e.g. com.example.Type
-  --brokers=<brokers>   1.2.3.4:9092,5.6.7.8:9092
-  --from-beginning      Consume kafka from beginning
-  --count=<count>       Stop after count messages
-  --help                Show this screen.
-  --version             Show version.
-";
-
 #[derive(Debug, RustcDecodable)]
 struct Args {
     pub cmd_kafka: bool,
@@ -64,7 +46,7 @@ fn main() {
 
     let out_is_tty = atty::is(atty::Stream::Stdout);
 
-    let args: Args = Docopt::new(USAGE)
+    let args: Args = Docopt::new(include_str!("usage.txt"))
         .and_then(|d| d.version(Some(String::from(VERSION))).decode())
         .unwrap_or_else(|e| e.exit());
 
