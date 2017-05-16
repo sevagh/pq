@@ -1,14 +1,8 @@
-extern crate futures;
-extern crate rdkafka;
-extern crate rdkafka_sys;
+extern crate kafka;
 
 mod error;
 
-use futures::stream::{Stream, Wait};
-use rdkafka::client::Context;
-use rdkafka::consumer::{Consumer, ConsumerContext, Rebalance, CommitMode};
-use rdkafka::consumer::stream_consumer::{StreamConsumer, MessageStream};
-use rdkafka::config::{ClientConfig, TopicConfig, RDKafkaLogLevel};
+use kafka::consumer::{Consumer, FetchOffset};
 use error::StreamDelimitError;
 
 use std::io::Read;
@@ -16,37 +10,33 @@ use std::io::Read;
 const MAX_ATTEMPTS: usize = 10;
 
 pub struct StreamDelimiter<'a> {
-    delim: &'a str,
+    delim: String,
     read: Option<&'a mut Read>,
     kafka_consumer: Option<KafkaConsumer>,
-    wait: Option<Wait<MessageStream>>,
 }
 
 impl<'a> StreamDelimiter<'a> {
-    pub fn new(delim: &'a str, read: &'a mut Read) -> StreamDelimiter<'a> {
+    pub fn new(delim: String, read: &'a mut Read) -> StreamDelimiter<'a> {
         StreamDelimiter {
             delim: delim,
             read: Some(read),
             kafka_consumer: None,
-            wait: None,
         }
     }
 
-    pub fn for_kafka(brokers: &'a str,
-                     topic: &'a str,
+    pub fn for_kafka(brokers: String,
+                     topic: String,
                      from_beginning: bool)
                      -> Result<StreamDelimiter<'a>, StreamDelimitError> {
-        if let Ok(mut kafka_consumer) = KafkaConsumer::new(brokers, topic, from_beginning) {
-            let wait = kafka_consumer.consumer.start().wait();
-            Ok(StreamDelimiter {
-                   delim: "kafka",
-                   read: None,
-                   kafka_consumer: Some(kafka_consumer),
-                   wait: Some(wait),
-               })
-        } else {
-            return Err(StreamDelimitError::KafkaInitializeError);
-        }
+        let kfc = match KafkaConsumer::new(brokers.as_str(), topic.as_str(), from_beginning) {
+            Ok(kfc) => kfc,
+            Err(e) => return Err(e),
+        };
+        Ok(StreamDelimiter {
+                delim: "kafka".to_owned(),
+                read: None,
+                kafka_consumer: Some(kfc),
+            })
     }
 }
 
@@ -55,7 +45,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         let mut ret: Option<Vec<u8>> = None;
-        match self.delim {
+        match self.delim.as_str() {
             "varint" => {
                 if let Some(ref mut read_) = self.read {
                     let mut varint_buf: Vec<u8> = Vec::new();
@@ -84,21 +74,26 @@ impl<'a> Iterator for StreamDelimiter<'a> {
                 }
             }
             "leb128" => unimplemented!(),
-            "kafka" => {
-                match self.wait.as_mut().unwrap().next() {
-                    Some(Ok(Ok(message))) => {
-                        match message.payload_view::<[u8]>() {
-                            Some(Ok(s)) => ret = Some(s.to_vec()),
-                            _ => ret = None,
+            "single" => {
+                let mut buf = Vec::new();
+                if let Some(ref mut read_) = self.read {
+                    match read_.read_to_end(&mut buf) {
+                        Ok(x) => {
+                            if x > 0 {
+                                ret = Some(buf);
+                            } else {
+                                ret = None
+                            }
                         }
-                        self.kafka_consumer
-                            .as_mut()
-                            .unwrap()
-                            .consumer
-                            .commit_message(&message, CommitMode::Async)
-                            .unwrap();
+                        Err(_) => ret = None,
                     }
-                    _ => ret = None,
+                }
+            }
+            "kafka" => {
+                let kafka_consumer = self.kafka_consumer.as_mut().unwrap();
+                for mut ms in kafka_consumer {
+                    ret = ms.pop();
+                    break;
                 }
             }
             _ => panic!("Unknown delimiter"),
@@ -107,53 +102,43 @@ impl<'a> Iterator for StreamDelimiter<'a> {
     }
 }
 
-pub struct ConsumerContextExample;
-
-impl Context for ConsumerContextExample {}
-
-impl ConsumerContext for ConsumerContextExample {
-    fn pre_rebalance(&self, _: &Rebalance) {}
-
-    fn post_rebalance(&self, _: &Rebalance) {}
-}
-
-type LoggingConsumer = StreamConsumer<ConsumerContextExample>;
-
 struct KafkaConsumer {
-    consumer: LoggingConsumer,
+    consumer: Consumer,
 }
 
 impl<'a> KafkaConsumer {
-    fn new(brokers: &'a str,
-           topic: &'a str,
+    fn new(brokers: &str,
+           topic: &str,
            from_beginning: bool)
            -> Result<KafkaConsumer, StreamDelimitError> {
-        let context = ConsumerContextExample;
-
-        let auto_offset_reset = if from_beginning {
-            "earliest"
+        let fetch_offset: FetchOffset;
+        if from_beginning {
+            fetch_offset = FetchOffset::Latest;
         } else {
-            "smallest"
-        };
+            fetch_offset = FetchOffset::Earliest;
+        }
+        match  
+        Consumer::from_hosts(brokers.split(",").map(|x| x.to_owned()).collect::<Vec<String>>())
+            .with_topic_partitions(topic.to_owned(), &[0, 1])
+            .with_fallback_offset(fetch_offset)
+            .create() {
+                Ok(consumer) => { Ok(KafkaConsumer{ consumer }) }
+                Err(_) => Err(StreamDelimitError::KafkaInitializeError),
+        }
+    }
+}
 
-        let consumer = ClientConfig::new()
-            .set("group.id", "pq-consumer-group-id")
-            .set("bootstrap.servers", brokers)
-            .set("enable.partition.eof", "false")
-            .set("session.timeout.ms", "6000")
-            .set("enable.auto.commit", "true")
-            .set("statistics.interval.ms", "5000")
-            .set_default_topic_config(TopicConfig::new()
-                                          .set("auto.offset.reset", auto_offset_reset)
-                                          .finalize())
-            .set_log_level(RDKafkaLogLevel::Debug)
-            .create_with_context::<_, LoggingConsumer>(context)
-            .expect("Consumer creation failed");
+impl Iterator for KafkaConsumer {
+    type Item = Vec<Vec<u8>>;
 
-        consumer
-            .subscribe(&vec![topic])
-            .expect("Can't subscribe to specified topics");
-
-        Ok(KafkaConsumer { consumer })
+    fn next(&mut self) -> Option<Vec<Vec<u8>>> {
+        let ref mut kafka_consumer = self.consumer;
+        let mut ret: Option<Vec<Vec<u8>>> = None;
+        for ms in kafka_consumer.poll().unwrap().iter().take(1) {
+            ret = Some(ms.messages().iter().map(|x| x.value.to_vec()).collect::<Vec<_>>());
+            kafka_consumer.consume_messageset(ms).unwrap();
+        }
+        kafka_consumer.commit_consumed().unwrap();
+        ret
     }
 }

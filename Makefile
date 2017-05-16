@@ -1,6 +1,6 @@
 WORKSPACES = "./" "./stream_delimit/"
 
-all: build
+all: build-debug
 
 docker:
 	docker pull clux/muslrust

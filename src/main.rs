@@ -55,68 +55,56 @@ fn main() {
         Err(e) => errexit!(e),
     };
 
+    let mut infile: Option<Box<Read>>;
     if args.cmd_kafka {
-        if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
-            match StreamDelimiter::for_kafka(&brokers, &topic, args.flag_from_beginning) {
-                Ok(delim) => {
-                    for (ctr, item) in delim.enumerate() {
-                        if let Some(count) = args.flag_count {
-                            if ctr >= count {
-                                process::exit(0);
-                            }
-                        }
-                        match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
-                            Ok(_) => (),
-                            Err(e) => errexit!(e),
-                        }
-                    }
-                }
-                Err(e) => errexit!(e),
-            }
-        } else {
-            errexit!(PqrsError::ArgumentError)
-        }
+        infile = None;
     } else {
-        let mut infile: Box<Read> = match args.arg_infile {
+        infile = match args.arg_infile {
             Some(x) => {
                 let file = match File::open(&x) {
                     Ok(x) => x,
                     Err(e) => errexit!(e),
                 };
-                Box::new(BufReader::new(file))
+                Some(Box::new(BufReader::new(file)))
             }
             None => {
                 if atty::is(atty::Stream::Stdin) {
                     writeln!(stdout, "pq expects input to be piped from stdin").unwrap();
                     process::exit(0);
                 }
-                Box::new(stdin.lock())
+                Some(Box::new(stdin.lock()))
             }
         };
+    }
 
-        if let Some(lead_delim) = args.flag_stream {
-            let delim = StreamDelimiter::new(&lead_delim, &mut infile);
-            for (ctr, item) in delim.enumerate() {
-                if let Some(count) = args.flag_count {
-                    if ctr >= count {
-                        process::exit(0);
-                    }
-                }
-                match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
-                    Ok(_) => (),
-                    Err(e) => errexit!(e),
-                }
+    let delim: StreamDelimiter;
+    if args.cmd_kafka {
+        if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
+            match StreamDelimiter::for_kafka(brokers, topic, args.flag_from_beginning) {
+                Ok(x) => delim = x,
+                Err(e) => errexit!(e),
             }
         } else {
-            let mut buf = Vec::new();
-            match infile.read_to_end(&mut buf) {
-                Ok(_) => (),
-                Err(e) => errexit!(e),
+            errexit!(PqrsError::ArgumentError);
+        }
+    } else {
+        match infile {
+            Some(ref mut x) => {
+                delim = StreamDelimiter::new(args.flag_stream.unwrap_or_default(), x);
             }
-            match pqrs_decoder.decode_message(&buf, &mut stdout.lock(), out_is_tty) {
-                Ok(_) => (),
-                Err(e) => errexit!(e),
+            None => errexit!(PqrsError::ArgumentError),
+        }
+    }
+
+    for (ctr, item) in delim.enumerate() {
+        if let Some(count) = args.flag_count {
+            if ctr >= count {
+                process::exit(0);
             }
+        }
+        match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
+            Ok(_) => (),
+            Err(e) => errexit!(e),
         }
     }
 }
