@@ -8,10 +8,6 @@ documentation = "http://pqrs.sevag.xyz"
 readme = "./README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
-include = [
-    "**/*.rs",
-    "Cargo.toml",
-]
 
 [dependencies]
 docopt = "0.7"
