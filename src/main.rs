@@ -74,7 +74,7 @@ fn main() {
                 }
                 Some(Box::new(stdin.lock()))
             }
-        };
+        }
     }
 
     let delim: StreamDelimiter;

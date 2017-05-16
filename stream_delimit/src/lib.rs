@@ -33,10 +33,10 @@ impl<'a> StreamDelimiter<'a> {
             Err(e) => return Err(e),
         };
         Ok(StreamDelimiter {
-                delim: "kafka".to_owned(),
-                read: None,
-                kafka_consumer: Some(kfc),
-            })
+               delim: "kafka".to_owned(),
+               read: None,
+               kafka_consumer: Some(kfc),
+           })
     }
 }
 
@@ -109,40 +109,45 @@ impl KafkaConsumer {
            topic: &str,
            from_beginning: bool)
            -> Result<KafkaConsumer, StreamDelimitError> {
-        let fetch_offset: FetchOffset;
-        if from_beginning {
-            fetch_offset = FetchOffset::Latest;
+        let fetch_offset = if from_beginning {
+            FetchOffset::Latest
         } else {
-            fetch_offset = FetchOffset::Earliest;
-        }
-        match  
-        Consumer::from_hosts(brokers.split(",").map(|x| x.to_owned()).collect::<Vec<String>>())
-            .with_topic_partitions(topic.to_owned(), &[0, 1])
-            .with_fallback_offset(fetch_offset)
-            .create() {
-                Ok(consumer) => {
-                    Ok(KafkaConsumer{
-                        consumer: consumer,
-                        messages: vec![],
-                    })
-                }
-                Err(_) => Err(StreamDelimitError::KafkaInitializeError),
+            FetchOffset::Earliest
+        };
+        match Consumer::from_hosts(brokers
+                                       .split(',')
+                                       .map(|x| x.to_owned())
+                                       .collect::<Vec<String>>())
+                      .with_topic_partitions(topic.to_owned(), &[0, 1])
+                      .with_fallback_offset(fetch_offset)
+                      .create() {
+            Ok(consumer) => {
+                Ok(KafkaConsumer {
+                       consumer: consumer,
+                       messages: vec![],
+                   })
+            }
+            Err(_) => Err(StreamDelimitError::KafkaInitializeError),
         }
     }
 
     fn get_single_message(&mut self) -> Option<Vec<u8>> {
         if self.messages.is_empty() {
-            let ref mut kafka_consumer = self.consumer;
+            let kafka_consumer = &mut self.consumer;
             match kafka_consumer.poll() {
                 Ok(x) => {
                     let x = x.iter().take(1).next().unwrap();
-                    self.messages.append(&mut x.messages().iter().map(|x| x.value.to_vec()).collect::<Vec<_>>());
+                    self.messages
+                        .append(&mut x.messages()
+                                         .iter()
+                                         .map(|x| x.value.to_vec())
+                                         .collect::<Vec<_>>());
                     kafka_consumer.consume_messageset(x).unwrap();
                 }
                 Err(_) => return None,
             }
             kafka_consumer.commit_consumed().unwrap();
         }
-        return self.messages.pop();
+        self.messages.pop()
     }
 }
