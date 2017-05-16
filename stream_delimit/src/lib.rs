@@ -91,10 +91,7 @@ impl<'a> Iterator for StreamDelimiter<'a> {
             }
             "kafka" => {
                 let kafka_consumer = self.kafka_consumer.as_mut().unwrap();
-                for mut ms in kafka_consumer {
-                    ret = ms.pop();
-                    break;
-                }
+                return kafka_consumer.get_single_message();
             }
             _ => panic!("Unknown delimiter"),
         }
@@ -104,9 +101,10 @@ impl<'a> Iterator for StreamDelimiter<'a> {
 
 struct KafkaConsumer {
     consumer: Consumer,
+    messages: Vec<Vec<u8>>,
 }
 
-impl<'a> KafkaConsumer {
+impl KafkaConsumer {
     fn new(brokers: &str,
            topic: &str,
            from_beginning: bool)
@@ -122,23 +120,29 @@ impl<'a> KafkaConsumer {
             .with_topic_partitions(topic.to_owned(), &[0, 1])
             .with_fallback_offset(fetch_offset)
             .create() {
-                Ok(consumer) => { Ok(KafkaConsumer{ consumer }) }
+                Ok(consumer) => {
+                    Ok(KafkaConsumer{
+                        consumer: consumer,
+                        messages: vec![],
+                    })
+                }
                 Err(_) => Err(StreamDelimitError::KafkaInitializeError),
         }
     }
-}
 
-impl Iterator for KafkaConsumer {
-    type Item = Vec<Vec<u8>>;
-
-    fn next(&mut self) -> Option<Vec<Vec<u8>>> {
-        let ref mut kafka_consumer = self.consumer;
-        let mut ret: Option<Vec<Vec<u8>>> = None;
-        for ms in kafka_consumer.poll().unwrap().iter().take(1) {
-            ret = Some(ms.messages().iter().map(|x| x.value.to_vec()).collect::<Vec<_>>());
-            kafka_consumer.consume_messageset(ms).unwrap();
+    fn get_single_message(&mut self) -> Option<Vec<u8>> {
+        if self.messages.is_empty() {
+            let ref mut kafka_consumer = self.consumer;
+            match kafka_consumer.poll() {
+                Ok(x) => {
+                    let x = x.iter().take(1).next().unwrap();
+                    self.messages.append(&mut x.messages().iter().map(|x| x.value.to_vec()).collect::<Vec<_>>());
+                    kafka_consumer.consume_messageset(x).unwrap();
+                }
+                Err(_) => return None,
+            }
+            kafka_consumer.commit_consumed().unwrap();
         }
-        kafka_consumer.commit_consumed().unwrap();
-        ret
+        return self.messages.pop();
     }
 }
