@@ -6,14 +6,24 @@ docker:
 	docker pull clux/muslrust
 
 build-debug: docker
-	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo build
+	docker run \
+		-v $(PWD):/volume:Z -w /volume \
+		-t clux/muslrust \
+		sh -c "cargo build --verbose && chown -R 1000:1000 ./"
 
 build-release: docker
-	docker run -v $(PWD):/volume:Z -e USERID=1000 -w /volume -t clux/muslrust cargo build --release
+	docker run \
+		-v $(PWD):/volume:Z -w /volume \
+		-t clux/muslrust \
+		sh -c "cargo build --verbose --release && chown -R 1000:1000 ./"
 
 test: docker
-	docker run -v $(PWD):/volume:Z -e USERID=1000 -e PQ_TESTS_PATH=/volume/tests/ -w /volume -t clux/muslrust cargo test --verbose
-	
+	docker run \
+		-v $(PWD):/volume:Z -w /volume \
+		-e PQ_TESTS_PATH=/volume/tests \
+		-t clux/muslrust \
+		sh -c "cargo test --verbose && chown -R 1000:1000 ./"
+
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
 		cd $(WORKSPACE) ;\
