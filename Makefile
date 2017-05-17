@@ -9,23 +9,20 @@ build-debug: docker
 	docker run \
 		-v $(PWD):/volume:Z -w /volume \
 		-t clux/muslrust \
-		cargo build --verbose &&\
-		chown -R 1000:1000 ./
+		sh -c "cargo build --verbose && chown -R 1000:1000 ./"
 
 build-release: docker
 	docker run \
 		-v $(PWD):/volume:Z -w /volume \
 		-t clux/muslrust \
-		cargo build --verbose --release &&\
-		chown -R 1000:1000 ./
+		sh -c "cargo build --verbose --release && chown -R 1000:1000 ./"
 
 test: docker
 	docker run \
 		-v $(PWD):/volume:Z -w /volume \
-		-t clux/muslrust \
 		-e PQ_TESTS_PATH=/volume/tests \
-		cargo test --verbose &&\
-		chown -R 1000:1000 ./
+		-t clux/muslrust \
+		sh -c "cargo test --verbose && chown -R 1000:1000 ./"
 
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
