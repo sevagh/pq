@@ -23,6 +23,7 @@ test: docker
 	docker run \
 		-v $(PWD):/volume:Z -w /volume \
 		-t clux/muslrust \
+		-e PQ_TESTS_PATH=/volume/tests \
 		cargo test --verbose &&\
 		chown -R 1000:1000 ./
 
