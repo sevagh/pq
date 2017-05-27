@@ -20,7 +20,8 @@ mod macros;
 use std::fs::File;
 use docopt::Docopt;
 use decode::PqrsDecoder;
-use stream_delimit::StreamDelimiter;
+use stream_delimit::stream_consumer::StreamConsumer;
+use stream_delimit::stream_type::StreamType;
 use std::io::{self, Read, BufReader, Write, stderr};
 use std::process;
 use error::PqrsError;
@@ -77,11 +78,11 @@ fn main() {
         }
     }
 
-    let delim: StreamDelimiter;
+    let consumer: StreamConsumer;
     if args.cmd_kafka {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
-            match StreamDelimiter::for_kafka(brokers, topic, args.flag_from_beginning) {
-                Ok(x) => delim = x,
+            match StreamConsumer::for_kafka(brokers, topic, args.flag_from_beginning) {
+                Ok(x) => consumer = x,
                 Err(e) => errexit!(e),
             }
         } else {
@@ -90,13 +91,19 @@ fn main() {
     } else {
         match infile {
             Some(ref mut x) => {
-                delim = StreamDelimiter::new(args.flag_stream.unwrap_or_default(), x);
+                let type_: StreamType;
+                match args.flag_stream.unwrap_or_default().as_str() {
+                    "varint" => type_ = StreamType::ByteVarint,
+                    "single" => type_ = StreamType::Single,
+                    _ => panic!("Unrecognized stream type"),
+                }
+                consumer = StreamConsumer::for_byte(type_, x);
             }
             None => errexit!(PqrsError::ArgumentError),
         }
     }
 
-    for (ctr, item) in delim.enumerate() {
+    for (ctr, item) in consumer.enumerate() {
         if let Some(count) = args.flag_count {
             if ctr >= count {
                 process::exit(0);
