@@ -21,7 +21,8 @@ use std::fs::File;
 use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::stream_consumer::StreamConsumer;
-use stream_delimit::stream_type::StreamType;
+use stream_delimit::stream_type::string_to_stream_type;
+use stream_delimit::stream_converter::StreamConverter;
 use std::io::{self, Read, BufReader, Write, stderr};
 use std::process;
 use error::PqrsError;
@@ -33,6 +34,7 @@ struct Args {
     pub cmd_kafka: bool,
     pub arg_infile: Option<String>,
     pub arg_topic: Option<String>,
+    pub flag_dump: Option<String>,
     pub flag_msgtype: Option<String>,
     pub flag_count: Option<usize>,
     pub flag_stream: Option<String>,
@@ -79,39 +81,52 @@ fn main() {
     }
 
     let consumer: StreamConsumer;
+
     if args.cmd_kafka {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
             match StreamConsumer::for_kafka(brokers, topic, args.flag_from_beginning) {
+    //if let Some(dump_type) = args.dump {
+/*
+        
+                */
                 Ok(x) => consumer = x,
                 Err(e) => errexit!(e),
             }
+            
         } else {
             errexit!(PqrsError::ArgumentError);
         }
     } else {
         match infile {
             Some(ref mut x) => {
-                let type_: StreamType;
-                match args.flag_stream.unwrap_or_default().as_str() {
-                    "varint" => type_ = StreamType::ByteVarint,
-                    "single" => type_ = StreamType::Single,
-                    _ => panic!("Unrecognized stream type"),
-                }
-                consumer = StreamConsumer::for_byte(type_, x);
+                consumer = StreamConsumer::for_byte(string_to_stream_type(args.flag_stream.unwrap_or_default()), x);
             }
             None => errexit!(PqrsError::ArgumentError),
         }
     }
 
-    for (ctr, item) in consumer.enumerate() {
-        if let Some(count) = args.flag_count {
-            if ctr >= count {
-                process::exit(0);
+    if let Some(dump_type) = args.flag_dump {
+        let converter = StreamConverter::new(consumer, string_to_stream_type(dump_type));
+        let stdout_ = &mut stdout.lock();
+        for (ctr, item) in converter.enumerate() {
+            if let Some(count) = args.flag_count {
+                if ctr >= count {
+                    process::exit(0);
+                }
             }
+            stdout_.write_all(&item).unwrap();
         }
-        match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
-            Ok(_) => (),
-            Err(e) => errexit!(e),
+    } else {
+        for (ctr, item) in consumer.enumerate() {
+            if let Some(count) = args.flag_count {
+                if ctr >= count {
+                    process::exit(0);
+                }
+            }
+            match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
+                Ok(_) => (),
+                Err(e) => errexit!(e),
+            }
         }
     }
 }

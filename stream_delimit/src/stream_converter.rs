@@ -21,18 +21,18 @@ impl<'a> Iterator for StreamConverter<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         match self.stream_src.stream_type {
-            StreamType::ByteVarint => {
+            StreamType::Varint => {
                 match self.stream_dest {
-                    StreamType::ByteVarint => panic!("Won't convert bytevarint stream to itself"),
-                    StreamType::ByteLeb128 => unimplemented!(),
+                    StreamType::Varint => panic!("Won't convert bytevarint stream to itself"),
+                    StreamType::Leb128 => unimplemented!(),
                     _ => panic!("Unsupported conversion"),
                 }
             }
             StreamType::Single => panic!("Won't convert single stream"),
-            StreamType::ByteLeb128 => unimplemented!(),
+            StreamType::Leb128 => unimplemented!(),
             StreamType::Kafka => {
                 match self.stream_dest {
-                    StreamType::ByteVarint => {
+                    StreamType::Varint => {
                         let kafka_consumer = self.stream_src.kafka_consumer.as_mut().unwrap();
                         match kafka_consumer.get_single_message() {
                             Some(ref mut x) => {

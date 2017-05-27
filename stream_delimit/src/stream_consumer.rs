@@ -16,7 +16,7 @@ impl<'a> Iterator for StreamConsumer<'a> {
     fn next(&mut self) -> Option<Vec<u8>> {
         let mut ret: Option<Vec<u8>> = None;
         match self.stream_type {
-            StreamType::ByteVarint => {
+            StreamType::Varint => {
                 if let Some(ref mut read_) = self.read {
                     match decode_varint(read_) {
                         Ok(x) => {
@@ -31,7 +31,7 @@ impl<'a> Iterator for StreamConsumer<'a> {
                     }
                 }
             }
-            StreamType::ByteLeb128 => unimplemented!(),
+            StreamType::Leb128 => unimplemented!(),
             StreamType::Single => {
                 let mut buf = Vec::new();
                 if let Some(ref mut read_) = self.read {
