@@ -4,6 +4,8 @@
 
 `pq` is a tool which deserializes protobuf messages given a set of pre-compiled `.fdset` files. It can understand varint-delimited streams, and it can connect to Kafka.
 
+`pq` will pretty-print when outputting to a tty, but you should pipe it to `jq` for more fully-featured json handling.
+
 ### Download
 
 pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pq/releases).
@@ -20,10 +22,21 @@ $ protoc -o person.fdset person.proto
 $ cp *.fdset ~/.pq/
 ```
 
-Pipe a single compiled protobuf message:
+Pipe a single compiled protobuf message - pq will guess the type:
 
 ```
-$ testbench.py "single()" | pq | jq
+$ pq <./tests/samples/dog
+{
+  "age": 4,
+  "breed": "poodle",
+  "temperament": "excited"
+}
+```
+
+Provide a more explicit message type with `--msgtype`:
+
+```
+$ pq <./tests/samples/dog --msgtype=com.example.dog.Dog
 {
   "age": 4,
   "breed": "poodle",
@@ -34,22 +47,18 @@ $ testbench.py "single()" | pq | jq
 Pipe a `varint`-delimited stream:
 
 ```
-$ testbench.py "stream(limit=2)" | pq --stream="varint" | jq
+$ pq --stream="varint" <./tests/samples/dog_stream
 {
   "age": 10,
   "breed": "gsd",
   "temperament": "aggressive"
-}
-{
-  "id": 3,
-  "name": "khosrov"
 }
 ```
 
 Consume from a Kafka stream:
 
 ```
-$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 | jq
+$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1
 {
   "age": 10,
   "breed": "gsd",
@@ -60,7 +69,7 @@ $ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 | jq
 Convert a Kafka stream to varint-delimited:
 
 ```
-$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 --dump=varint | pq --stream=varint | jq
+$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 --dump=varint | pq --stream=varint
 {
   "age": 10,
   "breed": "gsd",
