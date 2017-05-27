@@ -56,3 +56,14 @@ $ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 | jq
   "temperament": "aggressive"
 }
 ```
+
+Convert a Kafka stream to varint-delimited:
+
+```
+$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 --dump=varint | pq --stream=varint | jq
+{
+  "age": 10,
+  "breed": "gsd",
+  "temperament": "aggressive"
+}
+```
