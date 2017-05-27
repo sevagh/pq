@@ -6,7 +6,7 @@ use std::io;
 pub enum StreamDelimitError {
     KafkaInitializeError,
     VarintDecodeError(io::Error),
-    VarintDecodeMaxAttemptsExceededError,
+    VarintDecodeMaxBytesError,
 }
 
 impl fmt::Display for StreamDelimitError {
@@ -18,7 +18,7 @@ impl fmt::Display for StreamDelimitError {
             StreamDelimitError::VarintDecodeError(ref e) => {
                 write!(f, "Couldn't decode leading varint: {}", e)
             }
-            StreamDelimitError::VarintDecodeMaxAttemptsExceededError => {
+            StreamDelimitError::VarintDecodeMaxBytesError => {
                 write!(f, "Exceeded max attempts to decode leading varint")
             }
         }
@@ -29,16 +29,16 @@ impl Error for StreamDelimitError {
     fn description(&self) -> &str {
         match *self {
             StreamDelimitError::KafkaInitializeError => "couldn't initialize kafka consumer",
-            StreamDelimitError::VarintDecodeError(_) => "couldn't decode leading varint",
-            StreamDelimitError::VarintDecodeMaxAttemptsExceededError => "couldn't decode leading varint",
+            StreamDelimitError::VarintDecodeError(_) |
+            StreamDelimitError::VarintDecodeMaxBytesError => "couldn't decode leading varint",
         }
     }
 
     fn cause(&self) -> Option<&Error> {
         match *self {
-            StreamDelimitError::KafkaInitializeError => None,
+            StreamDelimitError::KafkaInitializeError |
+            StreamDelimitError::VarintDecodeMaxBytesError => None,
             StreamDelimitError::VarintDecodeError(ref e) => Some(e),
-            StreamDelimitError::VarintDecodeMaxAttemptsExceededError => None,
         }
     }
 }

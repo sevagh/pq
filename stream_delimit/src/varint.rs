@@ -20,7 +20,7 @@ pub fn decode_varint(read: &mut Read) -> Result<u64, StreamDelimitError> {
             return Ok(concat);
         }
     }
-    Err(StreamDelimitError::VarintDecodeMaxAttemptsExceededError)
+    Err(StreamDelimitError::VarintDecodeMaxBytesError)
 }
 
 pub fn encode_varint(mut value: u64) -> Vec<u8> {

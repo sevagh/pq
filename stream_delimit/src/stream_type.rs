@@ -1,5 +1,3 @@
-use std::string::String;
-
 pub enum StreamType {
     Varint,
     Leb128,
@@ -7,8 +5,8 @@ pub enum StreamType {
     Single,
 }
 
-pub fn string_to_stream_type(stream_type: String) -> StreamType {
-    match stream_type.as_str() {
+pub fn string_to_stream_type(stream_type: &str) -> StreamType {
+    match stream_type {
         "varint" => StreamType::Varint,
         "single" => StreamType::Single,
         "kafka" => StreamType::Kafka,

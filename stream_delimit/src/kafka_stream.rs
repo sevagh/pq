@@ -8,7 +8,7 @@ pub struct KafkaConsumer {
     messages: Vec<Vec<u8>>,
 }
 
-impl<'a> StreamConsumer <'a> {
+impl<'a> StreamConsumer<'a> {
     pub fn for_kafka(brokers: String,
                      topic: String,
                      from_beginning: bool)

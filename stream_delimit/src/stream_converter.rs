@@ -43,9 +43,8 @@ impl<'a> Iterator for StreamConverter<'a> {
                             None => None,
                         }
                     }
-                    _ => unimplemented!()
+                    _ => unimplemented!(),
                 }
-                
             }
         }
     }

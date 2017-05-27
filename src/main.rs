@@ -85,27 +85,26 @@ fn main() {
     if args.cmd_kafka {
         if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
             match StreamConsumer::for_kafka(brokers, topic, args.flag_from_beginning) {
-    //if let Some(dump_type) = args.dump {
-/*
-        
-                */
                 Ok(x) => consumer = x,
                 Err(e) => errexit!(e),
             }
-            
         } else {
             errexit!(PqrsError::ArgumentError);
         }
     } else {
         match infile {
             Some(ref mut x) => {
-                consumer = StreamConsumer::for_byte(string_to_stream_type(args.flag_stream.unwrap_or_default()), x);
+                consumer =
+                    StreamConsumer::for_byte(string_to_stream_type(args.flag_stream
+                                                                       .unwrap_or_default()
+                                                                       .as_str()),
+                                             x);
             }
             None => errexit!(PqrsError::ArgumentError),
         }
     }
 
-    if let Some(dump_type) = args.flag_dump {
+    if let Some(ref dump_type) = args.flag_dump {
         let converter = StreamConverter::new(consumer, string_to_stream_type(dump_type));
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
