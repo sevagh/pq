@@ -14,7 +14,7 @@ release: docker
 	docker $(DOCKER_ARGS) sh -c "cargo build --verbose --release $(CHOWN_CMD)"
 
 test: docker
-	docker $(DOCKER_ARGS) sh -c "cargo test --verbose $(CHOWN_CMD)"
+	docker $(DOCKER_ARGS) sh -c "PQ_TESTS_PATH=/volume/tests cargo test --verbose $(CHOWN_CMD)"
 
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
