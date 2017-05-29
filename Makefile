@@ -1,28 +1,20 @@
-WORKSPACES = "./" "./stream_delimit/"
+WORKSPACES="./" "./stream_delimit/"
+CHOWN_CMD=&& chown -R 1000:1000 ./
+DOCKER_ARGS=run -v cargo-cache:/root/.cargo -v $(PWD):/volume:Z -w /volume -t clux/muslrust
 
 all: build-debug
 
 docker:
 	docker pull clux/muslrust
 
-build-debug: docker
-	docker run \
-		-v $(PWD):/volume:Z -w /volume \
-		-t clux/muslrust \
-		sh -c "cargo build --verbose && chown -R 1000:1000 ./"
+debug: docker
+	docker $(DOCKER_ARGS) sh -c "cargo build --verbose $(CHOWN_CMD)"
 
-build-release: docker
-	docker run \
-		-v $(PWD):/volume:Z -w /volume \
-		-t clux/muslrust \
-		sh -c "cargo build --verbose --release && chown -R 1000:1000 ./"
+release: docker
+	docker $(DOCKER_ARGS) sh -c "cargo build --verbose --release $(CHOWN_CMD)"
 
 test: docker
-	docker run \
-		-v $(PWD):/volume:Z -w /volume \
-		-e PQ_TESTS_PATH=/volume/tests \
-		-t clux/muslrust \
-		sh -c "cargo test --verbose && chown -R 1000:1000 ./"
+	docker $(DOCKER_ARGS) sh -c "cargo test --verbose $(CHOWN_CMD)"
 
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
@@ -32,10 +24,10 @@ lint:
 		rustup default stable ;\
 	)
 
-package: build-release
+package: release
 	cd target/x86_64-unknown-linux-musl/release;\
 		tar -czvf pq-bin.tar.gz pq;\
 		cd -;\
 		mv target/x86_64-unknown-linux-musl/release/pq-bin.tar.gz ./pq-bin.tar.gz 
 
-.PHONY: all build-debug build-release docs lint package
+.PHONY: all debug release lint package
