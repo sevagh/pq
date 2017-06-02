@@ -1,9 +1,45 @@
 use std::fmt;
 use protobuf::ProtobufError;
 use std::error::Error;
-use serde_protobuf;
-use serde_json;
-use fdset_discovery::DiscoveryError;
+
+#[derive(Debug)]
+pub enum DiscoveryError {
+    NoHome,
+    NoFdsetPath(String),
+    NoFiles(String),
+    NoMatchingFdProto,
+}
+
+impl fmt::Display for DiscoveryError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            DiscoveryError::NoHome => write!(f, "$HOME not defined"),
+            DiscoveryError::NoMatchingFdProto => write!(f, "No matching fdproto found"),
+            DiscoveryError::NoFdsetPath(ref path) => write!(f, "Path {} doesn't exist", path),
+            DiscoveryError::NoFiles(ref path) => write!(f, "No valid fdset files in path {}", path),
+        }
+    }
+}
+
+impl Error for DiscoveryError {
+    fn description(&self) -> &str {
+        match *self {
+            DiscoveryError::NoHome => "$HOME not defined",
+            DiscoveryError::NoMatchingFdProto => "No matching fdproto",
+            DiscoveryError::NoFdsetPath(_) => "fdset_path doesn't exist",
+            DiscoveryError::NoFiles(_) => "no files in fdset_path",
+        }
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            DiscoveryError::NoHome |
+            DiscoveryError::NoFdsetPath(_) |
+            DiscoveryError::NoMatchingFdProto |
+            DiscoveryError::NoFiles(_) => None,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum PqrsError {
@@ -14,10 +50,7 @@ pub enum PqrsError {
 
 #[derive(Debug)]
 pub enum DecodeError {
-    NoSuccessfulAttempts,
     ProtobufError(ProtobufError),
-    SerdeProtobufError(serde_protobuf::error::Error),
-    SerializeError(serde_json::Error),
 }
 
 impl fmt::Display for PqrsError {
@@ -63,12 +96,7 @@ impl From<DecodeError> for PqrsError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            DecodeError::NoSuccessfulAttempts => {
-                write!(f, "Couldn't decode with any message descriptor")
-            }
             DecodeError::ProtobufError(ref err) => err.fmt(f),
-            DecodeError::SerdeProtobufError(ref err) => err.fmt(f),
-            DecodeError::SerializeError(ref err) => err.fmt(f),
         }
     }
 }
@@ -76,19 +104,13 @@ impl fmt::Display for DecodeError {
 impl Error for DecodeError {
     fn description(&self) -> &str {
         match *self {
-            DecodeError::NoSuccessfulAttempts => "no suitable message descriptor",
             DecodeError::ProtobufError(ref err) => err.description(),
-            DecodeError::SerdeProtobufError(ref err) => err.description(),
-            DecodeError::SerializeError(ref err) => err.description(),
         }
     }
 
     fn cause(&self) -> Option<&Error> {
         match *self {
-            DecodeError::NoSuccessfulAttempts => None,
             DecodeError::ProtobufError(ref err) => Some(err),
-            DecodeError::SerdeProtobufError(ref err) => Some(err),
-            DecodeError::SerializeError(ref err) => Some(err),
         }
     }
 }
