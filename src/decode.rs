@@ -11,14 +11,14 @@ use serde_value::Value;
 use protobuf::CodedInputStream;
 use newline_pretty_formatter::NewlineFormatter;
 
-pub struct PqrsDecoder {
+pub struct PqrsDecoder<'a> {
     pub descriptors: Descriptors,
     pub message_descriptors: Vec<MessageDescriptor>,
-    pub message_type: Option<String>,
+    pub message_type: Option<&'a str>,
 }
 
-impl PqrsDecoder {
-    pub fn new(msgtype: Option<String>) -> Result<PqrsDecoder, PqrsError> {
+impl<'a> PqrsDecoder<'a> {
+    pub fn new(msgtype: Option<&str>) -> Result<PqrsDecoder, PqrsError> {
         let loaded_descs = match get_loaded_descriptors() {
             Err(e) => return Err(PqrsError::FdsetDiscoveryError(e)),
             Ok(x) => x,
