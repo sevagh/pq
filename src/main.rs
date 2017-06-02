@@ -36,7 +36,7 @@ fn main() {
     let matches = clap_app!(
         @app (app_from_crate!())
         (@arg INPUT: "Sets the input file to use")
-        (@arg STREAM: --stream +takes_value "Enabled stream + sets stream type")
+        (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
         (@arg MSGTYPE: --msgtype +takes_value +global "Sets protobuf message type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
