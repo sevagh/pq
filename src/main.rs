@@ -2,7 +2,7 @@
 
 #[macro_use]
 extern crate clap;
-extern crate atty;
+extern crate libc;
 extern crate protobuf;
 extern crate serde;
 extern crate serde_protobuf;
@@ -108,7 +108,7 @@ fn run_byte(decoder: PqrsDecoder,
             Box::new(BufReader::new(file))
         }
         None => {
-            if atty::is(atty::Stream::Stdin) {
+            if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
                 println!("pq expects input to be piped from stdin");
                 process::exit(0);
             }
@@ -126,7 +126,7 @@ fn decode_or_convert(decoder: PqrsDecoder,
                      convert: Option<&str>,
                      count: i32) {
     let stdout = io::stdout();
-    let out_is_tty = atty::is(atty::Stream::Stdout);
+    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
 
     if let Some(ref convert_type) = convert {
         let converter = StreamConverter::new(consumer, string_to_stream_type(convert_type));
