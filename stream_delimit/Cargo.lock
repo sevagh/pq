@@ -1,8 +1,9 @@
 [root]
 name = "stream_delimit"
-version = "0.2.3"
+version = "0.3.1"
 dependencies = [
  "kafka 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.23 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
