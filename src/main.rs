@@ -36,16 +36,14 @@ fn main() {
     let matches = clap_app!(
         @app (app_from_crate!())
         (@arg INPUT: "Sets the input file to use")
-        (@arg MSGTYPE: --msgtype +takes_value "Sets protobuf message type")
         (@arg STREAM: --stream +takes_value "Enabled stream + sets stream type")
-        (@arg COUNT: --count +takes_value "Stop after count messages")
-        (@arg CONVERT: --convert +takes_value "Convert to different stream type")
+        (@arg MSGTYPE: --msgtype +takes_value +global "Sets protobuf message type")
+        (@arg COUNT: --count +takes_value +global "Stop after count messages")
+        (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
         (@subcommand kafka =>
             (@arg TOPIC: +required "Sets the kafka topic")
             (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
             (@arg FROMBEG: --beginning "Consume topic from beginning")
-            (@arg COUNT: --count +takes_value "Stop after count messages")
-            (@arg CONVERT: --convert +takes_value "Convert to different stream type")
         )
     )
             .get_matches();
@@ -55,21 +53,24 @@ fn main() {
         Err(e) => errexit!(e),
     };
 
+    let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
+    let convert = matches.value_of("CONVERT");
+
     match matches.subcommand() {
         ("kafka", Some(m)) => {
             run_kafka(pqrs_decoder,
                       m.value_of("BROKERS"),
                       m.value_of("TOPIC"),
                       m.is_present("FROMBEG"),
-                      m.value_of("CONVERT"),
-                      value_t!(m, "COUNT", i32).unwrap_or(-1))
+                      convert,
+                      count)
         }
         _ => {
             run_byte(pqrs_decoder,
                      matches.value_of("INPUT"),
                      string_to_stream_type(matches.value_of("STREAM").unwrap_or("single")),
-                     matches.value_of("CONVERT"),
-                     value_t!(matches, "COUNT", i32).unwrap_or(-1))
+                     convert,
+                     count)
         }
     }
 }
