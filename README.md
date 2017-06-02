@@ -12,8 +12,6 @@ pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can a
 
 ### Usage
 
-[Docopt usage string](https://raw.githubusercontent.com/sevagh/pq/master/src/usage.txt).
-
 To set up, put your `*.fdset` files in `~/.pq`:
 
 ```
@@ -69,7 +67,7 @@ $ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1
 Convert a Kafka stream to varint-delimited:
 
 ```
-$ pq kafka my_topic --brokers=192.168.0.1:9092 --from-beginning --count=1 --dump=varint | pq --stream=varint
+$ pq kafka my_topic --brokers=192.168.0.1:9092 --beginning --count=1 --convert=varint | pq --stream=varint
 {
   "age": 10,
   "breed": "gsd",

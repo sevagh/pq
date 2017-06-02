@@ -1,8 +1,8 @@
 #![crate_type = "bin"]
 
-extern crate rustc_serialize;
-extern crate atty;
-extern crate docopt;
+#[macro_use]
+extern crate clap;
+extern crate libc;
 extern crate protobuf;
 extern crate serde;
 extern crate serde_protobuf;
@@ -14,11 +14,8 @@ mod fdset_discovery;
 mod newline_pretty_formatter;
 mod error;
 mod decode;
-#[macro_use]
-mod macros;
 
 use std::fs::File;
-use docopt::Docopt;
 use decode::PqrsDecoder;
 use stream_delimit::stream_consumer::StreamConsumer;
 use stream_delimit::stream_type::string_to_stream_type;
@@ -26,103 +23,106 @@ use stream_delimit::stream_converter::StreamConverter;
 use std::io::{self, Read, BufReader, Write, stderr};
 use std::process;
 use error::PqrsError;
+use clap::ArgMatches;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-
-#[derive(Debug, RustcDecodable)]
-struct Args {
-    pub cmd_kafka: bool,
-    pub arg_infile: Option<String>,
-    pub arg_topic: Option<String>,
-    pub flag_dump: Option<String>,
-    pub flag_msgtype: Option<String>,
-    pub flag_count: Option<usize>,
-    pub flag_stream: Option<String>,
-    pub flag_from_beginning: bool,
-    pub flag_brokers: Option<String>,
-    flag_version: bool,
+macro_rules! errexit {
+    ($error:expr) => ({
+        writeln!(&mut stderr(), "{}", $error).unwrap();
+        process::exit(255);
+    });
 }
 
 fn main() {
-    let mut stdout = io::stdout();
+    include_str!("../Cargo.toml");
+    let matches = clap_app!(
+        @app (app_from_crate!())
+        (@arg INPUT: "Sets the input file to use")
+        (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
+        (@arg MSGTYPE: --msgtype +takes_value +global "Sets protobuf message type")
+        (@arg COUNT: --count +takes_value +global "Stop after count messages")
+        (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
+        (@subcommand kafka =>
+            (@arg TOPIC: +required "Sets the kafka topic")
+            (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
+            (@arg FROMBEG: --beginning "Consume topic from beginning")
+        )
+    )
+            .get_matches();
+
+    match matches.subcommand() {
+        ("kafka", Some(m)) => run_kafka(m),
+        _ => run_byte(&matches),
+    }
+}
+
+fn run_kafka(matches: &ArgMatches) {
+    if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
+        match StreamConsumer::for_kafka(String::from(brokers),
+                                        String::from(topic),
+                                        matches.is_present("FROMBEG")) {
+            Ok(x) => decode_or_convert(x, matches),
+            Err(e) => errexit!(e),
+        }
+    } else {
+        errexit!(PqrsError::ArgumentError);
+    }
+}
+
+fn run_byte(matches: &ArgMatches) {
     let stdin = io::stdin();
-
-    let out_is_tty = atty::is(atty::Stream::Stdout);
-
-    let args: Args = Docopt::new(include_str!("usage.txt"))
-        .and_then(|d| d.version(Some(String::from(VERSION))).decode())
-        .unwrap_or_else(|e| e.exit());
-
-    let pqrs_decoder = match PqrsDecoder::new(args.flag_msgtype) {
-        Ok(x) => x,
-        Err(e) => errexit!(e),
-    };
-
-    let mut infile: Option<Box<Read>>;
-    if args.cmd_kafka {
-        infile = None;
-    } else {
-        infile = match args.arg_infile {
-            Some(x) => {
-                let file = match File::open(&x) {
-                    Ok(x) => x,
-                    Err(e) => errexit!(e),
-                };
-                Some(Box::new(BufReader::new(file)))
-            }
-            None => {
-                if atty::is(atty::Stream::Stdin) {
-                    writeln!(stdout, "pq expects input to be piped from stdin").unwrap();
-                    process::exit(0);
-                }
-                Some(Box::new(stdin.lock()))
-            }
-        }
-    }
-
-    let consumer: StreamConsumer;
-
-    if args.cmd_kafka {
-        if let (Some(brokers), Some(topic)) = (args.flag_brokers, args.arg_topic) {
-            match StreamConsumer::for_kafka(brokers, topic, args.flag_from_beginning) {
-                Ok(x) => consumer = x,
+    let mut input: Box<Read> = match matches.value_of("INPUT") {
+        Some(x) => {
+            let file = match File::open(&x) {
+                Ok(x) => x,
                 Err(e) => errexit!(e),
-            }
-        } else {
-            errexit!(PqrsError::ArgumentError);
+            };
+            Box::new(BufReader::new(file))
         }
-    } else {
-        match infile {
-            Some(ref mut x) => {
-                consumer =
-                    StreamConsumer::for_byte(string_to_stream_type(args.flag_stream
-                                                                       .unwrap_or_default()
-                                                                       .as_str()),
-                                             x);
+        None => {
+            if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
+                println!("pq expects input to be piped from stdin");
+                process::exit(0);
             }
-            None => errexit!(PqrsError::ArgumentError),
+            Box::new(stdin.lock())
         }
-    }
+    };
+    decode_or_convert(StreamConsumer::for_byte(string_to_stream_type(matches
+                                                                         .value_of("STREAM")
+                                                                         .unwrap_or("single")),
+                                               &mut input),
+                      matches);
+}
 
-    if let Some(ref dump_type) = args.flag_dump {
-        let converter = StreamConverter::new(consumer, string_to_stream_type(dump_type));
+fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
+    let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
+
+    let stdout = io::stdout();
+    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
+
+    if let Some(ref convert_type) = matches.value_of("CONVERT") {
+        let converter = StreamConverter::new(consumer, string_to_stream_type(convert_type));
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
-            if let Some(count) = args.flag_count {
-                if ctr >= count {
+            if count >= 0 {
+                if ctr >= count as usize {
                     process::exit(0);
                 }
             }
             stdout_.write_all(&item).unwrap();
         }
     } else {
+        let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE")) {
+            Ok(x) => x,
+            Err(e) => errexit!(e),
+        };
+
         for (ctr, item) in consumer.enumerate() {
-            if let Some(count) = args.flag_count {
-                if ctr >= count {
+            if count >= 0 {
+                if ctr >= count as usize {
                     process::exit(0);
                 }
             }
-            match pqrs_decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
+            match decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
                 Ok(_) => (),
                 Err(e) => errexit!(e),
             }
