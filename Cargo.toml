@@ -16,14 +16,11 @@ serde_json = "1.0.1"
 serde-protobuf = "0.5.0"
 protobuf = "1.2.1"
 libc = "0.2.22"
-stream_delimit = { path = "stream_delimit", version = "0.3.0" }
+stream_delimit = "0.3.1"
 clap = "2.24.2"
 
 [replace]
 "serde-protobuf:0.5.0" = { git = 'https://github.com/sevagh/rq' }
-
-[workspace]
-members = ["stream_delimit"]
 
 [profile.release]
 debug = true
