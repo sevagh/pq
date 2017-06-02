@@ -32,7 +32,6 @@ macro_rules! errexit {
 }
 
 fn main() {
-
     include_str!("../Cargo.toml");
     let matches = clap_app!(
         @app (app_from_crate!())
@@ -44,7 +43,9 @@ fn main() {
         (@subcommand kafka =>
             (@arg TOPIC: +required "Sets the kafka topic")
             (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
-            (@arg FROMBEG: --from_beginning "Consume topic from beginning")
+            (@arg FROMBEG: --beginning "Consume topic from beginning")
+            (@arg COUNT: --count +takes_value "Stop after count messages")
+            (@arg CONVERT: --convert +takes_value "Convert to different stream type")
         )
     )
             .get_matches();
@@ -54,23 +55,21 @@ fn main() {
         Err(e) => errexit!(e),
     };
 
-    let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
-
     match matches.subcommand() {
-        ("kafka", _) => {
+        ("kafka", Some(m)) => {
             run_kafka(pqrs_decoder,
-                      matches.value_of("BROKERS"),
-                      matches.value_of("TOPIC"),
-                      matches.is_present("FROMBEG"),
-                      matches.value_of("CONVERT"),
-                      count)
+                      m.value_of("BROKERS"),
+                      m.value_of("TOPIC"),
+                      m.is_present("FROMBEG"),
+                      m.value_of("CONVERT"),
+                      value_t!(m, "COUNT", i32).unwrap_or(-1))
         }
         _ => {
             run_byte(pqrs_decoder,
                      matches.value_of("INPUT"),
                      string_to_stream_type(matches.value_of("STREAM").unwrap_or("single")),
                      matches.value_of("CONVERT"),
-                     count)
+                     value_t!(matches, "COUNT", i32).unwrap_or(-1))
         }
     }
 }
