@@ -44,9 +44,10 @@ impl<'a> PqrsDecoder<'a> {
                                                                          self.message_type)),
                                                                stream)
                 .unwrap();
-        let value = match deser(&mut deserializer) {
+        let value = match Value::deserialize(&mut deserializer) {
             Ok(value) => value,
-            Err(e) => return Err(e),
+            Err(Error(ErrorKind::Protobuf(e), _)) => return Err(DecodeError::ProtobufError(e)),
+            Err(e) => return Err(DecodeError::SerdeProtobufError(e)),
         };
         if is_tty {
             let formatter = NewlineFormatter::default();
@@ -60,13 +61,5 @@ impl<'a> PqrsDecoder<'a> {
                 Err(e) => Err(DecodeError::SerializeError(e)),
             }
         }
-    }
-}
-
-fn deser(deserializer: &mut Deserializer) -> Result<Value, DecodeError> {
-    match Value::deserialize(deserializer) {
-        Ok(x) => Ok(x),
-        Err(Error(ErrorKind::Protobuf(e), _)) => Err(DecodeError::ProtobufError(e)),
-        Err(e) => Err(DecodeError::SerdeProtobufError(e)),
     }
 }
