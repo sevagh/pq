@@ -1,62 +1,25 @@
 extern crate protobuf;
 
+use error::DiscoveryError;
 use std::env;
 use std::fs::{File, read_dir};
 use std::path::PathBuf;
 use std::result::Result;
 use protobuf::parse_from_reader;
 use protobuf::descriptor::FileDescriptorSet;
-use std::fmt;
-use std::error::Error;
 
-#[derive(Debug)]
-pub enum DiscoveryError {
-    NoHome,
-    NoFdsetPath(String),
-    NoFiles(String),
-}
-
-impl fmt::Display for DiscoveryError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            DiscoveryError::NoHome => write!(f, "$HOME not defined"),
-            DiscoveryError::NoFdsetPath(ref path) => write!(f, "Path {} doesn't exist", path),
-            DiscoveryError::NoFiles(ref path) => write!(f, "No valid fdset files in path {}", path),
-        }
-    }
-}
-
-impl Error for DiscoveryError {
-    fn description(&self) -> &str {
-        match *self {
-            DiscoveryError::NoHome => "$HOME not defined",
-            DiscoveryError::NoFdsetPath(_) => "fdset_path doesn't exist",
-            DiscoveryError::NoFiles(_) => "no files in fdset_path",
-        }
-    }
-
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            DiscoveryError::NoHome |
-            DiscoveryError::NoFdsetPath(_) |
-            DiscoveryError::NoFiles(_) => None,
-        }
-    }
-}
-
-
-pub fn get_loaded_descriptors() -> Result<Vec<(PathBuf, FileDescriptorSet)>, DiscoveryError> {
+pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>, DiscoveryError> {
     let (fdsets, fdset_path) = match discover_fdsets() {
         Ok((fdsets, fdsets_path)) => (fdsets, fdsets_path),
         Err(e) => return Err(e),
     };
-    let mut descriptors: Vec<(PathBuf, FileDescriptorSet)> = Vec::new();
+    let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
         let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
         match parse_from_reader(&mut fdset_file) {
             Err(_) => continue,
-            Ok(x) => descriptors.push((fdset_path, x)),
+            Ok(x) => descriptors.push(x),
         }
     }
 

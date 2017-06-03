@@ -10,17 +10,16 @@ extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
 
-mod fdset_discovery;
+mod discovery;
 mod newline_pretty_formatter;
 mod error;
 mod decode;
 
-use std::fs::File;
 use decode::PqrsDecoder;
 use stream_delimit::stream_consumer::StreamConsumer;
 use stream_delimit::stream_type::string_to_stream_type;
 use stream_delimit::stream_converter::StreamConverter;
-use std::io::{self, Read, BufReader, Write, stderr};
+use std::io::{self, Write, stderr};
 use std::process;
 use error::PqrsError;
 use clap::ArgMatches;
@@ -36,9 +35,8 @@ fn main() {
     include_str!("../Cargo.toml");
     let matches = clap_app!(
         @app (app_from_crate!())
-        (@arg INPUT: "Sets the input file to use")
+        (@arg MSGTYPE: +global "Sets protobuf message type")
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
-        (@arg MSGTYPE: --msgtype +takes_value +global "Sets protobuf message type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
         (@subcommand kafka =>
@@ -70,26 +68,14 @@ fn run_kafka(matches: &ArgMatches) {
 
 fn run_byte(matches: &ArgMatches) {
     let stdin = io::stdin();
-    let mut input: Box<Read> = match matches.value_of("INPUT") {
-        Some(x) => {
-            let file = match File::open(&x) {
-                Ok(x) => x,
-                Err(e) => errexit!(e),
-            };
-            Box::new(BufReader::new(file))
-        }
-        None => {
-            if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
-                println!("pq expects input to be piped from stdin");
-                process::exit(0);
-            }
-            Box::new(stdin.lock())
-        }
-    };
+    if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
+        println!("pq expects input to be piped from stdin");
+        process::exit(0);
+    }
     decode_or_convert(StreamConsumer::for_byte(string_to_stream_type(matches
                                                                          .value_of("STREAM")
                                                                          .unwrap_or("single")),
-                                               &mut input),
+                                               &mut stdin.lock()),
                       matches);
 }
 
@@ -111,10 +97,13 @@ fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
             stdout_.write_all(&item).unwrap();
         }
     } else {
-        let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE")) {
-            Ok(x) => x,
-            Err(e) => errexit!(e),
-        };
+        let decoder =
+            match PqrsDecoder::new(matches
+                                       .value_of("MSGTYPE")
+                                       .unwrap_or_else(|| errexit!("Must supply message type"))) {
+                Ok(x) => x,
+                Err(e) => errexit!(e),
+            };
 
         for (ctr, item) in consumer.enumerate() {
             if count >= 0 {
