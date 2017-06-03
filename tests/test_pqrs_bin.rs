@@ -16,6 +16,7 @@ fn for_dog(work: &mut Runner) {
 }
 
 fn for_nonexistent_fdset_dir(work: &mut Runner) {
+    work.cmd.arg("com.example.dog.Dog");
     work.cmd.env("FDSET_PATH", "fdset-doesnt-exist");
     work.stdin_from_file("samples/dog");
 }
@@ -99,5 +100,5 @@ fn test_bad_input() {
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
     assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("Couldn\'t decode with any message descriptor\n"));
+            .contains("WireError"));
 }
