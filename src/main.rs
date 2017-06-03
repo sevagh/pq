@@ -10,7 +10,7 @@ extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
 
-mod fdset_discovery;
+mod discovery;
 mod newline_pretty_formatter;
 mod error;
 mod decode;
@@ -36,9 +36,9 @@ fn main() {
     include_str!("../Cargo.toml");
     let matches = clap_app!(
         @app (app_from_crate!())
-        (@arg INPUT: "Sets the input file to use")
+        (@arg MSGTYPE: +global "Sets protobuf message type")
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
-        (@arg MSGTYPE: --msgtype +takes_value +global "Sets protobuf message type")
+        (@arg INPUT: --input +takes_value "Sets the input file to use")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
         (@subcommand kafka =>
@@ -111,7 +111,7 @@ fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
             stdout_.write_all(&item).unwrap();
         }
     } else {
-        let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE")) {
+        let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE").unwrap_or_else(|| errexit!("Must supply message type"))) {
             Ok(x) => x,
             Err(e) => errexit!(e),
         };
