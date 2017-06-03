@@ -99,6 +99,5 @@ fn test_bad_input() {
     let out = run_pqrs(for_bad_input);
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("WireError"));
+    assert!(String::from_utf8_lossy(&out.stderr).contains("WireError"));
 }
