@@ -6,15 +6,13 @@ use std::process::Output;
 use runner::Runner;
 
 fn for_person(work: &mut Runner) {
+    work.cmd.arg("com.example.person.Person");
     work.stdin_from_file("samples/person");
 }
 
 fn for_dog(work: &mut Runner) {
+    work.cmd.arg("com.example.dog.Dog");
     work.stdin_from_file("samples/dog");
-}
-
-fn for_dog_file(work: &mut Runner) {
-    work.cmd.arg(&work.tests_path.join("samples/dog"));
 }
 
 fn for_nonexistent_fdset_dir(work: &mut Runner) {
@@ -23,16 +21,19 @@ fn for_nonexistent_fdset_dir(work: &mut Runner) {
 }
 
 fn for_no_valid_fdsets(work: &mut Runner) {
+    work.cmd.arg("com.example.dog.Dog");
     work.cmd
         .env("FDSET_PATH", &work.tests_path.join("fdsets-invalid"));
     work.stdin_from_file("samples/dog");
 }
 
 fn for_bad_input(work: &mut Runner) {
+    work.cmd.arg("com.example.dog.Dog");
     work.stdin_from_file("samples/bad");
 }
 
 fn for_dog_stream(work: &mut Runner) {
+    work.cmd.arg("com.example.dog.Dog");
     work.cmd.arg("--stream=varint");
     work.stdin_from_file("samples/dog_stream");
 }
@@ -54,14 +55,6 @@ fn run_pqrs<F>(modify_in: F) -> Output
 #[test]
 fn test_dog_decode() {
     let out = run_pqrs(for_dog);
-    assert!(out.status.success());
-    assert_eq!(String::from_utf8_lossy(&out.stdout),
-               "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
-}
-
-#[test]
-fn test_dog_decode_file() {
-    let out = run_pqrs(for_dog_file);
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout),
                "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");

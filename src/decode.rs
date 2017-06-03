@@ -40,8 +40,9 @@ impl<'a> PqrsDecoder<'a> {
                           -> Result<(), DecodeError> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::for_named_message(&self.descriptors,
-                                                               &(format!(".{}", self.message_type)),
-                                                                stream)
+                                                               &(format!(".{}",
+                                                                         self.message_type)),
+                                                               stream)
                 .unwrap();
         let value = match deser(&mut deserializer) {
             Ok(value) => value,
