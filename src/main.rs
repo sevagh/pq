@@ -35,7 +35,7 @@ fn main() {
     include_str!("../Cargo.toml");
     let matches = clap_app!(
         @app (app_from_crate!())
-        (@arg MSGTYPE: +global "Sets protobuf message type")
+        (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT] "Sets protobuf message type")
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
@@ -98,7 +98,7 @@ fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
         let decoder =
             match PqrsDecoder::new(matches
                                        .value_of("MSGTYPE")
-                                       .unwrap_or_else(|| errexit!("Must supply message type"))) {
+                                       .unwrap_or_else(|| errexit!("Must supply --msgtype or --convert"))) {
                 Ok(x) => x,
                 Err(e) => errexit!(e),
             };

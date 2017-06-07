@@ -29,7 +29,7 @@ $ cp *.fdset ~/.pq/
 Pipe a single compiled protobuf message:
 
 ```
-$ pq com.example.dog.Dog <./tests/samples/dog
+$ pq --msgtype com.example.dog.Dog <./tests/samples/dog
 {
   "age": 4,
   "breed": "poodle",
@@ -40,7 +40,7 @@ $ pq com.example.dog.Dog <./tests/samples/dog
 Pipe a `varint`-delimited stream:
 
 ```
-$ pq com.example.dog.Dog --stream varint <./tests/samples/dog_stream
+$ pq --msgtype com.example.dog.Dog --stream varint <./tests/samples/dog_stream
 {
   "age": 10,
   "breed": "gsd",
@@ -51,7 +51,7 @@ $ pq com.example.dog.Dog --stream varint <./tests/samples/dog_stream
 Consume from a Kafka stream:
 
 ```
-$ pq kafka my_topic --brokers 192.168.0.1:9092 --beginning --count 1 com.example.dog.Dog
+$ pq kafka my_topic --brokers 192.168.0.1:9092 --beginning --count 1 --msgtype com.example.dog.Dog
 {
   "age": 10,
   "breed": "gsd",
@@ -62,7 +62,8 @@ $ pq kafka my_topic --brokers 192.168.0.1:9092 --beginning --count 1 com.example
 Convert a Kafka stream to varint-delimited:
 
 ```
-$ pq kafka my_topic --brokers=192.168.0.1:9092 --beginning --count 1 --convert varint | pq com.example.dog.Dog --stream varint
+$ pq kafka my_topic --brokers=192.168.0.1:9092 --count 1 --convert varint |\
+> pq --msgtype com.example.dog.Dog --stream varint
 {
   "age": 10,
   "breed": "gsd",
