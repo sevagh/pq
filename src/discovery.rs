@@ -62,11 +62,3 @@ fn discover_fdsets() -> Result<(Vec<PathBuf>, String), DiscoveryError> {
     }
     Ok((fdset_files, path_str))
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_simple() {
-        assert_eq!("abc", "abc");
-    }
-}
