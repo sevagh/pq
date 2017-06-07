@@ -85,14 +85,12 @@ fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
     let stdout = io::stdout();
     let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
 
-    if let Some(ref convert_type) = matches.value_of("CONVERT") {
+    if let Some(convert_type) = matches.value_of("CONVERT") {
         let converter = StreamConverter::new(consumer, string_to_stream_type(convert_type));
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
-            if count >= 0 {
-                if ctr >= count as usize {
-                    process::exit(0);
-                }
+            if count >= 0 && ctr >= count as usize {
+                process::exit(0);
             }
             stdout_.write_all(&item).unwrap();
         }
@@ -106,10 +104,8 @@ fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
             };
 
         for (ctr, item) in consumer.enumerate() {
-            if count >= 0 {
-                if ctr >= count as usize {
-                    process::exit(0);
-                }
+            if count >= 0 && ctr >= count as usize {
+                process::exit(0);
             }
             match decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
                 Ok(_) => (),

@@ -2,6 +2,7 @@ use stream_type::StreamType;
 use stream_consumer::StreamConsumer;
 use kafka::consumer::{Consumer, FetchOffset};
 use error::StreamDelimitError;
+use std;
 
 pub struct KafkaConsumer {
     consumer: Consumer,
@@ -37,7 +38,7 @@ impl KafkaConsumer {
         };
         match Consumer::from_hosts(brokers
                                        .split(',')
-                                       .map(|x| x.to_owned())
+                                       .map(std::borrow::ToOwned::to_owned)
                                        .collect::<Vec<String>>())
                       .with_topic_partitions(topic.to_owned(), &[0, 1])
                       .with_fallback_offset(fetch_offset)
