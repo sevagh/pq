@@ -1,6 +1,6 @@
 [package]
 name = "pq"
-version = "0.7.2"
+version = "0.7.3"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
 repository = "https://github.com/sevagh/pq"
@@ -16,7 +16,7 @@ serde_json = "1.0.2"
 serde-protobuf = "0.5.0"
 protobuf = "1.2.1"
 libc = "0.2.22"
-stream_delimit = "0.3.1"
+stream_delimit = "0.3.2"
 clap = "2.24.2"
 
 [replace]
