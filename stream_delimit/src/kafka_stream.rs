@@ -32,9 +32,9 @@ impl KafkaConsumer {
                from_beginning: bool)
                -> Result<KafkaConsumer, StreamDelimitError> {
         let fetch_offset = if from_beginning {
-            FetchOffset::Latest
-        } else {
             FetchOffset::Earliest
+        } else {
+            FetchOffset::Latest
         };
         match Consumer::from_hosts(brokers
                                        .split(',')
