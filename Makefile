@@ -19,8 +19,8 @@ test: docker
 lint:
 	@- $(foreach WORKSPACE,$(WORKSPACES), \
 		cd $(WORKSPACE) ;\
-		rustup run nightly cargo fmt;\
-		rustup run nightly cargo clippy ;\
+		cargo +nightly fmt;\
+		cargo +nightly clippy;\
 	)
 
 package: release
