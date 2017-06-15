@@ -28,22 +28,23 @@ impl<'a> PqrsDecoder<'a> {
         }
         descriptors.resolve_refs();
         Ok(PqrsDecoder {
-               descriptors: descriptors,
-               message_type: msgtype,
-           })
+            descriptors: descriptors,
+            message_type: msgtype,
+        })
     }
 
-    pub fn decode_message(&self,
-                          data: &[u8],
-                          out: &mut Write,
-                          is_tty: bool)
-                          -> Result<(), DecodeError> {
+    pub fn decode_message(
+        &self,
+        data: &[u8],
+        out: &mut Write,
+        is_tty: bool,
+    ) -> Result<(), DecodeError> {
         let stream = CodedInputStream::from_bytes(data);
-        let mut deserializer = Deserializer::for_named_message(&self.descriptors,
-                                                               &(format!(".{}",
-                                                                         self.message_type)),
-                                                               stream)
-                .unwrap();
+        let mut deserializer = Deserializer::for_named_message(
+            &self.descriptors,
+            &(format!(".{}", self.message_type)),
+            stream,
+        ).unwrap();
         let value = match Value::deserialize(&mut deserializer) {
             Ok(value) => value,
             Err(Error(ErrorKind::Protobuf(e), _)) => return Err(DecodeError::ProtobufError(e)),

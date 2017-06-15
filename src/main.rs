@@ -35,7 +35,8 @@ fn main() {
     include_str!("../Cargo.toml");
     let matches = clap_app!(
         @app (app_from_crate!())
-        (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT] "Sets protobuf message type")
+        (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT]
+            "Sets protobuf message type")
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
@@ -44,8 +45,7 @@ fn main() {
             (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
             (@arg FROMBEG: --beginning "Consume topic from beginning")
         )
-    )
-            .get_matches();
+    ).get_matches();
 
     match matches.subcommand() {
         ("kafka", Some(m)) => run_kafka(m),
@@ -55,9 +55,11 @@ fn main() {
 
 fn run_kafka(matches: &ArgMatches) {
     if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
-        match StreamConsumer::for_kafka(String::from(brokers),
-                                        String::from(topic),
-                                        matches.is_present("FROMBEG")) {
+        match StreamConsumer::for_kafka(
+            String::from(brokers),
+            String::from(topic),
+            matches.is_present("FROMBEG"),
+        ) {
             Ok(x) => decode_or_convert(x, matches),
             Err(e) => errexit!(e),
         }
@@ -72,11 +74,13 @@ fn run_byte(matches: &ArgMatches) {
         println!("pq expects input to be piped from stdin");
         process::exit(0);
     }
-    decode_or_convert(StreamConsumer::for_byte(string_to_stream_type(matches
-                                                                         .value_of("STREAM")
-                                                                         .unwrap_or("single")),
-                                               &mut stdin.lock()),
-                      matches);
+    decode_or_convert(
+        StreamConsumer::for_byte(
+            string_to_stream_type(matches.value_of("STREAM").unwrap_or("single")),
+            &mut stdin.lock(),
+        ),
+        matches,
+    );
 }
 
 fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
@@ -95,13 +99,12 @@ fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
             stdout_.write_all(&item).unwrap();
         }
     } else {
-        let decoder =
-            match PqrsDecoder::new(matches
-                                       .value_of("MSGTYPE")
-                                       .unwrap_or_else(|| errexit!("Must supply --msgtype or --convert"))) {
-                Ok(x) => x,
-                Err(e) => errexit!(e),
-            };
+        let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE").expect(
+            "Must supply --msgtype or --convert",
+        )) {
+            Ok(x) => x,
+            Err(e) => errexit!(e),
+        };
 
         for (ctr, item) in consumer.enumerate() {
             if count >= 0 && ctr >= count as usize {

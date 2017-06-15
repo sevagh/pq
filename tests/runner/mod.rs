@@ -36,11 +36,7 @@ impl Runner {
     fn with_stdin(&mut self, contents: &[u8]) {
         self.cmd.stdin(Stdio::piped());
         let mut chld = self._spawn();
-        chld.stdin
-            .as_mut()
-            .unwrap()
-            .write_all(contents)
-            .unwrap();
+        chld.stdin.as_mut().unwrap().write_all(contents).unwrap();
         self.chld = Some(chld);
     }
 

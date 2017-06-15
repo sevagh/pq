@@ -23,8 +23,10 @@ fn for_nonexistent_fdset_dir(work: &mut Runner) {
 
 fn for_no_valid_fdsets(work: &mut Runner) {
     work.cmd.arg("--msgtype=com.example.dog.Dog");
-    work.cmd
-        .env("FDSET_PATH", &work.tests_path.join("fdsets-invalid"));
+    work.cmd.env(
+        "FDSET_PATH",
+        &work.tests_path.join("fdsets-invalid"),
+    );
     work.stdin_from_file("samples/dog");
 }
 
@@ -40,12 +42,12 @@ fn for_dog_stream(work: &mut Runner) {
 }
 
 fn run_pqrs<F>(modify_in: F) -> Output
-    where F: FnOnce(&mut Runner)
+where
+    F: FnOnce(&mut Runner),
 {
     let mut work = Runner::new();
 
-    work.cmd
-        .env("FDSET_PATH", &work.tests_path.join("fdsets"));
+    work.cmd.env("FDSET_PATH", &work.tests_path.join("fdsets"));
 
     modify_in(&mut work);
 
@@ -57,16 +59,20 @@ fn run_pqrs<F>(modify_in: F) -> Output
 fn test_dog_decode() {
     let out = run_pqrs(for_dog);
     assert!(out.status.success());
-    assert_eq!(String::from_utf8_lossy(&out.stdout),
-               "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}"
+    );
 }
 
 #[test]
 fn test_dog_decode_stream() {
     let out = run_pqrs(for_dog_stream);
     assert!(out.status.success());
-    assert_eq!(String::from_utf8_lossy(&out.stdout),
-               "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}"
+    );
 }
 
 #[test]
@@ -74,8 +80,9 @@ fn test_nonexistent_fdset_dir() {
     let out = run_pqrs(for_nonexistent_fdset_dir);
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr)
-            .contains("Path fdset-doesnt-exist doesn\'t exist"));
+    assert!(String::from_utf8_lossy(&out.stderr).contains(
+        "Path fdset-doesnt-exist doesn\'t exist",
+    ));
 }
 
 #[test]
@@ -83,15 +90,19 @@ fn test_no_fdset_files() {
     let out = run_pqrs(for_no_valid_fdsets);
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains("No valid fdset files in path"));
+    assert!(String::from_utf8_lossy(&out.stderr).contains(
+        "No valid fdset files in path",
+    ));
 }
 
 #[test]
 fn test_person_decode() {
     let out = run_pqrs(for_person);
     assert!(out.status.success());
-    assert_eq!(String::from_utf8_lossy(&out.stdout),
-               "{\"id\":0,\"name\":\"khosrov\"}");
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        "{\"id\":0,\"name\":\"khosrov\"}"
+    );
 }
 
 #[test]
