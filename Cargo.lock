@@ -289,7 +289,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "serde-protobuf"
 version = "0.5.0"
-source = "git+https://github.com/sevagh/rq#8e1bc8437878f3ee6a3cce029a5e9263bd7db31e"
+source = "git+https://github.com/dflemstr/rq#1d69af8149988949dc0694d2ed7e793ddafee04e"
 dependencies = [
  "error-chain 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "linked-hash-map 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -302,7 +302,7 @@ dependencies = [
 name = "serde-protobuf"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-replace = "serde-protobuf 0.5.0 (git+https://github.com/sevagh/rq)"
+replace = "serde-protobuf 0.5.0 (git+https://github.com/dflemstr/rq)"
 
 [[package]]
 name = "serde-value"
@@ -440,7 +440,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum ref_slice 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "825740057197b7d43025e7faf6477eaabc03434e153233da02d1f44602f71527"
 "checksum rustc-demangle 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "3058a43ada2c2d0b92b3ae38007a2d0fa5e9db971be260e0171408a4ff471c95"
 "checksum serde 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "991ef6be409a3b7a46cb9ee701d86156ce851825c65dbee7f16dbd5c4e7e2d47"
-"checksum serde-protobuf 0.5.0 (git+https://github.com/sevagh/rq)" = "<none>"
+"checksum serde-protobuf 0.5.0 (git+https://github.com/dflemstr/rq)" = "<none>"
 "checksum serde-protobuf 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7c556fa9ec60482a7cbfcc8b98903c6318b15c54039a7b5eeb59032817875bc4"
 "checksum serde-value 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aea2e969bc2f4ce870b4119227cc8d1f1f372cda9d238a8614d92c96b357ec30"
 "checksum serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "48b04779552e92037212c3615370f6bd57a40ebba7f20e554ff9f55e41a69a7b"
