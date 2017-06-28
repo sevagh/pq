@@ -6,12 +6,6 @@
 
 `pq` will pretty-print when outputting to a tty, but you should pipe it to `jq` for more fully-featured json handling.
 
-### :warning: Guess feature removed
-
-Guessing has been removed. I suspect it was never correct, and furthermore counting "NULL" fields is not robust - the fields could be nulled by the user and I end up discarding valid messages. Ultimately, decoding protobuf without knowing the type is pointless and I won't be doing it.
-
-Going forward, the advantage of `pq` is that instead of compiling schema-specific code, you can use a single binary (distributed everywhere) and just drop `*.fdset` files into `~/.pq` to support new message types.
-
 ### Download
 
 pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pq/releases).
