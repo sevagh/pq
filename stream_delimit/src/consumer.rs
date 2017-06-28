@@ -3,6 +3,8 @@ use kafka::consumer::{Consumer, FetchOffset};
 use error::StreamDelimitError;
 use std;
 use std::io::Read;
+use std::{thread, time};
+
 
 pub struct StreamConsumer<'a> {
     consumer: &'a mut GenericConsumer,
@@ -102,7 +104,10 @@ impl GenericConsumer for KafkaConsumer {
                                 );
                                 break;
                             }
-                            None => continue,
+                            None => {
+                                thread::sleep(time::Duration::from_secs(1));
+                                continue;
+                            }
                         }
                     }
                     Err(_) => return None,
