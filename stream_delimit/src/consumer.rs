@@ -85,24 +85,29 @@ impl GenericConsumer for KafkaConsumer {
     fn get_single_message(&mut self) -> Option<Vec<u8>> {
         if self.messages.is_empty() {
             let kafka_consumer = &mut self.consumer;
-            match kafka_consumer.poll() {
-                Ok(x) => {
-                    let x = x.iter().take(1).next().expect(
-                        "Couldn't take 1 message from kafka stream",
-                    );
-                    self.messages.append(&mut x.messages()
-                        .iter()
-                        .map(|x| x.value.to_vec())
-                        .collect::<Vec<_>>());
-                    kafka_consumer.consume_messageset(x).expect(
-                        "Couldn't mark messageset as consumed",
-                    );
+            loop {
+                match kafka_consumer.poll() {
+                    Ok(x) => {
+                        match x.iter().take(1).next() {
+                            Some(y) => {
+                                self.messages.append(&mut y.messages()
+                                    .iter()
+                                    .map(|z| z.value.to_vec())
+                                    .collect::<Vec<_>>());
+                                kafka_consumer.consume_messageset(y).expect(
+                                    "Couldn't mark messageset as consumed",
+                                );
+                                kafka_consumer.commit_consumed().expect(
+                                    "Couldn't commit consumption",
+                                );
+                                break;
+                            }
+                            None => continue,
+                        }
+                    }
+                    Err(_) => return None,
                 }
-                Err(_) => return None,
             }
-            kafka_consumer.commit_consumed().expect(
-                "Couldn't commit consumption",
-            );
         }
         self.messages.pop()
     }
