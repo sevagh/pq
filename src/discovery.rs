@@ -16,7 +16,7 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>, DiscoveryError
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
-        let mut fdset_file = File::open(fdset_path.as_path()).unwrap();
+        let mut fdset_file = File::open(fdset_path.as_path()).expect("Couldn't open fdset file");
         match parse_from_reader(&mut fdset_file) {
             Err(_) => continue,
             Ok(x) => descriptors.push(x),
@@ -49,7 +49,7 @@ fn discover_fdsets() -> Result<(Vec<PathBuf>, String), DiscoveryError> {
     match read_dir(path.as_path()) {
         Ok(paths) => {
             for p in paths {
-                let path = p.unwrap().path();
+                let path = p.expect("error iterating through paths").path();
                 if !path.is_dir() {
                     fdset_files.push(path);
                 }

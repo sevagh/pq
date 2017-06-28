@@ -16,9 +16,8 @@ mod error;
 mod decode;
 
 use decode::PqrsDecoder;
-use stream_delimit::stream_consumer::StreamConsumer;
-use stream_delimit::stream_type::string_to_stream_type;
-use stream_delimit::stream_converter::StreamConverter;
+use stream_delimit::consumer::*;
+use stream_delimit::converter::StreamConverter;
 use std::io::{self, Write, stderr};
 use std::process;
 use error::PqrsError;
@@ -26,7 +25,7 @@ use clap::ArgMatches;
 
 macro_rules! errexit {
     ($error:expr) => ({
-        writeln!(&mut stderr(), "{}", $error).unwrap();
+        writeln!(&mut stderr(), "{}", $error).expect("Couldn't write to stdout");
         process::exit(255);
     });
 }
@@ -55,12 +54,8 @@ fn main() {
 
 fn run_kafka(matches: &ArgMatches) {
     if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
-        match StreamConsumer::for_kafka(
-            String::from(brokers),
-            String::from(topic),
-            matches.is_present("FROMBEG"),
-        ) {
-            Ok(x) => decode_or_convert(x, matches),
+        match KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG")) {
+            Ok(mut x) => decode_or_convert(StreamConsumer::new(&mut x), matches),
             Err(e) => errexit!(e),
         }
     } else {
@@ -70,33 +65,34 @@ fn run_kafka(matches: &ArgMatches) {
 
 fn run_byte(matches: &ArgMatches) {
     let stdin = io::stdin();
+    let mut stdin = stdin.lock();
     if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
         println!("pq expects input to be piped from stdin");
         process::exit(0);
     }
-    decode_or_convert(
-        StreamConsumer::for_byte(
-            string_to_stream_type(matches.value_of("STREAM").unwrap_or("single")),
-            &mut stdin.lock(),
-        ),
-        matches,
-    );
+    let mut byte_consumer: Box<GenericConsumer> =
+        match matches.value_of("STREAM").unwrap_or("single") {
+            "single" => Box::new(SingleConsumer::new(&mut stdin)),
+            "varint" => Box::new(VarintConsumer::new(&mut stdin)),
+            _ => errexit!(PqrsError::ArgumentError),
+        };
+    decode_or_convert(StreamConsumer::new(byte_consumer.as_mut()), matches);
 }
 
-fn decode_or_convert(consumer: StreamConsumer, matches: &ArgMatches) {
+fn decode_or_convert(mut consumer: StreamConsumer, matches: &ArgMatches) {
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
     let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
 
     if let Some(convert_type) = matches.value_of("CONVERT") {
-        let converter = StreamConverter::new(consumer, string_to_stream_type(convert_type));
+        let converter = StreamConverter::new(&mut consumer, convert_type);
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
             if count >= 0 && ctr >= count as usize {
                 process::exit(0);
             }
-            stdout_.write_all(&item).unwrap();
+            stdout_.write_all(&item).expect("Couldn't write to stdout");
         }
     } else {
         let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE").expect(
