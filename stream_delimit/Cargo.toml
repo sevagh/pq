@@ -1,6 +1,6 @@
 [package]
 name = "stream_delimit"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "length delimited protobuf stream separator"
 repository = "https://github.com/sevagh/pq/tree/master/stream_delimit"

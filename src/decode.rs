@@ -44,7 +44,7 @@ impl<'a> PqrsDecoder<'a> {
             &self.descriptors,
             &(format!(".{}", self.message_type)),
             stream,
-        ).unwrap();
+        ).expect("Couldn't initialize deserializer");
         let value = match Value::deserialize(&mut deserializer) {
             Ok(value) => value,
             Err(Error(ErrorKind::Protobuf(e), _)) => return Err(DecodeError::ProtobufError(e)),

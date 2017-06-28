@@ -1,6 +1,6 @@
 [root]
 name = "stream_delimit"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "kafka 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -246,7 +246,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "pq"
-version = "0.7.5"
+version = "0.7.6"
 dependencies = [
  "clap 2.24.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.22 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -255,7 +255,7 @@ dependencies = [
  "serde-protobuf 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-value 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "stream_delimit 0.3.3",
+ "stream_delimit 0.3.4",
 ]
 
 [[package]]
