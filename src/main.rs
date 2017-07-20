@@ -18,17 +18,11 @@ mod decode;
 use decode::PqrsDecoder;
 use stream_delimit::consumer::*;
 use stream_delimit::converter::StreamConverter;
-use std::io::{self, Write, stderr};
+use std::io::{self, Write};
 use std::process;
+use std::fmt::Display;
 use error::PqrsError;
 use clap::ArgMatches;
-
-macro_rules! errexit {
-    ($error:expr) => ({
-        writeln!(&mut stderr(), "{}", $error).expect("Couldn't write to stdout");
-        process::exit(255);
-    });
-}
 
 fn main() {
     include_str!("../Cargo.toml");
@@ -56,10 +50,10 @@ fn run_kafka(matches: &ArgMatches) {
     if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
         match KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG")) {
             Ok(mut x) => decode_or_convert(StreamConsumer::new(&mut x), matches),
-            Err(e) => errexit!(e),
+            Err(e) => errexit(&e, 255),
         }
     } else {
-        errexit!(PqrsError::ArgumentError);
+        errexit(&PqrsError::ArgumentError, 255);
     }
 }
 
@@ -74,7 +68,7 @@ fn run_byte(matches: &ArgMatches) {
         match matches.value_of("STREAM").unwrap_or("single") {
             "single" => Box::new(SingleConsumer::new(&mut stdin)),
             "varint" => Box::new(VarintConsumer::new(&mut stdin)),
-            _ => errexit!(PqrsError::ArgumentError),
+            _ => errexit(&PqrsError::ArgumentError, 255),
         };
     decode_or_convert(StreamConsumer::new(byte_consumer.as_mut()), matches);
 }
@@ -99,7 +93,7 @@ fn decode_or_convert(mut consumer: StreamConsumer, matches: &ArgMatches) {
             "Must supply --msgtype or --convert",
         )) {
             Ok(x) => x,
-            Err(e) => errexit!(e),
+            Err(e) => errexit(&e, 255),
         };
 
         for (ctr, item) in consumer.enumerate() {
@@ -108,8 +102,13 @@ fn decode_or_convert(mut consumer: StreamConsumer, matches: &ArgMatches) {
             }
             match decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
                 Ok(_) => (),
-                Err(e) => errexit!(e),
+                Err(e) => errexit(&e, 255),
             }
         }
     }
+}
+
+fn errexit<T: Display>(msg: &T, exit_code: i32) -> ! {
+    eprintln!("{}", msg);
+    process::exit(exit_code);
 }
