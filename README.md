@@ -6,20 +6,6 @@
 
 `pq` will pretty-print when outputting to a tty, but you should pipe it to `jq` for more fully-featured json handling.
 
-### Dependency on serde-protobuf
-
-Due to [serde-protobuf](https://github.com/dflemstr/rq/tree/master/serde-protobuf) being (sadly) almost abandonware at this point, I copy-pasted the source files into [pq's src](./src). Using a git override was causing me to be unable to publish with Rust 1.19.0.
-
-The files:
-
-* [de.rs](./src/de.rs)
-* [descriptor.rs](./src/descriptor.rs)
-* [serde_protobuf.rs](./src/serde_protobuf.rs)
-* [serde_protobuf_error.rs](./src/serde_protobuf_error.rs)
-* [value.rs](./src/value.rs)
-
-are **not** written by me. Original author is [https://github.com/dflemstr](https://github.com/dflemstr).
-
 ### Download
 
 pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pq/releases).
@@ -78,3 +64,19 @@ $ pq kafka my_topic --brokers=192.168.0.1:9092 --count 1 --convert varint |\
   "temperament": "aggressive"
 }
 ```
+
+### Dependency on serde-protobuf
+
+Due to [serde-protobuf](https://github.com/dflemstr/rq/tree/master/serde-protobuf) being (sadly) almost abandonware at this point, I copy-pasted the source files into [pq's src](./src). Using a git override was causing me to be unable to publish with Rust 1.19.0.
+
+The files:
+
+* [de.rs](./src/de.rs)
+* [descriptor.rs](./src/descriptor.rs)
+* [serde_protobuf.rs](./src/serde_protobuf.rs)
+* [serde_protobuf_error.rs](./src/serde_protobuf_error.rs)
+* [value.rs](./src/value.rs)
+
+are **not** written by me. Original author is [https://github.com/dflemstr](https://github.com/dflemstr).
+
+
