@@ -49,7 +49,7 @@ pub enum PqrsError {
 #[derive(Debug)]
 pub enum DecodeError {
     ProtobufError(ProtobufError),
-    SerdeProtobufError(serde_protobuf::error::Error),
+    SerdeProtobufError(serde_protobuf::serde_protobuf_error::Error),
     SerializeError(serde_json::Error),
 }
 

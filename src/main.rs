@@ -4,8 +4,13 @@
 extern crate clap;
 extern crate libc;
 extern crate protobuf;
+#[macro_use]
+extern crate error_chain;
+extern crate linked_hash_map;
+#[macro_use]
+extern crate log;
+#[macro_use]
 extern crate serde;
-extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
@@ -14,6 +19,11 @@ mod discovery;
 mod newline_pretty_formatter;
 mod error;
 mod decode;
+mod serde_protobuf;
+pub mod de;
+pub mod descriptor;
+pub mod value;
+pub mod serde_protobuf_error;
 
 use decode::PqrsDecoder;
 use stream_delimit::consumer::*;

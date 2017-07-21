@@ -5,7 +5,7 @@ use std::result::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
 use serde_protobuf::de::Deserializer;
-use serde_protobuf::error::{Error, ErrorKind};
+use serde_protobuf::serde_protobuf_error::{Error, ErrorKind};
 use serde_protobuf::descriptor::Descriptors;
 use serde_value::Value;
 use protobuf::CodedInputStream;
