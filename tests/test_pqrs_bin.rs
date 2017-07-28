@@ -81,7 +81,7 @@ fn test_nonexistent_fdset_dir() {
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
     assert!(String::from_utf8_lossy(&out.stderr).contains(
-        "Path fdset-doesnt-exist doesn\'t exist",
+        "Path fdset-doesnt-exist not found",
     ));
 }
 
@@ -91,7 +91,7 @@ fn test_no_fdset_files() {
     assert_eq!(out.status.code().unwrap(), 255);
     assert_eq!(String::from_utf8_lossy(&out.stdout), "");
     assert!(String::from_utf8_lossy(&out.stderr).contains(
-        "No valid fdset files in path",
+        "no valid fdset files in",
     ));
 }
 

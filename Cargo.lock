@@ -236,9 +236,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "pq"
-version = "0.7.9"
+version = "0.8.0"
 dependencies = [
  "clap 2.25.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "error-chain 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf 1.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.10 (registry+https://github.com/rust-lang/crates.io-index)",
