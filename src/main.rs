@@ -9,11 +9,13 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
+#[macro_use]
+extern crate error_chain;
 
 mod discovery;
 mod newline_pretty_formatter;
-mod error;
 mod decode;
+mod errors;
 
 use decode::PqrsDecoder;
 use stream_delimit::consumer::*;
@@ -21,7 +23,6 @@ use stream_delimit::converter::StreamConverter;
 use std::io::{self, Write};
 use std::process;
 use std::fmt::Display;
-use error::PqrsError;
 use clap::ArgMatches;
 
 fn main() {
@@ -53,7 +54,7 @@ fn run_kafka(matches: &ArgMatches) {
             Err(e) => errexit(&e, 255),
         }
     } else {
-        errexit(&PqrsError::ArgumentError, 255);
+        errexit(&String::from("Kafka needs a broker and topic"), 255);
     }
 }
 
@@ -68,7 +69,7 @@ fn run_byte(matches: &ArgMatches) {
         match matches.value_of("STREAM").unwrap_or("single") {
             "single" => Box::new(SingleConsumer::new(&mut stdin)),
             "varint" => Box::new(VarintConsumer::new(&mut stdin)),
-            _ => errexit(&PqrsError::ArgumentError, 255),
+            _ => errexit(&String::from("Only supports stream types single and varint"), 255),
         };
     decode_or_convert(StreamConsumer::new(byte_consumer.as_mut()), matches);
 }

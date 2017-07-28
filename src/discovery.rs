@@ -1,14 +1,13 @@
 extern crate protobuf;
 
-use error::DiscoveryError;
 use std::env;
 use std::fs::{File, read_dir};
 use std::path::PathBuf;
-use std::result::Result;
 use protobuf::parse_from_reader;
 use protobuf::descriptor::FileDescriptorSet;
+use errors::*;
 
-pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>, DiscoveryError> {
+pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
     let (fdsets, fdset_path) = match discover_fdsets() {
         Ok((fdsets, fdsets_path)) => (fdsets, fdsets_path),
         Err(e) => return Err(e),
@@ -16,7 +15,7 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>, DiscoveryError
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
-        let mut fdset_file = File::open(fdset_path.as_path()).expect("Couldn't open fdset file");
+        let mut fdset_file = File::open(fdset_path.as_path()).chain_err(|| "Couldn't open fdset file")?;
         match parse_from_reader(&mut fdset_file) {
             Err(_) => continue,
             Ok(x) => descriptors.push(x),
@@ -24,12 +23,12 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>, DiscoveryError
     }
 
     if descriptors.is_empty() {
-        return Err(DiscoveryError::NoFiles(fdset_path));
+        return Err(format!("no files in {}", fdset_path).into());
     }
     Ok(descriptors)
 }
 
-fn discover_fdsets() -> Result<(Vec<PathBuf>, String), DiscoveryError> {
+fn discover_fdsets() -> Result<(Vec<PathBuf>, String)> {
     let mut fdset_files = Vec::new();
 
     let path = match env::var("FDSET_PATH") {
@@ -37,7 +36,7 @@ fn discover_fdsets() -> Result<(Vec<PathBuf>, String), DiscoveryError> {
         Err(_) => {
             let mut home = match env::home_dir() {
                 Some(x) => x,
-                None => return Err(DiscoveryError::NoHome),
+                None => return Err("$HOME is not defined".into()),
             };
             home.push(".pq");
             home
@@ -55,10 +54,10 @@ fn discover_fdsets() -> Result<(Vec<PathBuf>, String), DiscoveryError> {
                 }
             }
         }
-        Err(_) => return Err(DiscoveryError::NoFdsetPath(path_str)),
+        Err(_) => return Err(format!("Path {} not found", path_str).into()),
     }
     if fdset_files.is_empty() {
-        return Err(DiscoveryError::NoFiles(path_str));
+        return Err(format!("No valid fdset files in path {}", path_str).into());
     }
     Ok((fdset_files, path_str))
 }
