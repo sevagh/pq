@@ -69,7 +69,12 @@ fn run_byte(matches: &ArgMatches) {
         match matches.value_of("STREAM").unwrap_or("single") {
             "single" => Box::new(SingleConsumer::new(&mut stdin)),
             "varint" => Box::new(VarintConsumer::new(&mut stdin)),
-            _ => errexit(&String::from("Only supports stream types single and varint"), 255),
+            _ => {
+                errexit(
+                    &String::from("Only supports stream types single and varint"),
+                    255,
+                )
+            }
         };
     decode_or_convert(StreamConsumer::new(byte_consumer.as_mut()), matches);
 }

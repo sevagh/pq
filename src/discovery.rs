@@ -15,7 +15,9 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
-        let mut fdset_file = File::open(fdset_path.as_path()).chain_err(|| "Couldn't open fdset file")?;
+        let mut fdset_file = File::open(fdset_path.as_path()).chain_err(
+            || "Couldn't open fdset file",
+        )?;
         match parse_from_reader(&mut fdset_file) {
             Err(_) => continue,
             Ok(x) => descriptors.push(x),
