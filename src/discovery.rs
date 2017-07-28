@@ -25,7 +25,7 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
     }
 
     if descriptors.is_empty() {
-        return Err(format!("no files in {}", fdset_path).into());
+        return Err(format!("no valid fdset files in {}", fdset_path).into());
     }
     Ok(descriptors)
 }
