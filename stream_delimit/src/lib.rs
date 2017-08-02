@@ -1,3 +1,4 @@
+#[cfg(feature = "kafka")]
 extern crate kafka;
 
 mod varint;
