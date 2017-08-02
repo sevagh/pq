@@ -8,10 +8,7 @@ use protobuf::descriptor::FileDescriptorSet;
 use errors::*;
 
 pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
-    let fdsets = match discover_fdsets() {
-        Ok(fdsets) => fdsets,
-        Err(e) => return Err(e),
-    };
+    let fdsets = discover_fdsets();
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
@@ -32,7 +29,7 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
     Ok(descriptors)
 }
 
-fn discover_fdsets() -> Result<Vec<PathBuf>> {
+fn discover_fdsets() -> Vec<PathBuf> {
     let mut fdset_files = Vec::new();
 
     if let Ok(x) = env::var("FDSET_PATH") {
@@ -48,7 +45,7 @@ fn discover_fdsets() -> Result<Vec<PathBuf>> {
     let x = PathBuf::from("/etc/pq");
     fdset_files.append(&mut get_fdset_files_from_path(&x));
 
-    Ok(fdset_files)
+    fdset_files
 }
 
 fn get_fdset_files_from_path(path: &PathBuf) -> Vec<PathBuf> {
