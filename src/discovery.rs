@@ -8,10 +8,7 @@ use protobuf::descriptor::FileDescriptorSet;
 use errors::*;
 
 pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
-    let (fdsets, fdset_path) = match discover_fdsets() {
-        Ok((fdsets, fdsets_path)) => (fdsets, fdsets_path),
-        Err(e) => return Err(e),
-    };
+    let fdsets = discover_fdsets();
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
@@ -25,41 +22,41 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
     }
 
     if descriptors.is_empty() {
-        return Err(format!("no valid fdset files in {}", fdset_path).into());
+        return Err(
+            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq".into(),
+        );
     }
     Ok(descriptors)
 }
 
-fn discover_fdsets() -> Result<(Vec<PathBuf>, String)> {
+fn discover_fdsets() -> Vec<PathBuf> {
     let mut fdset_files = Vec::new();
 
-    let path = match env::var("FDSET_PATH") {
-        Ok(x) => PathBuf::from(x),
-        Err(_) => {
-            let mut home = match env::home_dir() {
-                Some(x) => x,
-                None => return Err("$HOME is not defined".into()),
-            };
-            home.push(".pq");
-            home
-        }
-    };
+    if let Ok(x) = env::var("FDSET_PATH") {
+        let p = PathBuf::from(x);
+        fdset_files.append(&mut get_fdset_files_from_path(&p));
+    }
 
-    let path_str = path.to_string_lossy().into_owned();
+    if let Some(mut x) = env::home_dir() {
+        x.push(".pq");
+        fdset_files.append(&mut get_fdset_files_from_path(&x));
+    }
 
-    match read_dir(path.as_path()) {
-        Ok(paths) => {
-            for p in paths {
-                let path = p.expect("error iterating through paths").path();
-                if !path.is_dir() {
-                    fdset_files.push(path);
-                }
+    let x = PathBuf::from("/etc/pq");
+    fdset_files.append(&mut get_fdset_files_from_path(&x));
+
+    fdset_files
+}
+
+fn get_fdset_files_from_path(path: &PathBuf) -> Vec<PathBuf> {
+    let mut ret = vec![];
+    if let Ok(paths) = read_dir(path.as_path()) {
+        for p in paths {
+            let path = p.expect("error iterating through paths").path();
+            if !path.is_dir() {
+                ret.push(path);
             }
         }
-        Err(_) => return Err(format!("Path {} not found", path_str).into()),
     }
-    if fdset_files.is_empty() {
-        return Err(format!("No valid fdset files in path {}", path_str).into());
-    }
-    Ok((fdset_files, path_str))
+    ret
 }
