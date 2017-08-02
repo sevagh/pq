@@ -26,7 +26,7 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
 
     if descriptors.is_empty() {
         return Err(
-            "no valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq".into(),
+            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq".into(),
         );
     }
     Ok(descriptors)
@@ -47,12 +47,6 @@ fn discover_fdsets() -> Result<Vec<PathBuf>> {
 
     let x = PathBuf::from("/etc/pq");
     fdset_files.append(&mut get_fdset_files_from_path(&x));
-
-    if fdset_files.is_empty() {
-        return Err(
-            "No fdset files found. Dirs checked: $FDSET_PATH, $HOME/.pq, /etc/pq".into(),
-        );
-    }
 
     Ok(fdset_files)
 }
