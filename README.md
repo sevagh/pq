@@ -12,7 +12,7 @@ pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can a
 
 ### Usage
 
-To set up, put your `*.fdset` files in `~/.pq` (specify an alternate directory with the `FDSET_PATH=` env var):
+To set up, put your `*.fdset` files in `~/.pq` or `/etc/pq` or an alternate directory specified with the `FDSET_PATH=` env var:
 
 ```
 $ protoc -o dog.fdset dog.proto
