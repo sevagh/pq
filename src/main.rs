@@ -25,8 +25,8 @@ use std::io::{self, Write};
 use std::process;
 use clap::ArgMatches;
 
-#[cfg(feature = "kafka")]
-use stream_delimit::kafka::KafkaConsumer;
+#[cfg(feature = "default")]
+use stream_delimit::kafka_consumer::KafkaConsumer;
 
 fn main() {
     include_str!("../Cargo.toml");
@@ -50,7 +50,7 @@ fn main() {
     }
 }
 
-#[cfg(feature = "kafka")]
+#[cfg(feature = "default")]
 fn run_kafka(matches: &ArgMatches) {
     if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
         match KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG")) {
@@ -71,7 +71,7 @@ fn run_kafka(matches: &ArgMatches) {
     }
 }
 
-#[cfg(not(feature = "kafka"))]
+#[cfg(not(feature = "default"))]
 fn run_kafka(_: &ArgMatches) {
     eprintln!("This version of pq has been compiled without kafka support");
     process::exit(255);
