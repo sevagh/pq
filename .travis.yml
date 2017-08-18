@@ -1,9 +1,0 @@
-language: rust
-
-rust:
-  - stable
-
-services:
-  - docker
-
-script: make test
