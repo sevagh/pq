@@ -5,7 +5,7 @@ authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
 repository = "https://github.com/sevagh/pq"
 documentation = "https://github.com/sevagh/pq"
-readme = "./README.md"
+readme = "README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
 
