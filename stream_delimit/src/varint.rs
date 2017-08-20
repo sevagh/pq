@@ -11,7 +11,7 @@ pub fn decode_varint(read: &mut Read) -> Result<u64, StreamDelimitError> {
             Ok(_) => (),
             Err(e) => return Err(StreamDelimitError::VarintDecodeError(e)),
         }
-        if (varint_buf[i] & 0b10000000) >> 7 != 0x1 {
+        if (varint_buf[i] & 0b10_000_000) >> 7 != 0x1 {
             let mut concat: u64 = 0;
             for i in (0..varint_buf.len()).rev() {
                 let i_ = i as u32;

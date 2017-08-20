@@ -15,21 +15,20 @@ extern crate error_chain;
 mod discovery;
 mod newline_pretty_formatter;
 mod decode;
-mod errors;
+mod commands;
 
-use decode::PqrsDecoder;
+mod errors {
+    error_chain!{
+        foreign_links {
+            StreamDelimit(::stream_delimit::error::StreamDelimitError);
+        }
+    }
+}
 
-use stream_delimit::consumer::{GenericConsumer, SingleConsumer, StreamConsumer, VarintConsumer};
-use stream_delimit::converter::StreamConverter;
-use std::io::{self, Write};
-use std::process;
-use clap::ArgMatches;
+use errors::*;
+use commands::*;
 
-#[cfg(feature = "default")]
-use stream_delimit::kafka_consumer::KafkaConsumer;
-
-fn main() {
-    include_str!("../Cargo.toml");
+quick_main!(|| -> Result<i32> {
     let matches = clap_app!(
         @app (app_from_crate!())
         (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT]
@@ -45,102 +44,8 @@ fn main() {
     ).get_matches();
 
     match matches.subcommand() {
-        ("kafka", Some(m)) => run_kafka(m),
-        _ => run_byte(&matches),
+        ("kafka", Some(m)) => run_kafka(m)?,
+        _ => run_byte(&matches)?,
     }
-}
-
-#[cfg(feature = "default")]
-fn run_kafka(matches: &ArgMatches) {
-    if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
-        match KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG")) {
-            Ok(mut x) => decode_or_convert(StreamConsumer::new(&mut x), matches),
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                /*
-                for e in e.iter().skip(1) {
-                    eprintln!("Reason: {}", e);
-                }
-                */
-                process::exit(255);
-            }
-        }
-    } else {
-        eprintln!("Kafka needs a broker and topic");
-        process::exit(255);
-    }
-}
-
-#[cfg(not(feature = "default"))]
-fn run_kafka(_: &ArgMatches) {
-    eprintln!("This version of pq has been compiled without kafka support");
-    process::exit(255);
-}
-
-fn run_byte(matches: &ArgMatches) {
-    let stdin = io::stdin();
-    let mut stdin = stdin.lock();
-    if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
-        println!("pq expects input to be piped from stdin");
-        process::exit(0);
-    }
-    let mut byte_consumer: Box<GenericConsumer> =
-        match matches.value_of("STREAM").unwrap_or("single") {
-            "single" => Box::new(SingleConsumer::new(&mut stdin)),
-            "varint" => Box::new(VarintConsumer::new(&mut stdin)),
-            _ => {
-                eprintln!(
-                    "Only supports stream types single and varint",
-                );
-                process::exit(255);
-            }
-        };
-    decode_or_convert(StreamConsumer::new(byte_consumer.as_mut()), matches);
-}
-
-fn decode_or_convert(mut consumer: StreamConsumer, matches: &ArgMatches) {
-    let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
-
-    let stdout = io::stdout();
-    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
-
-    if let Some(convert_type) = matches.value_of("CONVERT") {
-        let converter = StreamConverter::new(&mut consumer, convert_type);
-        let stdout_ = &mut stdout.lock();
-        for (ctr, item) in converter.enumerate() {
-            if count >= 0 && ctr >= count as usize {
-                process::exit(0);
-            }
-            stdout_.write_all(&item).expect("Couldn't write to stdout");
-        }
-    } else {
-        let decoder = match PqrsDecoder::new(matches.value_of("MSGTYPE").expect(
-            "Must supply --msgtype or --convert",
-        )) {
-            Ok(x) => x,
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                for e in e.iter().skip(1) {
-                    eprintln!("Reason: {}", e);
-                }
-                process::exit(255);
-            }
-        };
-
-        for (ctr, item) in consumer.enumerate() {
-            if count >= 0 && ctr >= count as usize {
-                process::exit(0);
-            }
-            match decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
-                Ok(_) => (),
-                Err(e) => {
-                    eprintln!("Error: {}", e);
-                    for e in e.iter().skip(1) {
-                        eprintln!("Reason: {}", e);
-                    }
-                    process::exit(255);
-                }
-            }
-        }
-    }
-}
+    Ok(0)
+});
