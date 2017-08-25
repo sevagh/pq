@@ -1,27 +1,31 @@
 use varint::encode_varint;
-use consumer::GenericConsumer;
+use stream::*;
 
-pub struct StreamConverter<'a> {
-    stream_src: &'a mut GenericConsumer,
-    stream_dest: &'a str,
+pub struct Converter<'a> {
+    stream_src: Box<&'a mut Iterator<Item = Vec<u8>>>,
+    stream_dest: StreamType,
 }
 
-impl<'a> StreamConverter<'a> {
-    pub fn new(stream_src: &'a mut GenericConsumer, stream_dest: &'a str) -> StreamConverter<'a> {
-        StreamConverter {
-            stream_src,
+impl<'a> Converter<'a> {
+    pub fn new<T: Iterator<Item = Vec<u8>>>(
+        stream_src: &'a mut T,
+        stream_dest: StreamType,
+    ) -> Converter<'a> {
+        Converter {
+            stream_src: Box::new(stream_src),
             stream_dest,
         }
     }
 }
 
-impl<'a> Iterator for StreamConverter<'a> {
+impl<'a> Iterator for Converter<'a> {
     type Item = Vec<u8>;
 
     fn next(&mut self) -> Option<Vec<u8>> {
         match self.stream_dest {
-            "varint" => {
-                match self.stream_src.get_single_message() {
+            StreamType::Varint |
+            StreamType::Leb128 => {
+                match self.stream_src.next() {
                     Some(ref mut x) => {
                         let mut lead_varint = encode_varint(x.len() as u64);
                         lead_varint.append(x);

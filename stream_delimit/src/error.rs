@@ -1,44 +1,29 @@
-use std::fmt;
-use std::error::Error;
-use std::io;
-
-#[derive(Debug)]
-pub enum StreamDelimitError {
-    KafkaInitializeError,
-    VarintDecodeError(io::Error),
-    VarintDecodeMaxBytesError,
-}
-
-impl fmt::Display for StreamDelimitError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            StreamDelimitError::KafkaInitializeError => {
-                write!(f, "Couldn't initialize kafka consumer")
-            }
-            StreamDelimitError::VarintDecodeError(ref e) => {
-                write!(f, "Couldn't decode leading varint: {}", e)
-            }
-            StreamDelimitError::VarintDecodeMaxBytesError => {
-                write!(f, "Exceeded max attempts to decode leading varint")
-            }
-        }
-    }
-}
-
-impl Error for StreamDelimitError {
-    fn description(&self) -> &str {
-        match *self {
-            StreamDelimitError::KafkaInitializeError => "couldn't initialize kafka consumer",
-            StreamDelimitError::VarintDecodeError(_) |
-            StreamDelimitError::VarintDecodeMaxBytesError => "couldn't decode leading varint",
-        }
+error_chain! {
+    foreign_links {
+        Io(::std::io::Error);
     }
 
-    fn cause(&self) -> Option<&Error> {
-        match *self {
-            StreamDelimitError::KafkaInitializeError |
-            StreamDelimitError::VarintDecodeMaxBytesError => None,
-            StreamDelimitError::VarintDecodeError(ref e) => Some(e),
+    links {
+        Kafka(::kafka::error::Error, ::kafka::error::ErrorKind) #[cfg(feature="with_kafka")];
+    }
+
+    errors {
+        #[cfg(feature="with_kafka")]
+        KafkaInitializeError(e: ::kafka::Error) {
+            description("couldn't initialize kafka consumer")
+            display("couldn't initialize kafka consumer: {}", e)
+        }
+        VarintDecodeError(e: ::std::io::Error) {
+            description("couldn't decode leading varint")
+            display("couldn't decode leading varint: '{}'", e)
+        }
+        InvalidStreamTypeError(t: String) {
+            description("invalid stream type")
+            display("invalid stream type: {} ((only support single, leb128, varint)", t)
+        }
+        VarintDecodeMaxBytesError {
+            description("exceeded max attempts to decode leading varint")
+            display("exceeded max attempts to decode leading varint")
         }
     }
 }

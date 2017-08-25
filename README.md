@@ -2,7 +2,7 @@
 
 ### protobuf to json deserializer, written in Rust
 
-`pq` is a tool which deserializes protobuf messages given a set of pre-compiled `.fdset` files. It can understand varint-delimited streams, and it can connect to Kafka.
+`pq` is a tool which deserializes protobuf messages given a set of pre-compiled `.fdset` files. It can understand varint/leb128-delimited streams, and it can connect to Kafka.
 
 `pq` will pretty-print when outputting to a tty, but you should pipe it to `jq` for more fully-featured json handling.
 
@@ -31,7 +31,7 @@ $ pq --msgtype com.example.dog.Dog <./tests/samples/dog
 }
 ```
 
-Pipe a `varint`-delimited stream:
+Pipe a `varint` or `leb128` delimited stream:
 
 ```
 $ pq --msgtype com.example.dog.Dog --stream varint <./tests/samples/dog_stream
@@ -63,4 +63,12 @@ $ pq kafka my_topic --brokers=192.168.0.1:9092 --count 1 --convert varint |\
   "breed": "gsd",
   "temperament": "aggressive"
 }
+```
+
+### Compile without kafka
+
+To compile `pq` without kafka support, run:
+
+```
+$ cargo build --no-default-features
 ```

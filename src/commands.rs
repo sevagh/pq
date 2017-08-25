@@ -1,7 +1,8 @@
 use decode::PqrsDecoder;
 
-use stream_delimit::consumer::{GenericConsumer, SingleConsumer, StreamConsumer, VarintConsumer};
-use stream_delimit::converter::StreamConverter;
+use stream_delimit::byte_consumer::ByteConsumer;
+use stream_delimit::stream::*;
+use stream_delimit::converter::Converter;
 use std::io::{self, Write};
 use clap::ArgMatches;
 use errors::*;
@@ -13,8 +14,8 @@ use stream_delimit::kafka_consumer::KafkaConsumer;
 #[cfg(feature = "default")]
 pub fn run_kafka(matches: &ArgMatches) -> Result<()> {
     if let (Some(brokers), Some(topic)) = (matches.value_of("BROKERS"), matches.value_of("TOPIC")) {
-        let mut consumer = KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG"))?;
-        decode_or_convert(StreamConsumer::new(&mut consumer), matches)?;
+        let consumer = KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG"))?;
+        decode_or_convert(consumer, matches)?;
     } else {
         bail!("Kafka needs a broker and topic");
     }
@@ -32,26 +33,24 @@ pub fn run_byte(matches: &ArgMatches) -> Result<()> {
     if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
         bail!("pq expects input to be piped from stdin");
     }
-    let mut byte_consumer: Box<GenericConsumer> =
-        match matches.value_of("STREAM").unwrap_or("single") {
-            "single" => Box::new(SingleConsumer::new(&mut stdin)),
-            "varint" => Box::new(VarintConsumer::new(&mut stdin)),
-            _ => bail!("Only supports stream types single and varint"),
-        };
+    let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))?;
     Ok(decode_or_convert(
-        StreamConsumer::new(byte_consumer.as_mut()),
+        ByteConsumer::new(&mut stdin, stream_type),
         matches,
     )?)
 }
 
-fn decode_or_convert(mut consumer: StreamConsumer, matches: &ArgMatches) -> Result<()> {
+fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
+    mut consumer: T,
+    matches: &ArgMatches,
+) -> Result<()> {
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
     let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
 
     if let Some(convert_type) = matches.value_of("CONVERT") {
-        let converter = StreamConverter::new(&mut consumer, convert_type);
+        let converter = Converter::new(&mut consumer, str_to_streamtype(convert_type)?);
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
             if count >= 0 && ctr >= count as usize {
