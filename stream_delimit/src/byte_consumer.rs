@@ -1,4 +1,3 @@
-use leb128::consume_single_leb128;
 use varint::consume_single_varint;
 use stream::*;
 use std::io::Read;
@@ -19,7 +18,7 @@ impl<'a> Iterator for ByteConsumer<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         match self.type_ {
-            StreamType::Leb128 => consume_single_leb128(self.read),
+            StreamType::Leb128 => consume_single_varint(self.read),
             StreamType::Varint => consume_single_varint(self.read),
             StreamType::Single => {
                 let ret: Option<Vec<u8>>;

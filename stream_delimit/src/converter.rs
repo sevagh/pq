@@ -1,5 +1,4 @@
 use varint::encode_varint;
-use leb128::encode_leb128;
 use stream::*;
 
 pub struct Converter<'a> {
@@ -24,22 +23,13 @@ impl<'a> Iterator for Converter<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         match self.stream_dest {
-            StreamType::Varint => {
+            StreamType::Varint |
+            StreamType::Leb128 => {
                 match self.stream_src.next() {
                     Some(ref mut x) => {
                         let mut lead_varint = encode_varint(x.len() as u64);
                         lead_varint.append(x);
                         Some(lead_varint)
-                    }
-                    None => None,
-                }
-            }
-            StreamType::Leb128 => {
-                match self.stream_src.next() {
-                    Some(ref mut x) => {
-                        let mut lead_leb128 = encode_leb128(x.len() as u64);
-                        lead_leb128.append(x);
-                        Some(lead_leb128)
                     }
                     None => None,
                 }

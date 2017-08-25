@@ -5,7 +5,6 @@ extern crate kafka;
 extern crate error_chain;
 
 mod varint;
-mod leb128;
 
 pub mod error;
 pub mod byte_consumer;

@@ -27,11 +27,11 @@ pub fn decode_varint(read: &mut Read) -> Result<u64> {
             Ok(_) => (),
             Err(e) => return Err(ErrorKind::VarintDecodeError(e))?,
         }
-        if (varint_buf[i] & 0b1000_0000) >> 7 != 0x1 {
+        if (varint_buf[i] & 0x80) >> 7 != 0x1 {
             let mut concat: u64 = 0;
             for i in (0..varint_buf.len()).rev() {
                 let i_ = i as u32;
-                concat += ((varint_buf[i] & 0b0111_1111) as u64) << (i_ * (8u32.pow(i_) - 1));
+                concat += ((varint_buf[i] & 0x7f) as u64) << (i_ * (8u32.pow(i_) - 1));
             }
             return Ok(concat);
         }

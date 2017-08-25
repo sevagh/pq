@@ -17,10 +17,6 @@ error_chain! {
             description("couldn't decode leading varint")
             display("couldn't decode leading varint: '{}'", e)
         }
-        Leb128DecodeError(e: ::std::io::Error) {
-            description("couldn't decode leading leb128")
-            display("couldn't decode leading leb128: '{}'", e)
-        }
         InvalidStreamTypeError(t: String) {
             description("invalid stream type")
             display("invalid stream type: {} ((only support single, leb128, varint)", t)
@@ -28,10 +24,6 @@ error_chain! {
         VarintDecodeMaxBytesError {
             description("exceeded max attempts to decode leading varint")
             display("exceeded max attempts to decode leading varint")
-        }
-        Leb128DecodeMaxBytesError {
-            description("exceeded max attempts to decode leading leb128")
-            display("exceeded max attempts to decode leading leb128")
         }
     }
 }
