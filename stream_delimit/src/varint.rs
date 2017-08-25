@@ -1,4 +1,4 @@
-use error::StreamDelimitError;
+use error::*;
 use std::io::Read;
 
 const VARINT_MAX_BYTES: usize = 10;
@@ -19,13 +19,13 @@ pub fn consume_single_varint(read: &mut Read) -> Option<Vec<u8>> {
     ret
 }
 
-pub fn decode_varint(read: &mut Read) -> Result<u64, StreamDelimitError> {
+pub fn decode_varint(read: &mut Read) -> Result<u64> {
     let mut varint_buf: Vec<u8> = Vec::new();
     for i in 0..VARINT_MAX_BYTES {
         varint_buf.push(0u8);
         match read.read_exact(&mut varint_buf[i..]) {
             Ok(_) => (),
-            Err(e) => return Err(StreamDelimitError::VarintDecodeError(e)),
+            Err(e) => return Err(ErrorKind::VarintDecodeError(e))?,
         }
         if (varint_buf[i] & 0b1000_0000) >> 7 != 0x1 {
             let mut concat: u64 = 0;
@@ -36,7 +36,7 @@ pub fn decode_varint(read: &mut Read) -> Result<u64, StreamDelimitError> {
             return Ok(concat);
         }
     }
-    Err(StreamDelimitError::VarintDecodeMaxBytesError)
+    Err(ErrorKind::VarintDecodeMaxBytesError)?
 }
 
 pub fn encode_varint(mut value: u64) -> Vec<u8> {

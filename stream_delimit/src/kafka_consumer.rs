@@ -1,6 +1,6 @@
 use kafka::consumer::{Consumer, FetchOffset};
 use std::{self, thread, time};
-use error::StreamDelimitError;
+use error::*;
 
 pub struct KafkaConsumer {
     consumer: Consumer,
@@ -45,11 +45,7 @@ impl Iterator for KafkaConsumer {
 }
 
 impl KafkaConsumer {
-    pub fn new(
-        brokers: &str,
-        topic: &str,
-        from_beginning: bool,
-    ) -> Result<KafkaConsumer, StreamDelimitError> {
+    pub fn new(brokers: &str, topic: &str, from_beginning: bool) -> Result<KafkaConsumer> {
         let fetch_offset = if from_beginning {
             FetchOffset::Earliest
         } else {
@@ -69,7 +65,7 @@ impl KafkaConsumer {
                     messages: vec![],
                 })
             }
-            Err(_) => Err(StreamDelimitError::KafkaInitializeError),
+            Err(e) => Err(ErrorKind::KafkaInitializeError(e))?,
         }
     }
 }

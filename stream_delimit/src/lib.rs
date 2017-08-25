@@ -1,6 +1,9 @@
 #[cfg(feature = "with_kafka")]
 extern crate kafka;
 
+#[macro_use]
+extern crate error_chain;
+
 mod varint;
 mod leb128;
 

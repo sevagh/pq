@@ -19,8 +19,8 @@ mod commands;
 
 mod errors {
     error_chain!{
-        foreign_links {
-            StreamDelimit(::stream_delimit::error::StreamDelimitError);
+        links {
+            StreamDelimit(::stream_delimit::error::Error, ::stream_delimit::error::ErrorKind);
         }
     }
 }
