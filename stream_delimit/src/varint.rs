@@ -59,11 +59,17 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        assert_eq!(1, decode_varint(&mut Cursor::new(encode_varint(1))).unwrap());
+        assert_eq!(
+            1,
+            decode_varint(&mut Cursor::new(encode_varint(1))).unwrap()
+        );
     }
 
     #[test]
     fn test_delimiter_longer() {
-        assert_eq!(300, decode_varint(&mut Cursor::new(encode_varint(300))).unwrap());
+        assert_eq!(
+            300,
+            decode_varint(&mut Cursor::new(encode_varint(300))).unwrap()
+        );
     }
 }
