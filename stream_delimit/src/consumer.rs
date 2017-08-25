@@ -1,86 +1,41 @@
-use varint::decode_varint;
+use leb128::consume_single_leb128;
+use varint::consume_single_varint;
+use stream::*;
 use std::io::Read;
 
-pub struct StreamConsumer<'a> {
-    consumer: &'a mut GenericConsumer,
+pub struct Consumer<'a> {
+    read: &'a mut Read,
+    type_: StreamType,
 }
 
-impl<'a> StreamConsumer<'a> {
-    pub fn new(consumer: &'a mut GenericConsumer) -> StreamConsumer<'a> {
-        StreamConsumer { consumer }
+impl<'a> Consumer<'a> {
+    pub fn new(read: &'a mut Read, type_: StreamType) -> Consumer {
+        Consumer { read, type_ }
     }
 }
 
-pub trait GenericConsumer {
-    fn get_single_message(&mut self) -> Option<Vec<u8>>;
-}
-
-pub struct VarintConsumer<'a> {
-    read: &'a mut Read,
-}
-
-pub struct SingleConsumer<'a> {
-    read: &'a mut Read,
-}
-
-impl<'a> Iterator for StreamConsumer<'a> {
+impl<'a> Iterator for Consumer<'a> {
     type Item = Vec<u8>;
 
     fn next(&mut self) -> Option<Vec<u8>> {
-        self.consumer.get_single_message()
-    }
-}
-
-impl<'a> VarintConsumer<'a> {
-    pub fn new(read: &'a mut Read) -> VarintConsumer {
-        VarintConsumer { read }
-    }
-}
-
-impl<'a> SingleConsumer<'a> {
-    pub fn new(read: &'a mut Read) -> SingleConsumer {
-        SingleConsumer { read }
-    }
-}
-
-impl<'a> GenericConsumer for VarintConsumer<'a> {
-    fn get_single_message(&mut self) -> Option<Vec<u8>> {
-        let ret: Option<Vec<u8>>;
-        match decode_varint(self.read) {
-            Ok(x) => {
-                let mut msg_buf = vec![0; x as usize];
-                match self.read.read_exact(&mut msg_buf) {
-                    Ok(_) => (),
-                    Err(_) => return None,
+        match self.type_ {
+            StreamType::Leb128 => consume_single_leb128(self.read),
+            StreamType::Varint => consume_single_varint(self.read),
+            StreamType::Single => {
+                let ret: Option<Vec<u8>>;
+                let mut buf = Vec::new();
+                match self.read.read_to_end(&mut buf) {
+                    Ok(x) => {
+                        if x > 0 {
+                            ret = Some(buf);
+                        } else {
+                            ret = None
+                        }
+                    }
+                    Err(_) => ret = None,
                 }
-                ret = Some(msg_buf);
+                ret
             }
-            Err(_) => ret = None,
         }
-        ret
-    }
-}
-
-impl<'a> GenericConsumer for SingleConsumer<'a> {
-    fn get_single_message(&mut self) -> Option<Vec<u8>> {
-        let ret: Option<Vec<u8>>;
-        let mut buf = Vec::new();
-        match self.read.read_to_end(&mut buf) {
-            Ok(x) => {
-                if x > 0 {
-                    ret = Some(buf);
-                } else {
-                    ret = None
-                }
-            }
-            Err(_) => ret = None,
-        }
-        ret
-    }
-}
-
-impl<'a> GenericConsumer for StreamConsumer<'a> {
-    fn get_single_message(&mut self) -> Option<Vec<u8>> {
-        self.consumer.get_single_message()
     }
 }

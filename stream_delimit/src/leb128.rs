@@ -1,11 +1,11 @@
 use error::StreamDelimitError;
 use std::io::Read;
 
-const VARINT_MAX_BYTES: usize = 10;
+const LEB128_MAX_BYTES: usize = 10;
 
-pub fn consume_single_varint(read: &mut Read) -> Option<Vec<u8>> {
+pub fn consume_single_leb128(read: &mut Read) -> Option<Vec<u8>> {
     let ret: Option<Vec<u8>>;
-    match decode_varint(read) {
+    match decode_leb128(read) {
         Ok(x) => {
             let mut msg_buf = vec![0; x as usize];
             match read.read_exact(&mut msg_buf) {
@@ -19,9 +19,9 @@ pub fn consume_single_varint(read: &mut Read) -> Option<Vec<u8>> {
     ret
 }
 
-pub fn decode_varint(read: &mut Read) -> Result<u64, StreamDelimitError> {
+pub fn decode_leb128(read: &mut Read) -> Result<u64, StreamDelimitError> {
     let mut varint_buf: Vec<u8> = Vec::new();
-    for i in 0..VARINT_MAX_BYTES {
+    for i in 0..LEB128_MAX_BYTES {
         varint_buf.push(0u8);
         match read.read_exact(&mut varint_buf[i..]) {
             Ok(_) => (),
@@ -39,8 +39,8 @@ pub fn decode_varint(read: &mut Read) -> Result<u64, StreamDelimitError> {
     Err(StreamDelimitError::VarintDecodeMaxBytesError)
 }
 
-pub fn encode_varint(mut value: u64) -> Vec<u8> {
-    let mut ret = vec![0u8; VARINT_MAX_BYTES];
+pub fn encode_leb128(mut value: u64) -> Vec<u8> {
+    let mut ret = vec![0u8; LEB128_MAX_BYTES];
     let mut n = 0;
     while value > 127 {
         ret[n] = 0x80 | (value & 0x7F) as u8;
@@ -59,22 +59,22 @@ mod tests {
     #[test]
     fn test_simple() {
         let mut buf: &[u8] = &[0x01];
-        assert_eq!(1, decode_varint(&mut buf).unwrap());
+        assert_eq!(1, decode_leb128(&mut buf).unwrap());
     }
 
     #[test]
-    fn test_varint_delimiter_longer() {
+    fn test_leb128_delimiter_longer() {
         let mut buf: &[u8] = &[0xACu8, 0x02u8];
-        assert_eq!(300, decode_varint(&mut buf).unwrap());
+        assert_eq!(300, decode_leb128(&mut buf).unwrap());
     }
 
     #[test]
     fn test_encode_simple() {
-        assert_eq!(vec![0x01], encode_varint(1))
+        assert_eq!(vec![0x01], encode_leb128(1))
     }
 
     #[test]
     fn test_encode_longer() {
-        assert_eq!(vec![0xACu8, 0x02u8], encode_varint(300))
+        assert_eq!(vec![0xACu8, 0x02u8], encode_leb128(300))
     }
 }

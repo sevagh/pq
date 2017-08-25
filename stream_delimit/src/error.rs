@@ -7,6 +7,7 @@ pub enum StreamDelimitError {
     KafkaInitializeError,
     VarintDecodeError(io::Error),
     VarintDecodeMaxBytesError,
+    InvalidStreamTypeError,
 }
 
 impl fmt::Display for StreamDelimitError {
@@ -21,6 +22,9 @@ impl fmt::Display for StreamDelimitError {
             StreamDelimitError::VarintDecodeMaxBytesError => {
                 write!(f, "Exceeded max attempts to decode leading varint")
             }
+            StreamDelimitError::InvalidStreamTypeError => {
+                write!(f, "Only supports stream types single, varint, leb128")
+            }
         }
     }
 }
@@ -31,12 +35,16 @@ impl Error for StreamDelimitError {
             StreamDelimitError::KafkaInitializeError => "couldn't initialize kafka consumer",
             StreamDelimitError::VarintDecodeError(_) |
             StreamDelimitError::VarintDecodeMaxBytesError => "couldn't decode leading varint",
+            StreamDelimitError::InvalidStreamTypeError => {
+                "only supports stream types single, varint, leb128"
+            }
         }
     }
 
     fn cause(&self) -> Option<&Error> {
         match *self {
             StreamDelimitError::KafkaInitializeError |
+            StreamDelimitError::InvalidStreamTypeError |
             StreamDelimitError::VarintDecodeMaxBytesError => None,
             StreamDelimitError::VarintDecodeError(ref e) => Some(e),
         }
