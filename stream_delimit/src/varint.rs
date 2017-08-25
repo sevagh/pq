@@ -55,26 +55,15 @@ pub fn encode_varint(mut value: u64) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
     #[test]
     fn test_simple() {
-        let mut buf: &[u8] = &[0x01];
-        assert_eq!(1, decode_varint(&mut buf).unwrap());
+        assert_eq!(1, decode_varint(&mut Cursor::new(encode_varint(1))).unwrap());
     }
 
     #[test]
-    fn test_varint_delimiter_longer() {
-        let mut buf: &[u8] = &[0xACu8, 0x02u8];
-        assert_eq!(300, decode_varint(&mut buf).unwrap());
-    }
-
-    #[test]
-    fn test_encode_simple() {
-        assert_eq!(vec![0x01], encode_varint(1))
-    }
-
-    #[test]
-    fn test_encode_longer() {
-        assert_eq!(vec![0xACu8, 0x02u8], encode_varint(300))
+    fn test_delimiter_longer() {
+        assert_eq!(300, decode_varint(&mut Cursor::new(encode_varint(300))).unwrap());
     }
 }
