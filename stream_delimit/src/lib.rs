@@ -5,7 +5,7 @@ mod varint;
 mod leb128;
 
 pub mod error;
-pub mod consumer;
+pub mod byte_consumer;
 pub mod converter;
 pub mod stream;
 

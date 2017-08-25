@@ -1,6 +1,6 @@
 use decode::PqrsDecoder;
 
-use stream_delimit::consumer::Consumer;
+use stream_delimit::byte_consumer::ByteConsumer;
 use stream_delimit::stream::*;
 use stream_delimit::converter::Converter;
 use std::io::{self, Write};
@@ -35,7 +35,7 @@ pub fn run_byte(matches: &ArgMatches) -> Result<()> {
     }
     let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))?;
     Ok(decode_or_convert(
-        Consumer::new(&mut stdin, stream_type),
+        ByteConsumer::new(&mut stdin, stream_type),
         matches,
     )?)
 }

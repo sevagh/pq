@@ -3,18 +3,18 @@ use varint::consume_single_varint;
 use stream::*;
 use std::io::Read;
 
-pub struct Consumer<'a> {
+pub struct ByteConsumer<'a> {
     read: &'a mut Read,
     type_: StreamType,
 }
 
-impl<'a> Consumer<'a> {
-    pub fn new(read: &'a mut Read, type_: StreamType) -> Consumer {
-        Consumer { read, type_ }
+impl<'a> ByteConsumer<'a> {
+    pub fn new(read: &'a mut Read, type_: StreamType) -> ByteConsumer {
+        ByteConsumer { read, type_ }
     }
 }
 
-impl<'a> Iterator for Consumer<'a> {
+impl<'a> Iterator for ByteConsumer<'a> {
     type Item = Vec<u8>;
 
     fn next(&mut self) -> Option<Vec<u8>> {
