@@ -1,3 +1,5 @@
+extern crate protobuf;
+
 use std::env;
 use std::fs::{File, read_dir};
 use std::path::PathBuf;
