@@ -47,7 +47,6 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
-    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
 
     if let Some(convert_type) = matches.value_of("CONVERT") {
         let converter = Converter::new(&mut consumer, str_to_streamtype(convert_type)?);
@@ -70,7 +69,7 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
             if count >= 0 && ctr >= count as usize {
                 return Ok(());
             }
-            match decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
+            match decoder.decode_message(&item, &mut stdout.lock()) {
                 Ok(_) => (),
                 Err(e) => bail!(e),
             }

@@ -30,7 +30,7 @@ impl<'a> PqrsDecoder<'a> {
         })
     }
 
-    pub fn decode_message(&self, data: &[u8], out: &mut Write, is_tty: bool) -> Result<()> {
+    pub fn decode_message(&self, data: &[u8], out: &mut Write) -> Result<()> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::for_named_message(
             &self.descriptors,
@@ -40,15 +40,9 @@ impl<'a> PqrsDecoder<'a> {
         let value = Value::deserialize(&mut deserializer).chain_err(
             || "Deser error",
         )?;
-        if is_tty {
-            let formatter = NewlineFormatter::default();
-            Ok(value
-                .serialize(&mut Serializer::with_formatter(out, formatter))
-                .chain_err(|| "Ser error")?)
-        } else {
-            Ok(value.serialize(&mut Serializer::new(out)).chain_err(
-                || "Serr error",
-            )?)
-        }
+        let formatter = NewlineFormatter::default();
+        Ok(value
+            .serialize(&mut Serializer::with_formatter(out, formatter))
+            .chain_err(|| "Ser error")?)
     }
 }
