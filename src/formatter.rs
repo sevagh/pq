@@ -1,31 +1,46 @@
-use serde_json::ser::{Formatter, PrettyFormatter};
+use serde_json::ser::{Formatter, PrettyFormatter, CompactFormatter};
+use erased_serde_json::Formatter as ErasedFormatter;
 use std::io::{self, Write};
+use std::boxed::Box;
 
-#[derive(Default)]
-pub struct NewlineFormatter {
-    pretty: PrettyFormatter<'static>,
+pub struct CustomFormatter {
+    formatter: Box<ErasedFormatter>,
     depth: usize,
 }
 
-impl Formatter for NewlineFormatter {
+impl CustomFormatter {
+    pub fn new(is_tty: bool) -> Self {
+        let f: Box<ErasedFormatter> = if is_tty {
+            Box::new(PrettyFormatter::default())
+        } else {
+            Box::new(CompactFormatter)
+        };
+        CustomFormatter {
+            formatter: f,
+            depth: 0,
+        }
+    }
+}
+
+impl Formatter for CustomFormatter {
     fn begin_array<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
-        self.pretty.begin_array(w)
+        self.formatter.begin_array(w)
     }
     fn end_array<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
-        self.pretty.end_array(w)
+        self.formatter.end_array(w)
     }
     fn begin_array_value<W: ?Sized + Write>(&mut self, w: &mut W, first: bool) -> io::Result<()> {
-        self.pretty.begin_array_value(w, first)
+        self.formatter.begin_array_value(w, first)
     }
     fn end_array_value<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
-        self.pretty.end_array_value(w)
+        self.formatter.end_array_value(w)
     }
     fn begin_object<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
         self.depth += 1;
-        self.pretty.begin_object(w)
+        self.formatter.begin_object(w)
     }
     fn end_object<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
-        self.pretty.end_object(w).and_then(|()| {
+        self.formatter.end_object(w).and_then(|()| {
             self.depth -= 1;
             if self.depth == 0 {
                 w.write_all(b"\n")
@@ -35,12 +50,12 @@ impl Formatter for NewlineFormatter {
         })
     }
     fn begin_object_key<W: ?Sized + Write>(&mut self, w: &mut W, first: bool) -> io::Result<()> {
-        self.pretty.begin_object_key(w, first)
+        self.formatter.begin_object_key(w, first)
     }
     fn begin_object_value<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
-        self.pretty.begin_object_value(w)
+        self.formatter.begin_object_value(w)
     }
     fn end_object_value<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
-        self.pretty.end_object_value(w)
+        self.formatter.end_object_value(w)
     }
 }
