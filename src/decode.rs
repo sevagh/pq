@@ -6,7 +6,7 @@ use serde_protobuf::de::Deserializer;
 use serde_protobuf::descriptor::Descriptors;
 use serde_value::Value;
 use protobuf::CodedInputStream;
-use newline_pretty_formatter::NewlineFormatter;
+use formatter::CustomFormatter;
 use errors::*;
 
 pub struct PqrsDecoder<'a> {
@@ -30,7 +30,7 @@ impl<'a> PqrsDecoder<'a> {
         })
     }
 
-    pub fn decode_message(&self, data: &[u8], out: &mut Write) -> Result<()> {
+    pub fn decode_message(&self, data: &[u8], out: &mut Write, is_tty: bool) -> Result<()> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::for_named_message(
             &self.descriptors,
@@ -40,9 +40,11 @@ impl<'a> PqrsDecoder<'a> {
         let value = Value::deserialize(&mut deserializer).chain_err(
             || "Deser error",
         )?;
-        let formatter = NewlineFormatter::default();
         Ok(value
-            .serialize(&mut Serializer::with_formatter(out, formatter))
+            .serialize(&mut Serializer::with_formatter(
+                out,
+                CustomFormatter::new(is_tty),
+            ))
             .chain_err(|| "Ser error")?)
     }
 }

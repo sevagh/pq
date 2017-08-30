@@ -5,6 +5,7 @@ extern crate clap;
 extern crate libc;
 extern crate protobuf;
 extern crate serde;
+extern crate erased_serde_json;
 extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
@@ -13,12 +14,16 @@ extern crate stream_delimit;
 extern crate error_chain;
 
 mod discovery;
-mod newline_pretty_formatter;
+mod formatter;
 mod decode;
 mod commands;
 
 mod errors {
     error_chain!{
+        foreign_links {
+            Io(::std::io::Error);
+        }
+
         links {
             StreamDelimit(::stream_delimit::error::Error, ::stream_delimit::error::ErrorKind);
         }
