@@ -12,12 +12,12 @@ keywords = ["protobuf", "serde"]
 [dependencies]
 serde = "1.0.10"
 serde-value = "0.5.0"
-erased_serde_json = { git = "https://github.com/sevagh/erased-serde-json" }
+erased_serde_json = { path = "erased-serde-json" }
 serde_json = "1.0.2"
 serde-protobuf = "0.6.0"
 protobuf = "1.4.1"
 libc = "0.2.26"
-stream_delimit = { path = "stream_delimit", version = "0.4.1" }
+stream_delimit = { path = "stream-delimit", version = "0.4.1" }
 clap = "2.26.0"
 error-chain = "0.10.0"
 
@@ -25,7 +25,7 @@ error-chain = "0.10.0"
 default = ["stream_delimit/with_kafka"]
 
 [workspace]
-members = ["stream_delimit"]
+members = ["stream-delimit", "erased-serde-json"]
 
 [profile.release]
 debug = true
