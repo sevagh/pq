@@ -56,7 +56,7 @@ impl KafkaConsumer {
                 .split(',')
                 .map(std::borrow::ToOwned::to_owned)
                 .collect::<Vec<String>>(),
-        ).with_topic_partitions(topic.to_owned(), &[0, 1])
+        ).with_topic(topic.to_owned())
             .with_fallback_offset(fetch_offset)
             .create() {
             Ok(consumer) => {
