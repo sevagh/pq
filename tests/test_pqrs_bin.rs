@@ -1,114 +1,96 @@
 extern crate protobuf;
 
-mod runner;
+extern crate assert_cli;
 
-use std::process::Output;
-use runner::Runner;
+use std::env;
 
-fn for_person(work: &mut Runner) {
-    work.cmd.arg("--msgtype=com.example.person.Person");
-    work.stdin_from_file("samples/person");
-}
-
-fn for_dog(work: &mut Runner) {
-    work.cmd.arg("--msgtype=com.example.dog.Dog");
-    work.stdin_from_file("samples/dog");
-}
-
-fn for_nonexistent_fdset_dir(work: &mut Runner) {
-    work.cmd.arg("--msgtype=com.example.dog.Dog");
-    work.cmd.env("FDSET_PATH", "fdset-doesnt-exist");
-    work.stdin_from_file("samples/dog");
-}
-
-fn for_no_valid_fdsets(work: &mut Runner) {
-    work.cmd.arg("--msgtype=com.example.dog.Dog");
-    work.cmd.env(
-        "FDSET_PATH",
-        &work.tests_path.join("fdsets-invalid"),
-    );
-    work.stdin_from_file("samples/dog");
-}
-
-fn for_bad_input(work: &mut Runner) {
-    work.cmd.arg("--msgtype=com.example.dog.Dog");
-    work.stdin_from_file("samples/bad");
-}
-
-fn for_dog_stream(work: &mut Runner) {
-    work.cmd.arg("--msgtype=com.example.dog.Dog");
-    work.cmd.arg("--stream=varint");
-    work.stdin_from_file("samples/dog_stream");
-}
-
-fn run_pqrs<F>(modify_in: F) -> Output
-where
-    F: FnOnce(&mut Runner),
-{
-    let mut work = Runner::new();
-
-    work.cmd.env("FDSET_PATH", &work.tests_path.join("fdsets"));
-
-    modify_in(&mut work);
-
-    work.spawn();
-    work.output()
+fn get_fdset_dir(final_piece: &str) -> String {
+    let mut cwd = env::current_dir().unwrap();
+    cwd.push("tests");
+    cwd.push(final_piece);
+    String::from(cwd.to_str().unwrap())
 }
 
 #[test]
 fn test_dog_decode() {
-    let out = run_pqrs(for_dog);
-    assert!(out.status.success());
-    assert_eq!(
-        String::from_utf8_lossy(&out.stdout),
-        "{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}"
-    );
+    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
+    assert_cli::Assert::main_binary()
+        .with_args(&["--msgtype=com.example.dog.Dog"])
+        .stdin(include_str!("samples/dog"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}")
+        .unwrap();
 }
 
 #[test]
 fn test_dog_decode_stream() {
-    let out = run_pqrs(for_dog_stream);
-    assert!(out.status.success());
-    assert_eq!(
-        String::from_utf8_lossy(&out.stdout),
-        "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}"
-    );
+    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
+    assert_cli::Assert::main_binary()
+        .with_args(&["--msgtype=com.example.dog.Dog", "--stream=varint"])
+        .stdin(include_str!("samples/dog_stream"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains(
+            "{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}",
+        )
+        .unwrap();
 }
 
 #[test]
 fn test_nonexistent_fdset_dir() {
-    let out = run_pqrs(for_nonexistent_fdset_dir);
-    assert_eq!(out.status.code().unwrap(), 255);
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains(
-        "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq",
-    ));
+    env::set_var("FDSET_PATH", get_fdset_dir("fdsets-dont-exist"));
+    assert_cli::Assert::main_binary()
+        .with_args(&["--msgtype=com.example.dog.Dog"])
+        .stdin(include_str!("samples/dog"))
+        .fails()
+        .and()
+        .stderr()
+        .contains(
+            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq",
+        )
+        .unwrap();
 }
 
 #[test]
 fn test_no_fdset_files() {
-    let out = run_pqrs(for_no_valid_fdsets);
-    assert_eq!(out.status.code().unwrap(), 255);
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains(
-        "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq",
-    ));
+    env::set_var("FDSET_PATH", get_fdset_dir("fdsets-invalid"));
+    assert_cli::Assert::main_binary()
+        .with_args(&["--msgtype=com.example.dog.Dog"])
+        .stdin(include_str!("samples/dog"))
+        .fails()
+        .and()
+        .stderr()
+        .contains(
+            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq",
+        )
+        .unwrap();
 }
 
 #[test]
 fn test_person_decode() {
-    let out = run_pqrs(for_person);
-    assert!(out.status.success());
-    assert_eq!(
-        String::from_utf8_lossy(&out.stdout),
-        "{\"id\":0,\"name\":\"khosrov\"}"
-    );
+    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
+    assert_cli::Assert::main_binary()
+        .with_args(&["--msgtype=com.example.person.Person"])
+        .stdin(include_str!("samples/person"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"id\":0,\"name\":\"khosrov\"}")
+        .unwrap();
 }
 
 #[test]
 fn test_bad_input() {
-    let out = run_pqrs(for_bad_input);
-    assert_eq!(out.status.code().unwrap(), 255);
-    assert_eq!(String::from_utf8_lossy(&out.stdout), "");
-    assert!(String::from_utf8_lossy(&out.stderr).contains("WireError"));
+    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
+    assert_cli::Assert::main_binary()
+        .with_args(&["--msgtype=com.example.dog.Dog"])
+        .stdin(include_str!("samples/bad"))
+        .fails()
+        .and()
+        .stderr()
+        .contains("WireError")
+        .unwrap();
 }
