@@ -1,5 +1,4 @@
 extern crate protobuf;
-
 extern crate assert_cli;
 
 use std::env;
@@ -13,8 +12,12 @@ fn get_fdset_dir(final_piece: &str) -> String {
 
 #[test]
 fn test_dog_decode() {
-    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
+
     assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert(
+            "FDSET_PATH",
+            get_fdset_dir("fdsets"),
+        ))
         .with_args(&["--msgtype=com.example.dog.Dog"])
         .stdin(include_str!("samples/dog"))
         .succeeds()
@@ -26,8 +29,11 @@ fn test_dog_decode() {
 
 #[test]
 fn test_dog_decode_stream() {
-    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
     assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert(
+            "FDSET_PATH",
+            get_fdset_dir("fdsets"),
+        ))
         .with_args(&["--msgtype=com.example.dog.Dog", "--stream=varint"])
         .stdin(include_str!("samples/dog_stream"))
         .succeeds()
@@ -41,8 +47,13 @@ fn test_dog_decode_stream() {
 
 #[test]
 fn test_nonexistent_fdset_dir() {
-    env::set_var("FDSET_PATH", get_fdset_dir("fdsets-dont-exist"));
     assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert(
+            "FDSET_PATH",
+            get_fdset_dir(
+                "fdsets-doesnt-exist",
+            ),
+        ))
         .with_args(&["--msgtype=com.example.dog.Dog"])
         .stdin(include_str!("samples/dog"))
         .fails()
@@ -56,8 +67,13 @@ fn test_nonexistent_fdset_dir() {
 
 #[test]
 fn test_no_fdset_files() {
-    env::set_var("FDSET_PATH", get_fdset_dir("fdsets-invalid"));
     assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert(
+            "FDSET_PATH",
+            get_fdset_dir(
+                "fdsets-invalid",
+            ),
+        ))
         .with_args(&["--msgtype=com.example.dog.Dog"])
         .stdin(include_str!("samples/dog"))
         .fails()
@@ -71,8 +87,11 @@ fn test_no_fdset_files() {
 
 #[test]
 fn test_person_decode() {
-    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
     assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert(
+            "FDSET_PATH",
+            get_fdset_dir("fdsets"),
+        ))
         .with_args(&["--msgtype=com.example.person.Person"])
         .stdin(include_str!("samples/person"))
         .succeeds()
@@ -84,8 +103,11 @@ fn test_person_decode() {
 
 #[test]
 fn test_bad_input() {
-    env::set_var("FDSET_PATH", get_fdset_dir("fdsets"));
     assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert(
+            "FDSET_PATH",
+            get_fdset_dir("fdsets"),
+        ))
         .with_args(&["--msgtype=com.example.dog.Dog"])
         .stdin(include_str!("samples/bad"))
         .fails()

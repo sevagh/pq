@@ -22,7 +22,7 @@ clap = "2.26.0"
 error-chain = "0.10.0"
 
 [dev-dependencies]
-assert_cli = "0.5.3"
+assert_cli = "0.5.4"
 
 [features]
 default = ["stream_delimit/with_kafka"]
