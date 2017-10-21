@@ -22,10 +22,7 @@ mod errors {
     error_chain!{
         foreign_links {
             Io(::std::io::Error);
-        }
-
-        links {
-            StreamDelimit(::stream_delimit::error::Error, ::stream_delimit::error::ErrorKind);
+            StreamDelimit(::stream_delimit::error::Error);
         }
     }
 }
