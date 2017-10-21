@@ -1,6 +1,6 @@
 [package]
 name = "stream_delimit"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "length delimited protobuf stream separator"
 repository = "https://github.com/sevagh/pq/tree/master/stream_delimit"
@@ -9,9 +9,9 @@ license = "MIT"
 keywords = ["protobuf", "serde"]
 
 [dependencies]
-libc = "0.2.26"
+libc = "0.2"
 kafka = { version = "0.7", optional = true }
-error-chain = "0.10.0"
+error-chain = "0.10"
 
 [features]
 default = []
