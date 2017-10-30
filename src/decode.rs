@@ -1,4 +1,3 @@
-use discovery::get_loaded_descriptors;
 use std::io::Write;
 use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
@@ -6,6 +5,7 @@ use serde_protobuf::de::Deserializer;
 use serde_protobuf::descriptor::Descriptors;
 use serde_value::Value;
 use protobuf::CodedInputStream;
+use protobuf::descriptor::FileDescriptorSet;
 use formatter::CustomFormatter;
 use errors::*;
 
@@ -15,10 +15,7 @@ pub struct PqrsDecoder<'a> {
 }
 
 impl<'a> PqrsDecoder<'a> {
-    pub fn new(msgtype: &str) -> Result<PqrsDecoder> {
-        let loaded_descs = get_loaded_descriptors().chain_err(
-            || "No loaded descriptors",
-        )?;
+    pub fn new(loaded_descs: Vec<FileDescriptorSet>, msgtype: &str) -> Result<PqrsDecoder> {
         let mut descriptors = Descriptors::new();
         for fdset in loaded_descs {
             descriptors.add_file_set_proto(&fdset);

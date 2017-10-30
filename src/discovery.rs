@@ -5,8 +5,13 @@ use protobuf::parse_from_reader;
 use protobuf::descriptor::FileDescriptorSet;
 use errors::*;
 
-pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
-    let fdsets = discover_fdsets();
+pub fn get_loaded_descriptors(
+    additional_fdset_dirs: Vec<PathBuf>,
+    mut additional_fdset_files: Vec<PathBuf>,
+) -> Result<Vec<FileDescriptorSet>> {
+    let mut fdsets = discover_fdsets(additional_fdset_dirs);
+    fdsets.append(&mut additional_fdset_files);
+
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
@@ -27,7 +32,7 @@ pub fn get_loaded_descriptors() -> Result<Vec<FileDescriptorSet>> {
     Ok(descriptors)
 }
 
-fn discover_fdsets() -> Vec<PathBuf> {
+fn discover_fdsets(additional_fdset_dirs: Vec<PathBuf>) -> Vec<PathBuf> {
     let mut fdset_files = Vec::new();
 
     if let Ok(x) = env::var("FDSET_PATH") {
@@ -42,6 +47,10 @@ fn discover_fdsets() -> Vec<PathBuf> {
 
     let x = PathBuf::from("/etc/pq");
     fdset_files.append(&mut get_fdset_files_from_path(&x));
+
+    for a in additional_fdset_dirs {
+        fdset_files.append(&mut get_fdset_files_from_path(&a));
+    }
 
     fdset_files
 }
