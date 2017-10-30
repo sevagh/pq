@@ -31,7 +31,7 @@ pub fn decode_varint(read: &mut Read) -> Result<u64> {
             let mut concat: u64 = 0;
             for i in (0..varint_buf.len()).rev() {
                 let i_ = i as u32;
-                concat += ((varint_buf[i] & 0x7f) as u64) << (i_ * (8u32.pow(i_) - 1));
+                concat += u64::from(varint_buf[i] & 0x7f) << (i_ * (8u32.pow(i_) - 1));
             }
             return Ok(concat);
         }
