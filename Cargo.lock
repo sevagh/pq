@@ -1,6 +1,6 @@
 [root]
 name = "stream_delimit"
-version = "0.4.5"
+version = "0.4.6"
 dependencies = [
  "error-chain 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "kafka 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -352,7 +352,7 @@ dependencies = [
  "serde-protobuf 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-value 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "stream_delimit 0.4.5",
+ "stream_delimit 0.4.6",
 ]
 
 [[package]]

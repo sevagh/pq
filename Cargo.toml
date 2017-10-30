@@ -17,7 +17,7 @@ serde_json = "1.0"
 serde-protobuf = "0.7"
 protobuf = "1.4"
 libc = "0.2"
-stream_delimit = { path = "stream-delimit", version = "0.4.5" }
+stream_delimit = { path = "stream-delimit", version = "0.4.6" }
 clap = "2"
 error-chain = "0.11"
 

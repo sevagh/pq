@@ -1,10 +1,10 @@
 [package]
 name = "stream_delimit"
-version = "0.4.5"
+version = "0.4.6"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "length delimited protobuf stream separator"
 repository = "https://github.com/sevagh/pq/tree/master/stream_delimit"
-documentation = "http://docs.rs/stream-delimit/"
+documentation = "http://docs.rs/stream_delimit/"
 readme = "README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
