@@ -1,4 +1,4 @@
-# pq [![license](https://img.shields.io/github/license/sevagh/pq.svg)](https://github.com/sevagh/pq/blob/master/LICENSE) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq) [![GitHub release](https://img.shields.io/github/release/sevagh/pq.svg)](https://github.com/sevagh/pq) [![Crates.io](https://img.shields.io/crates/d/pq.svg)](https://github.com/sevagh/pq)
+# pq [![license](https://img.shields.io/github/license/sevagh/pq.svg)](https://github.com/sevagh/pq/blob/master/LICENSE) [![Crates.io](https://img.shields.io/crates/v/pq.svg)](https://crates.io/crates/pq) [![GitHub release](https://img.shields.io/github/release/sevagh/pq.svg)](https://github.com/sevagh/pq) [![Crates.io](https://img.shields.io/crates/d/pq.svg)](https://crates.io/crates/pq)
 
 ### protobuf to json deserializer, written in Rust
 
