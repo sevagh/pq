@@ -12,7 +12,6 @@ fn get_fdset_dir(final_piece: &str) -> String {
 
 #[test]
 fn test_dog_decode() {
-
     assert_cli::Assert::main_binary()
         .with_env(assert_cli::Environment::inherit().insert(
             "FDSET_PATH",
@@ -59,9 +58,7 @@ fn test_nonexistent_fdset_dir() {
         .fails()
         .and()
         .stderr()
-        .contains(
-            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq",
-        )
+        .contains("No valid fdset files found. Checked:")
         .unwrap();
 }
 
@@ -79,9 +76,7 @@ fn test_no_fdset_files() {
         .fails()
         .and()
         .stderr()
-        .contains(
-            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq",
-        )
+        .contains("No valid fdset files found. Checked:")
         .unwrap();
 }
 
@@ -114,5 +109,49 @@ fn test_bad_input() {
         .and()
         .stderr()
         .contains("WireError")
+        .unwrap();
+}
+
+#[test]
+fn test_person_decode_with_command_line_fdset_dir() {
+    assert_cli::Assert::main_binary()
+        .with_args(
+            &[
+                "--msgtype=com.example.person.Person",
+                &format!("--fdsetdir={0}", get_fdset_dir("fdsets")),
+            ],
+        )
+        .stdin(include_str!("samples/person"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"id\":0,\"name\":\"khosrov\"}")
+        .unwrap();
+}
+
+#[test]
+fn test_person_decode_with_command_line_fdset_file() {
+    assert_cli::Assert::main_binary()
+        .with_args(
+            &[
+                "--msgtype=com.example.person.Person",
+                &format!("--fdsetfile={0}", get_fdset_dir("fdsets/person.fdset")),
+            ],
+        )
+        .stdin(include_str!("samples/person"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"id\":0,\"name\":\"khosrov\"}")
+        .unwrap();
+}
+
+#[test]
+fn test_no_args() {
+    assert_cli::Assert::main_binary()
+        .fails()
+        .and()
+        .stderr()
+        .contains("Error: No loaded descriptors")
         .unwrap();
 }

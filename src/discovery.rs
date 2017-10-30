@@ -9,8 +9,12 @@ pub fn get_loaded_descriptors(
     additional_fdset_dirs: Vec<PathBuf>,
     mut additional_fdset_files: Vec<PathBuf>,
 ) -> Result<Vec<FileDescriptorSet>> {
-    let mut fdsets = discover_fdsets(additional_fdset_dirs);
+    let (mut fdsets, mut tested_things) = discover_fdsets(additional_fdset_dirs);
     fdsets.append(&mut additional_fdset_files);
+    tested_things.append(&mut additional_fdset_files
+        .iter()
+        .map(|x| format!("File: {:?}", x))
+        .collect::<Vec<_>>());
 
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
@@ -26,33 +30,38 @@ pub fn get_loaded_descriptors(
 
     if descriptors.is_empty() {
         return Err(
-            "No valid fdset files found in dirs: $FDSET_PATH, $HOME/.pq, /etc/pq".into(),
+            format!("No valid fdset files found. Checked: {:#?}", tested_things).into(),
         );
     }
     Ok(descriptors)
 }
 
-fn discover_fdsets(additional_fdset_dirs: Vec<PathBuf>) -> Vec<PathBuf> {
+fn discover_fdsets(additional_fdset_dirs: Vec<PathBuf>) -> (Vec<PathBuf>, Vec<String>) {
+    let mut tested_things = Vec::new();
     let mut fdset_files = Vec::new();
 
     if let Ok(x) = env::var("FDSET_PATH") {
+        tested_things.push(format!("Directory: {:?}", x));
         let p = PathBuf::from(x);
         fdset_files.append(&mut get_fdset_files_from_path(&p));
     }
 
     if let Some(mut x) = env::home_dir() {
         x.push(".pq");
+        tested_things.push(format!("Directory: {:?}", x));
+        fdset_files.append(&mut get_fdset_files_from_path(&x));
+    }
+
+    for x in additional_fdset_dirs {
+        tested_things.push(format!("Directory: {:?}", x));
         fdset_files.append(&mut get_fdset_files_from_path(&x));
     }
 
     let x = PathBuf::from("/etc/pq");
+    tested_things.push(format!("Directory: {:?}", x));
     fdset_files.append(&mut get_fdset_files_from_path(&x));
 
-    for a in additional_fdset_dirs {
-        fdset_files.append(&mut get_fdset_files_from_path(&a));
-    }
-
-    fdset_files
+    (fdset_files, tested_things)
 }
 
 fn get_fdset_files_from_path(path: &PathBuf) -> Vec<PathBuf> {
