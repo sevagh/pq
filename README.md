@@ -20,6 +20,13 @@ $ protoc -o person.fdset person.proto
 $ cp *.fdset ~/.pq/
 ```
 
+**New in 1.0** You can now specify additional fdset directories or files via options:
+
+```
+$ pq --msgtype com.example.dog.Dog --fdsetdir ./tests/fdsets <./tests/samples/dog
+$ pq --msgtype com.example.dog.Dog --fdsetfile ./tests/fdsets/dog.fdset <./tests/samples/dog
+```
+
 Pipe a single compiled protobuf message:
 
 ```

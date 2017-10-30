@@ -38,6 +38,10 @@ quick_main!(|| -> Result<i32> {
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
+        (@arg EXTRA_DIRS: --fdsetdir +takes_value +global +multiple
+             "[repeatable] Specify dirs to load fdset files from")
+        (@arg EXTRA_FILES: --fdsetfile +takes_value +global +multiple
+             "[repeatable] Specify an fdset file")
         (@subcommand kafka =>
             (@arg TOPIC: +required "Sets the kafka topic")
             (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
@@ -45,9 +49,21 @@ quick_main!(|| -> Result<i32> {
         )
     ).get_matches();
 
+    let extra_dirs = match matches.values_of("EXTRA_DIRS") {
+        Some(dirs) => dirs.map(std::path::PathBuf::from).collect::<Vec<_>>(),
+        None => vec![],
+    };
+
+    let extra_files = match matches.values_of("EXTRA_FILES") {
+        Some(files) => files.map(std::path::PathBuf::from).collect::<Vec<_>>(),
+        None => vec![],
+    };
+
+    let cmd = CommandRunner::new(extra_dirs, extra_files)?;
+
     match matches.subcommand() {
-        ("kafka", Some(m)) => run_kafka(m)?,
-        _ => run_byte(&matches)?,
+        ("kafka", Some(m)) => cmd.run_kafka(m)?,
+        _ => cmd.run_byte(&matches)?,
     }
     Ok(0)
 });

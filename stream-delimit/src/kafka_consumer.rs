@@ -1,7 +1,10 @@
+#![deny(missing_docs)]
+
 use kafka::consumer::{Consumer, FetchOffset};
 use std::{self, thread, time};
 use error::*;
 
+/// A consumer from Kafka
 pub struct KafkaConsumer {
     consumer: Consumer,
     messages: Vec<Vec<u8>>,
@@ -45,6 +48,7 @@ impl Iterator for KafkaConsumer {
 }
 
 impl KafkaConsumer {
+    /// Return a KafkaConsumer with some basic kafka connection properties
     pub fn new(brokers: &str, topic: &str, from_beginning: bool) -> Result<KafkaConsumer> {
         let fetch_offset = if from_beginning {
             FetchOffset::Earliest
