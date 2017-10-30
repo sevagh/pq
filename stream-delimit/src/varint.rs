@@ -1,3 +1,5 @@
+#![deny(missing_docs)]
+
 use error::*;
 use std::io::Read;
 

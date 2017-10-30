@@ -1,13 +1,17 @@
+#![deny(missing_docs)]
+
 use varint::consume_single_varint;
 use stream::*;
 use std::io::Read;
 
+/// A consumer for a byte stream
 pub struct ByteConsumer<'a> {
     read: &'a mut Read,
     type_: StreamType,
 }
 
 impl<'a> ByteConsumer<'a> {
+    /// Return a ByteConsumer from for single messages, varint or leb128-delimited
     pub fn new(read: &'a mut Read, type_: StreamType) -> ByteConsumer {
         ByteConsumer { read, type_ }
     }
