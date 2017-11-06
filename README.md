@@ -10,7 +10,20 @@
 
 pq is on [crates.io](https://crates.io/crates/pq): `cargo install pq`. You can also download a static binary from the [releases page](https://github.com/sevagh/pq/releases).
 
-### Usage
+### pq_docker usage
+
+Included is [pq_docker](./pq_docker), a convenience wrapper which runs the latest version of pq in a Docker container.
+
+It takes a path containing `*.proto` files directly as its first arg (so you can avoid the manual `protoc` command invocations to generate `.fdset` files):
+
+```
+sevagh:pq $ ./pq_docker ./tests/schemata/ --version
+pq 1.0.0
+sevagh:pq $ ./pq_docker ./tests/schemata/ --msgtype com.example.dog.Dog <tests/samples/dog
+{"age":3,"breed":"gsd","temperament":"excited"}
+```
+
+### pq usage
 
 To set up, put your `*.fdset` files in `~/.pq` or `/etc/pq` or an alternate directory specified with the `FDSET_PATH=` env var:
 
