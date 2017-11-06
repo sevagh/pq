@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# This file:
+#
+#  - Docker convenience wrapper for github.com/sevagh/pq
+#
+# Based on a template by BASH3 Boilerplate v2.0.0
+# Copyright (c) 2013 Kevin van Zonneveld and contributors
+# http://bash3boilerplate.sh/#authors
+
+set -o errtrace
+set -o nounset
+set -o pipefail
+set -o errexit
+
+[[ $# < 2 ]] && { echo >&2 "Usage: ${0} <protos_dir> <args>"; exit 1; }
+
+__command='docker'
+__abspath=$(readlink -e ${1})
+
+${__command} -v &>/dev/null || { echo >&2 "${__command} is not installed. Abort."; exit 1; }
+
+${__command} build -qt pq_docker . >& /dev/null
+${__command} run -i --rm -v "${__abspath}":/protos --name pq_docker pq_docker "${@:2}"
