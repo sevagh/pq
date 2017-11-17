@@ -10,6 +10,7 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate serde_json;
 extern crate stream_delimit;
+extern crate inflector;
 #[macro_use]
 extern crate error_chain;
 
