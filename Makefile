@@ -1,4 +1,4 @@
-WORKSPACES="./" "./stream-delimit/" "./erased-serde-json/"
+WORKSPACES="./" "./stream-delimit/"
 CHOWN_CMD=&& chown -R 1000:1000 ./
 DOCKER_ARGS=run -v cargo-cache:/root/.cargo -v $(PWD):/volume:Z -w /volume -t clux/muslrust
 
