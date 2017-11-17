@@ -14,10 +14,15 @@ use errors::*;
 pub struct PqrsDecoder<'a> {
     pub descriptors: Descriptors,
     pub message_type: &'a str,
+    spec_compliant: bool,
 }
 
 impl<'a> PqrsDecoder<'a> {
-    pub fn new(loaded_descs: Vec<FileDescriptorSet>, msgtype: &str) -> Result<PqrsDecoder> {
+    pub fn new(
+        loaded_descs: Vec<FileDescriptorSet>,
+        msgtype: &str,
+        compliant: bool,
+    ) -> Result<PqrsDecoder> {
         let mut descriptors = Descriptors::new();
         for fdset in loaded_descs {
             descriptors.add_file_set_proto(&fdset);
@@ -26,6 +31,7 @@ impl<'a> PqrsDecoder<'a> {
         Ok(PqrsDecoder {
             descriptors: descriptors,
             message_type: msgtype,
+            spec_compliant: compliant,
         })
     }
 
@@ -39,9 +45,13 @@ impl<'a> PqrsDecoder<'a> {
         let decoded_json = Value::deserialize(&mut deserializer).chain_err(
             || "Deser error",
         )?;
-        let compliant_json = match spec_compliance(&decoded_json) {
-            Some(x) => x,
-            None => decoded_json,
+        let compliant_json = if self.spec_compliant {
+            match spec_compliance(&decoded_json) {
+                Some(x) => x,
+                None => decoded_json,
+            }
+        } else {
+            decoded_json
         };
         Ok(compliant_json
             .serialize(&mut Serializer::with_formatter(

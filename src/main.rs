@@ -36,6 +36,8 @@ quick_main!(|| -> Result<i32> {
         @app (app_from_crate!())
         (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT]
             "Sets protobuf message type")
+        (@arg CANONICAL: --canonical +global conflicts_with[CONVERT]
+            "Emit canonical JSON according to Google documentation")
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
         (@arg CONVERT: --convert +takes_value +global "Convert to different stream type")
