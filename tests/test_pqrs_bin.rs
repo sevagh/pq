@@ -155,3 +155,38 @@ fn test_no_args() {
         .contains("Error: No loaded descriptors")
         .unwrap();
 }
+
+#[test]
+fn test_cat_noncanonical_decode() {
+    assert_cli::Assert::main_binary()
+        .with_args(
+            &[
+                "--msgtype=com.example.cat.Cat",
+                &format!("--fdsetfile={0}", get_fdset_dir("fdsets/cat.fdset")),
+            ],
+        )
+        .stdin(include_str!("samples/cat"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"is_lazy\":false}")
+        .unwrap();
+}
+
+#[test]
+fn test_cat_canonical_decode() {
+    assert_cli::Assert::main_binary()
+        .with_args(
+            &[
+                "--msgtype=com.example.cat.Cat",
+                &format!("--fdsetfile={0}", get_fdset_dir("fdsets/cat.fdset")),
+                "--canonical",
+            ],
+        )
+        .stdin(include_str!("samples/cat"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"isLazy\":false}")
+        .unwrap();
+}

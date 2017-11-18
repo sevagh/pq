@@ -86,6 +86,7 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
             matches.value_of("MSGTYPE").expect(
                 "Must supply --msgtype or --convert",
             ),
+            matches.is_present("CANONICAL"),
         ) {
             Ok(x) => x,
             Err(e) => bail!(e),

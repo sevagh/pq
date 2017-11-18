@@ -12,7 +12,7 @@ pub enum StreamType {
     Single,
 }
 
-/// Convert &str to associated StreamType
+/// Convert &str to associated `StreamType`
 pub fn str_to_streamtype(input: &str) -> Result<StreamType> {
     match input {
         "single" => Ok(StreamType::Single),

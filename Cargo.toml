@@ -1,6 +1,6 @@
 [package]
 name = "pq"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 description = "jq for protobuf"
 repository = "https://github.com/sevagh/pq"
@@ -20,6 +20,7 @@ libc = "0.2"
 stream_delimit = { path = "stream-delimit", version = "0.4.6" }
 clap = "2"
 error-chain = "0.11"
+Inflector = "0.11.0"
 
 [dev-dependencies]
 assert_cli = "0.5"

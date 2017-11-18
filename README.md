@@ -92,3 +92,11 @@ To compile `pq` without kafka support, run:
 ```
 $ cargo build --no-default-features
 ```
+
+### Spec compliance
+
+As pointed out in the issues, there are some Protobuf [JSON specs](https://developers.google.com/protocol-buffers/docs/proto3#json). It would be nice if `pq` obeys them.
+
+You can enable this with the `--canonical` flag.
+
+For now, there is the rule of `keys => lowerCamelCase` which is enforced (in [decode.rs](./src/decode.rs)). Other rules can be contributed gradually.
