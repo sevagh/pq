@@ -46,10 +46,7 @@ impl<'a> PqrsDecoder<'a> {
             || "Deser error",
         )?;
         let compliant_json = if self.spec_compliant {
-            match spec_compliance(&decoded_json) {
-                Some(x) => x,
-                None => decoded_json,
-            }
+            spec_compliance(decoded_json)
         } else {
             decoded_json
         };
@@ -70,22 +67,25 @@ Rules enforced:
 
 [✓] Keys should be lowerCamelCase
 */
-fn spec_compliance(json: &Value) -> Option<Value> {
-    match *json {
+fn spec_compliance(json: Value) -> Value {
+    match json {
         Value::Map(ref map) => {
-            Some(Value::Map(
+            Value::Map(
                 map.iter()
                     .map(|(key, value)| match *key {
                         Value::String(ref contents) => (
                             Value::String(to_camel_case(contents)),
-                            value.clone(),
+                            spec_compliance(value.clone()),
                         ),
-                        _ => (key.clone(), value.clone()),
+                        _ => (spec_compliance(key.clone()), spec_compliance(value.clone())),
                     })
                     .collect::<BTreeMap<Value, Value>>(),
-            ))
+            )
         }
-        _ => None,
+        Value::Seq(x) => Value::Seq(x.into_iter().map(spec_compliance).collect::<Vec<_>>()),
+        Value::Option(Some(box x)) |
+        Value::Newtype(box x) => spec_compliance(x),
+        x => x,
     }
 }
 
@@ -104,10 +104,7 @@ mod tests {
 
         let noncompliant_json = Value::Map(map);
 
-        let compliant_json = match spec_compliance(&noncompliant_json) {
-            Some(x) => x,
-            None => noncompliant_json,
-        };
+        let compliant_json = spec_compliance(noncompliant_json);
 
         match compliant_json {
             Value::Map(compliant_map) => {

@@ -30,4 +30,10 @@ package: release
 		cd -;\
 		mv target/x86_64-unknown-linux-musl/release/pq-bin.tar.gz ./pq-bin.tar.gz 
 
-.PHONY: all debug release lint package
+fdset:
+	$(MAKE) -C ./tests/ fdset
+
+regen:
+	$(MAKE) -C ./tests/ regen
+
+.PHONY: all debug release lint package regen

@@ -1,4 +1,5 @@
 #![crate_type = "bin"]
+#![feature(box_syntax, box_patterns)]
 
 #[macro_use]
 extern crate clap;

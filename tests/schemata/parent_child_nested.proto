@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message Parent {
+        Child my_child = 1;
+}
+
+message Child {
+        string foo_bar = 1;
+}

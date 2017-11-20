@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message ParentMap {
+        map<string, string> my_child = 1;
+}
