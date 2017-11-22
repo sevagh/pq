@@ -197,7 +197,10 @@ fn test_parent_nested_canonical_decode() {
         .with_args(
             &[
                 "--msgtype=Parent",
-                &format!("--fdsetfile={0}", get_fdset_dir("fdsets/parent_child_nested.fdset")),
+                &format!(
+                    "--fdsetfile={0}",
+                    get_fdset_dir("fdsets/parent_child_nested.fdset")
+                ),
                 "--canonical",
             ],
         )
@@ -215,7 +218,10 @@ fn test_parent_map_canonical_decode() {
         .with_args(
             &[
                 "--msgtype=ParentMap",
-                &format!("--fdsetfile={0}", get_fdset_dir("fdsets/parent_child_map.fdset")),
+                &format!(
+                    "--fdsetfile={0}",
+                    get_fdset_dir("fdsets/parent_child_map.fdset")
+                ),
                 "--canonical",
             ],
         )
