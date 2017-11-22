@@ -1,8 +1,13 @@
 
-¦
+”
 schemata/parent_child_map.proto"{
 	ParentMap2
 my_child (2.ParentMap.MyChildEntryRmyChild:
 MyChildEntry
 key (	Rkey
-value (	Rvalue:8bproto3
+value (	Rvalue:8"2
+KeyValue
+key (	Rkey
+value (	Rvalue"8
+ParentMapFootgun$
+my_child (2	.KeyValueRmyChildbproto3

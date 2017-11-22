@@ -45,6 +45,7 @@ impl<'a> PqrsDecoder<'a> {
             || "Deser error",
         )?;
         let compliant_json = if self.spec_compliant {
+            println!("Noncompliant: {:#?}", decoded_json);
             spec_compliance(decoded_json)
         } else {
             decoded_json

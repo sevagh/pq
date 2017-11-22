@@ -28,6 +28,8 @@ def single(msgtype, stream=False):
         obj = parent_child_nested_pb2.Parent(my_child=parent_child_nested_pb2.Child(foo_bar="baz"))
     elif msgtype == 'map':
         obj = parent_child_map_pb2.ParentMap(my_child={"foo_bar": "baz"})
+    elif msgtype == 'footgun':
+        obj = parent_child_map_pb2.ParentMapFootgun(my_child=[{"key": "foo_bar", "value": "baz"}])
     else:
         usage()
     obj = obj.SerializeToString()
@@ -41,7 +43,7 @@ def stream(msgtype, limit):
 
 
 def usage():
-    raise ValueError(('Usage: {0} <single|stream> <dog|person|cat|nested|map>'
+    raise ValueError(('Usage: {0} <single|stream> <dog|person|cat|nested|map|footgun>'
                       ' [--count c]').format(sys.argv[0]))
 
 
