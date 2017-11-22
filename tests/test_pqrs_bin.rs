@@ -190,3 +190,45 @@ fn test_cat_canonical_decode() {
         .contains("{\"isLazy\":false}")
         .unwrap();
 }
+
+#[test]
+fn test_parent_nested_canonical_decode() {
+    assert_cli::Assert::main_binary()
+        .with_args(
+            &[
+                "--msgtype=Parent",
+                &format!(
+                    "--fdsetfile={0}",
+                    get_fdset_dir("fdsets/parent_child_nested.fdset")
+                ),
+                "--canonical",
+            ],
+        )
+        .stdin(include_str!("samples/parent_nested"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"myChild\":{\"fooBar\":\"baz\"}}")
+        .unwrap();
+}
+
+#[test]
+fn test_parent_map_canonical_decode() {
+    assert_cli::Assert::main_binary()
+        .with_args(
+            &[
+                "--msgtype=ParentMap",
+                &format!(
+                    "--fdsetfile={0}",
+                    get_fdset_dir("fdsets/parent_child_map.fdset")
+                ),
+                "--canonical",
+            ],
+        )
+        .stdin(include_str!("samples/parent_map"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"myChild\":{\"foo_bar\":\"baz\"}}")
+        .unwrap();
+}

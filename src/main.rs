@@ -1,4 +1,5 @@
 #![crate_type = "bin"]
+#![feature(box_syntax, box_patterns)]
 
 #[macro_use]
 extern crate clap;
@@ -18,6 +19,7 @@ mod discovery;
 mod formatter;
 mod decode;
 mod commands;
+mod canonical;
 
 mod errors {
     error_chain!{
