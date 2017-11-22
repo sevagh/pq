@@ -110,7 +110,7 @@ fn spec_compliance(json: Value) -> Value {
                                 let value = map.get(&Value::String(String::from("value")));
                                 if let Some(&Value::Option(Some(box ref k))) = key {
                                     if let Some(v) = value {
-                                        return (k.clone(), v.clone());
+                                        return (k.clone(), spec_compliance(v.clone()));
                                     }
                                 }
                             }
