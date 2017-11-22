@@ -229,6 +229,6 @@ fn test_parent_map_canonical_decode() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"myChild\":[{\"key\":\"foo_bar\",\"value\":\"baz\"}]}")
+        .contains("{\"myChild\":{\"foo_bar\":\"baz\"}}")
         .unwrap();
 }
