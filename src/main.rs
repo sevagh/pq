@@ -19,6 +19,7 @@ mod discovery;
 mod formatter;
 mod decode;
 mod commands;
+mod canonical;
 
 mod errors {
     error_chain!{
