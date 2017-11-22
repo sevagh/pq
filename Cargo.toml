@@ -8,6 +8,7 @@ documentation = "https://github.com/sevagh/pq"
 readme = "README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
+exclude = ["erased-serde-json/**", "stream-delimit/**", "pq-bin.tar.gz", "pq", "pq_docker", "Dockerfile", "tests/python/**", "target/**", "tests/schemata/**", "Makefile", "tests/Makefile"]
 
 [dependencies]
 serde = "1.0"
