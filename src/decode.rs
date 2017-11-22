@@ -82,24 +82,25 @@ fn spec_compliance(json: Value) -> Value {
                     .collect::<BTreeMap<Value, Value>>(),
             )
         }
-        Value::Seq(mut x) => {
-            let kvmapseq = x.drain_filter(|elem| {
-                if let Value::Map(ref map) = *elem {
-                    if map.len() == 2 {
-                        // possibly key/value map case
-                        let key = map.get(&Value::String(String::from("key")));
-                        let value = map.get(&Value::String(String::from("value")));
-                        if let Some(&Value::Option(Some(box ref _k))) = key {
-                            if let Some(_v) = value {
-                                return true;
+        Value::Seq(x) => {
+            let (kvmapseq, nonkvmapseq): (Vec<Value>, Vec<Value>) =
+                x.into_iter().partition(|elem| {
+                    if let Value::Map(ref map) = *elem {
+                        if map.len() == 2 {
+                            // possibly key/value map case
+                            let key = map.get(&Value::String(String::from("key")));
+                            let value = map.get(&Value::String(String::from("value")));
+                            if let Some(&Value::Option(Some(box ref _k))) = key {
+                                if let Some(_v) = value {
+                                    return true;
+                                }
                             }
                         }
                     }
-                }
-                false
-            }).collect::<Vec<_>>();
+                    false
+                });
             if !kvmapseq.is_empty() {
-                assert!(x.is_empty());
+                assert!(nonkvmapseq.is_empty());
                 Value::Map(
                     kvmapseq
                         .into_iter()
@@ -118,7 +119,12 @@ fn spec_compliance(json: Value) -> Value {
                         .collect::<BTreeMap<_, _>>(),
                 )
             } else {
-                Value::Seq(x.into_iter().map(spec_compliance).collect::<Vec<_>>())
+                Value::Seq(
+                    nonkvmapseq
+                        .into_iter()
+                        .map(spec_compliance)
+                        .collect::<Vec<_>>(),
+                )
             }
         }
         Value::Option(Some(box x)) |
