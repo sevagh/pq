@@ -180,7 +180,6 @@ fn test_cat_canonical_decode() {
             &[
                 "--msgtype=com.example.cat.Cat",
                 &format!("--fdsetfile={0}", get_fdset_dir("fdsets/cat.fdset")),
-                "--canonical",
             ],
         )
         .stdin(include_str!("samples/cat"))
