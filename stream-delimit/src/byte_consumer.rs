@@ -22,8 +22,7 @@ impl<'a> Iterator for ByteConsumer<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         match self.type_ {
-            StreamType::Leb128 |
-            StreamType::Varint => consume_single_varint(self.read),
+            StreamType::Leb128 | StreamType::Varint => consume_single_varint(self.read),
             StreamType::Single => {
                 let ret: Option<Vec<u8>>;
                 let mut buf = Vec::new();

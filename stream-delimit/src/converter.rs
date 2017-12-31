@@ -28,17 +28,14 @@ impl<'a> Iterator for Converter<'a> {
 
     fn next(&mut self) -> Option<Vec<u8>> {
         match self.stream_dest {
-            StreamType::Varint |
-            StreamType::Leb128 => {
-                match self.stream_src.next() {
-                    Some(ref mut x) => {
-                        let mut lead_varint = encode_varint(x.len() as u64);
-                        lead_varint.append(x);
-                        Some(lead_varint)
-                    }
-                    None => None,
+            StreamType::Varint | StreamType::Leb128 => match self.stream_src.next() {
+                Some(ref mut x) => {
+                    let mut lead_varint = encode_varint(x.len() as u64);
+                    lead_varint.append(x);
+                    Some(lead_varint)
                 }
-            }
+                None => None,
+            },
             _ => unimplemented!(),
         }
     }
