@@ -1,5 +1,5 @@
 use std::env;
-use std::fs::{File, read_dir};
+use std::fs::{read_dir, File};
 use std::path::PathBuf;
 use protobuf::parse_from_reader;
 use protobuf::descriptor::FileDescriptorSet;
@@ -19,9 +19,8 @@ pub fn get_loaded_descriptors(
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
-        let mut fdset_file = File::open(fdset_path.as_path()).chain_err(
-            || "Couldn't open fdset file",
-        )?;
+        let mut fdset_file =
+            File::open(fdset_path.as_path()).chain_err(|| "Couldn't open fdset file")?;
         match parse_from_reader(&mut fdset_file) {
             Err(_) => continue,
             Ok(x) => descriptors.push(x),
@@ -29,9 +28,7 @@ pub fn get_loaded_descriptors(
     }
 
     if descriptors.is_empty() {
-        return Err(
-            format!("No valid fdset files found. Checked: {:#?}", tested_things).into(),
-        );
+        return Err(format!("No valid fdset files found. Checked: {:#?}", tested_things).into());
     }
     Ok(descriptors)
 }

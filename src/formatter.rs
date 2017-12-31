@@ -1,4 +1,4 @@
-use serde_json::ser::{Formatter, PrettyFormatter, CompactFormatter};
+use serde_json::ser::{CompactFormatter, Formatter, PrettyFormatter};
 use erased_serde_json::Formatter as ErasedFormatter;
 use std::io::{self, Write};
 use std::boxed::Box;

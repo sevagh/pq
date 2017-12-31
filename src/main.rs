@@ -2,16 +2,16 @@
 
 #[macro_use]
 extern crate clap;
+extern crate erased_serde_json;
+#[macro_use]
+extern crate error_chain;
 extern crate libc;
 extern crate protobuf;
 extern crate serde;
-extern crate erased_serde_json;
+extern crate serde_json;
 extern crate serde_protobuf;
 extern crate serde_value;
-extern crate serde_json;
 extern crate stream_delimit;
-#[macro_use]
-extern crate error_chain;
 
 mod discovery;
 mod formatter;

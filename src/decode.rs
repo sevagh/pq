@@ -1,5 +1,4 @@
 use std::io::Write;
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
 use serde_protobuf::de::Deserializer;
@@ -13,15 +12,10 @@ use errors::*;
 pub struct PqrsDecoder<'a> {
     pub descriptors: Descriptors,
     pub message_type: &'a str,
-    spec_compliant: bool,
 }
 
 impl<'a> PqrsDecoder<'a> {
-    pub fn new(
-        loaded_descs: Vec<FileDescriptorSet>,
-        msgtype: &str,
-        compliant: bool,
-    ) -> Result<PqrsDecoder> {
+    pub fn new(loaded_descs: Vec<FileDescriptorSet>, msgtype: &str) -> Result<PqrsDecoder> {
         let mut descriptors = Descriptors::new();
         for fdset in loaded_descs {
             descriptors.add_file_set_proto(&fdset);
@@ -30,7 +24,6 @@ impl<'a> PqrsDecoder<'a> {
         Ok(PqrsDecoder {
             descriptors: descriptors,
             message_type: msgtype,
-            spec_compliant: compliant,
         })
     }
 
@@ -41,9 +34,8 @@ impl<'a> PqrsDecoder<'a> {
             &(format!(".{}", self.message_type)),
             stream,
         ).expect("Couldn't initialize deserializer");
-        Ok(Value::deserialize(&mut deserializer).chain_err(
-                        || "Deser error",
-                    )?
+        Ok(Value::deserialize(&mut deserializer)
+            .chain_err(|| "Deser error")?
             .serialize(&mut Serializer::with_formatter(
                 out,
                 CustomFormatter::new(is_tty),
