@@ -367,7 +367,7 @@ dependencies = [
  "serde-protobuf 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde-value 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "stream_delimit 0.4.7",
+ "stream_delimit 0.4.8",
 ]
 
 [[package]]
@@ -525,7 +525,7 @@ dependencies = [
 
 [[package]]
 name = "stream_delimit"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "kafka 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
