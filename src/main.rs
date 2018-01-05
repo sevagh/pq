@@ -3,9 +3,8 @@
 #[macro_use]
 extern crate clap;
 extern crate erased_serde_json;
-#[macro_use]
-extern crate error_chain;
 extern crate libc;
+extern crate nix;
 extern crate protobuf;
 extern crate serde;
 extern crate serde_json;
@@ -18,19 +17,9 @@ mod formatter;
 mod decode;
 mod commands;
 
-mod errors {
-    error_chain!{
-        foreign_links {
-            Io(::std::io::Error);
-            StreamDelimit(::stream_delimit::error::Error);
-        }
-    }
-}
-
-use errors::*;
 use commands::*;
 
-quick_main!(|| -> Result<i32> {
+fn main() {
     let matches = clap_app!(
         @app (app_from_crate!())
         (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT]
@@ -59,11 +48,10 @@ quick_main!(|| -> Result<i32> {
         None => vec![],
     };
 
-    let cmd = CommandRunner::new(extra_dirs, extra_files)?;
+    let cmd = CommandRunner::new(extra_dirs, extra_files);
 
     match matches.subcommand() {
-        ("kafka", Some(m)) => cmd.run_kafka(m)?,
-        _ => cmd.run_byte(&matches)?,
+        ("kafka", Some(m)) => cmd.run_kafka(m),
+        _ => cmd.run_byte(&matches),
     }
-    Ok(0)
-});
+}

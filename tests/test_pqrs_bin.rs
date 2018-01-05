@@ -130,7 +130,7 @@ fn test_no_args() {
         .fails()
         .and()
         .stderr()
-        .contains("Error: No loaded descriptors")
+        .contains("No valid fdset files found")
         .unwrap();
 }
 
@@ -150,6 +150,7 @@ fn test_cat_noncanonical_decode() {
 }
 
 #[test]
+#[ignore]
 fn test_cat_canonical_decode() {
     assert_cli::Assert::main_binary()
         .with_args(&[
