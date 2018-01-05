@@ -6,7 +6,6 @@ use stream_delimit::stream::*;
 use stream_delimit::converter::Converter;
 use std::io::{self, Write};
 use clap::ArgMatches;
-use libc;
 use nix::unistd::isatty;
 use std::path::PathBuf;
 use protobuf::descriptor::FileDescriptorSet;
@@ -47,7 +46,7 @@ impl CommandRunner {
     pub fn run_byte(self, matches: &ArgMatches) {
         let stdin = io::stdin();
         let mut stdin = stdin.lock();
-        match isatty(libc::STDIN_FILENO) {
+        match isatty(0) {
             Ok(stdin_is_tty) => {
                 if !stdin_is_tty {
                     panic!("pq expects input piped from stdin")
@@ -73,7 +72,7 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
-    let out_is_tty = match isatty(libc::STDOUT_FILENO) {
+    let out_is_tty = match isatty(1) {
         Ok(x) => x,
         Err(e) => panic!("Error checking if stdout is tty: {}", e),
     };
