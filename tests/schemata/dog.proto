@@ -1,7 +1,0 @@
-package com.example.dog;
-
-message Dog {
-  required string breed = 1;
-  required int32 age = 2;
-  optional string temperament = 3;
-}

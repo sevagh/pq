@@ -1,6 +1,0 @@
-package com.example.person;
-
-message Person {
-  required string name = 1;
-  required int32 id = 2;
-}
