@@ -3,12 +3,11 @@ use std::fs::{read_dir, File};
 use std::path::PathBuf;
 use protobuf::parse_from_reader;
 use protobuf::descriptor::FileDescriptorSet;
-use errors::*;
 
 pub fn get_loaded_descriptors(
     additional_fdset_dirs: Vec<PathBuf>,
     mut additional_fdset_files: Vec<PathBuf>,
-) -> Result<Vec<FileDescriptorSet>> {
+) -> Vec<FileDescriptorSet> {
     let (mut fdsets, mut tested_things) = discover_fdsets(additional_fdset_dirs);
     fdsets.append(&mut additional_fdset_files);
     tested_things.append(&mut additional_fdset_files
@@ -19,8 +18,10 @@ pub fn get_loaded_descriptors(
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 
     for fdset_path in fdsets {
-        let mut fdset_file =
-            File::open(fdset_path.as_path()).chain_err(|| "Couldn't open fdset file")?;
+        let mut fdset_file = match File::open(fdset_path.as_path()) {
+            Ok(x) => x,
+            Err(e) => panic!("Couldn't open fdset file: {}", e),
+        };
         match parse_from_reader(&mut fdset_file) {
             Err(_) => continue,
             Ok(x) => descriptors.push(x),
@@ -28,9 +29,9 @@ pub fn get_loaded_descriptors(
     }
 
     if descriptors.is_empty() {
-        return Err(format!("No valid fdset files found. Checked: {:#?}", tested_things).into());
+        panic!("No valid fdset files found. Checked: {:#?}", tested_things);
     }
-    Ok(descriptors)
+    descriptors
 }
 
 fn discover_fdsets(additional_fdset_dirs: Vec<PathBuf>) -> (Vec<PathBuf>, Vec<String>) {

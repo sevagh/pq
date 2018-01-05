@@ -18,6 +18,8 @@ pub fn str_to_streamtype(input: &str) -> Result<StreamType> {
         "single" => Ok(StreamType::Single),
         "varint" => Ok(StreamType::Varint),
         "leb128" => Ok(StreamType::Leb128),
-        _ => Err(ErrorKind::InvalidStreamTypeError(input.to_string()))?,
+        _ => Err(StreamDelimitError::InvalidStreamTypeError(
+            input.to_string(),
+        ))?,
     }
 }

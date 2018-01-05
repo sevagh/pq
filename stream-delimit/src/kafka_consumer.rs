@@ -66,7 +66,7 @@ impl KafkaConsumer {
                 consumer: consumer,
                 messages: vec![],
             }),
-            Err(e) => Err(ErrorKind::KafkaInitializeError(e))?,
+            Err(e) => Err(StreamDelimitError::KafkaInitializeError(e))?,
         }
     }
 }

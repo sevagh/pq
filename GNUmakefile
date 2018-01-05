@@ -16,13 +16,11 @@ release: docker
 test: docker
 	docker $(DOCKER_ARGS) sh -c "cargo test --verbose $(CHOWN_CMD)"
 
-lint:
-	@- $(foreach WORKSPACE,$(WORKSPACES), \
-		cd $(WORKSPACE) ;\
-		cargo +nightly fmt;\
-		cargo +nightly clippy;\
-		cd -;\
-	)
+fmt:
+	-cargo +nightly fmt --all
+
+clippy:
+	-cargo +nightly clippy --all
 
 package: release
 	cd target/x86_64-unknown-linux-musl/release;\

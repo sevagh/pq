@@ -1,4 +1,4 @@
-use decode::PqrsDecoder;
+use decode::PqDecoder;
 use discovery::get_loaded_descriptors;
 
 use stream_delimit::byte_consumer::ByteConsumer;
@@ -6,8 +6,7 @@ use stream_delimit::stream::*;
 use stream_delimit::converter::Converter;
 use std::io::{self, Write};
 use clap::ArgMatches;
-use errors::*;
-use libc;
+use nix::unistd::isatty;
 use std::path::PathBuf;
 use protobuf::descriptor::FileDescriptorSet;
 
@@ -19,45 +18,49 @@ pub struct CommandRunner {
 use stream_delimit::kafka_consumer::KafkaConsumer;
 
 impl CommandRunner {
-    pub fn new(
-        additional_fdset_dirs: Vec<PathBuf>,
-        additional_fdset_files: Vec<PathBuf>,
-    ) -> Result<Self> {
-        let descriptors = get_loaded_descriptors(additional_fdset_dirs, additional_fdset_files)
-            .chain_err(|| "No loaded descriptors")?;
-        Ok(CommandRunner { descriptors })
+    pub fn new(additional_fdset_dirs: Vec<PathBuf>, additional_fdset_files: Vec<PathBuf>) -> Self {
+        let descriptors = get_loaded_descriptors(additional_fdset_dirs, additional_fdset_files);
+        CommandRunner { descriptors }
     }
 
     #[cfg(feature = "default")]
-    pub fn run_kafka(self, matches: &ArgMatches) -> Result<()> {
+    pub fn run_kafka(self, matches: &ArgMatches) {
         if let (Some(brokers), Some(topic)) =
             (matches.value_of("BROKERS"), matches.value_of("TOPIC"))
         {
-            let consumer = KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG"))?;
-            decode_or_convert(consumer, matches, self.descriptors)?;
+            let consumer = match KafkaConsumer::new(brokers, topic, matches.is_present("FROMBEG")) {
+                Ok(x) => x,
+                Err(e) => panic!("Couldn't initialize kafka consumer: {}", e),
+            };
+            decode_or_convert(consumer, matches, self.descriptors);
         } else {
-            bail!("Kafka needs a broker and topic");
+            panic!("Kafka needs broker[s] and topic");
         }
-        Ok(())
     }
 
     #[cfg(not(feature = "default"))]
-    pub fn run_kafka(self, _: &ArgMatches) -> Result<()> {
-        bail!("This version of pq has been compiled without kafka support");
+    pub fn run_kafka(self, _: &ArgMatches) {
+        not_implemented!("This version of pq has been compiled without kafka support");
     }
 
-    pub fn run_byte(self, matches: &ArgMatches) -> Result<()> {
+    pub fn run_byte(self, matches: &ArgMatches) {
         let stdin = io::stdin();
         let mut stdin = stdin.lock();
-        if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
-            bail!("pq expects input to be piped from stdin");
+        match isatty(0) {
+            Ok(stdin_is_tty) => {
+                if !stdin_is_tty {
+                    panic!("pq expects input piped from stdin")
+                }
+            }
+            Err(e) => panic!("Error checking if stdin is tty: {}", e),
         }
-        let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))?;
-        Ok(decode_or_convert(
+        let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))
+            .expect("Couldn't convert str to streamtype");
+        decode_or_convert(
             ByteConsumer::new(&mut stdin, stream_type),
             matches,
             self.descriptors,
-        )?)
+        )
     }
 }
 
@@ -65,41 +68,40 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
     mut consumer: T,
     matches: &ArgMatches,
     descriptors: Vec<FileDescriptorSet>,
-) -> Result<()> {
+) {
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
-    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
+    let out_is_tty = match isatty(1) {
+        Ok(x) => x,
+        Err(e) => panic!("Error checking if stdout is tty: {}", e),
+    };
 
     if let Some(convert_type) = matches.value_of("CONVERT") {
-        let converter = Converter::new(&mut consumer, str_to_streamtype(convert_type)?);
+        let converter = Converter::new(
+            &mut consumer,
+            str_to_streamtype(convert_type).expect("Couldn't convert str to streamtype"),
+        );
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
             if count >= 0 && ctr >= count as usize {
-                return Ok(());
+                return;
             }
             stdout_.write_all(&item).expect("Couldn't write to stdout");
         }
     } else {
-        let decoder = match PqrsDecoder::new(
+        let decoder = PqDecoder::new(
             descriptors,
             matches
                 .value_of("MSGTYPE")
                 .expect("Must supply --msgtype or --convert"),
-        ) {
-            Ok(x) => x,
-            Err(e) => bail!(e),
-        };
+        );
 
         for (ctr, item) in consumer.enumerate() {
             if count >= 0 && ctr >= count as usize {
-                return Ok(());
+                return;
             }
-            match decoder.decode_message(&item, &mut stdout.lock(), out_is_tty) {
-                Ok(_) => (),
-                Err(e) => bail!(e),
-            }
+            decoder.decode_message(&item, &mut stdout.lock(), out_is_tty);
         }
     }
-    Ok(())
 }
