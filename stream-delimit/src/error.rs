@@ -1,38 +1,57 @@
-#![allow(unused_doc_comment)]
+use std::fmt;
+use std::error::Error;
+use std::io;
+use std::result;
 
-error_chain! {
-    foreign_links {
-        Io(::std::io::Error);
+pub type Result<T> = result::Result<T, StreamDelimitError>;
+
+#[derive(Debug)]
+pub enum StreamDelimitError {
+    #[cfg(feature="with_kafka")]
+    KafkaInitializeError(::kafka::error::Error),
+    VarintDecodeError(io::Error),
+    InvalidStreamTypeError(String),
+    VarintDecodeMaxBytesError,
+}
+
+impl fmt::Display for StreamDelimitError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            #[cfg(feature="with_kafka")]
+            StreamDelimitError::KafkaInitializeError(ref e) => {
+                write!(f, "Couldn't initialize kafka consumer: {}", e)
+            }
+            StreamDelimitError::VarintDecodeError(ref e) => {
+                write!(f, "Couldn't decode leading varint: {}", e)
+            }
+            StreamDelimitError::InvalidStreamTypeError(ref t) => {
+                write!(f, "Invalid stream type: {} (only support single,leb128,varint)", t)
+            }
+            StreamDelimitError::VarintDecodeMaxBytesError => {
+                write!(f, "Exceeded max attempts to decode leading varint")
+            }
+        }
+    }
+}
+
+impl Error for StreamDelimitError {
+    fn description(&self) -> &str {
+        match *self {
+            #[cfg(feature="with_kafka")]
+            StreamDelimitError::KafkaInitializeError => "couldn't initialize kafka consumer",
+            StreamDelimitError::VarintDecodeError(_) => "couldn't decode leading varint",
+            StreamDelimitError::InvalidStreamTypeError(_) => "invalid stream type",
+            StreamDelimitError::VarintDecodeMaxBytesError => "couldn't decode leading varint",
+        }
     }
 
-    links {
-        Kafka(::kafka::error::Error, ::kafka::error::ErrorKind) #[cfg(feature="with_kafka")];
-    }
-
-    errors {
-        #[cfg(feature="with_kafka")]
-        /// Error connecting to Kafka
-        KafkaInitializeError(e: ::kafka::Error) {
-            description("couldn't initialize kafka consumer")
-            display("couldn't initialize kafka consumer: {}", e)
-        }
-
-        /// Error decoding a varint|leb128 stream
-        VarintDecodeError(e: ::std::io::Error) {
-            description("couldn't decode leading varint")
-            display("couldn't decode leading varint: '{}'", e)
-        }
-
-        /// Unrecognized stream type
-        InvalidStreamTypeError(t: String) {
-            description("invalid stream type")
-            display("invalid stream type: {} ((only support single, leb128, varint)", t)
-        }
-
-        /// Too large to be a valid varint|leb128
-        VarintDecodeMaxBytesError {
-            description("exceeded max attempts to decode leading varint")
-            display("exceeded max attempts to decode leading varint")
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            #[cfg(feature="with_kafka")]
+            StreamDelimitError::KafkaInitializeError(ref e) => Some(e),
+            StreamDelimitError::VarintDecodeError(ref e) => Some(e),
+            StreamDelimitError::InvalidStreamTypeError(_) => None,
+            StreamDelimitError::VarintDecodeMaxBytesError => None,
         }
     }
 }

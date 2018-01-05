@@ -10,9 +10,7 @@ license = "MIT"
 keywords = ["protobuf", "serde"]
 
 [dependencies]
-libc = "0.2"
 kafka = { version = "0.7", optional = true }
-error-chain = "0.10"
 
 [features]
 default = []
