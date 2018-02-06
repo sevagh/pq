@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 
 use kafka::consumer::{Consumer, FetchOffset};
-use std::{self};
+use std;
 use std::collections::VecDeque;
 use error::*;
 
@@ -22,9 +22,9 @@ impl Iterator for KafkaConsumer {
                     Ok(mss) => {
                         for ms in mss.iter() {
                             self.messages.append(&mut ms.messages()
-                                                 .iter()
-                                                 .map(|z| z.value.to_vec())
-                                                 .collect::<VecDeque<_>>());
+                                .iter()
+                                .map(|z| z.value.to_vec())
+                                .collect::<VecDeque<_>>());
                             kafka_consumer
                                 .consume_messageset(ms)
                                 .expect("Couldn't mark messageset as consumed");
@@ -33,7 +33,7 @@ impl Iterator for KafkaConsumer {
                             .commit_consumed()
                             .expect("Couldn't commit consumption");
                         break;
-                    },
+                    }
                     Err(_) => return None,
                 }
             }
