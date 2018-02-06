@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate clap;
 extern crate erased_serde_json;
-extern crate nix;
+extern crate libc;
 extern crate protobuf;
 extern crate serde;
 extern crate serde_json;

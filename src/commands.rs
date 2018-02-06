@@ -6,9 +6,9 @@ use stream_delimit::stream::*;
 use stream_delimit::converter::Converter;
 use std::io::{self, Write};
 use clap::ArgMatches;
-use nix::unistd::isatty;
 use std::path::PathBuf;
 use protobuf::descriptor::FileDescriptorSet;
+use libc;
 
 pub struct CommandRunner {
     descriptors: Vec<FileDescriptorSet>,
@@ -46,13 +46,8 @@ impl CommandRunner {
     pub fn run_byte(self, matches: &ArgMatches) {
         let stdin = io::stdin();
         let mut stdin = stdin.lock();
-        match isatty(0) {
-            Ok(stdin_is_tty) => {
-                if !stdin_is_tty {
-                    panic!("pq expects input piped from stdin")
-                }
-            }
-            Err(e) => panic!("Error checking if stdin is tty: {}", e),
+        if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
+            panic!("pq expects input to be piped from stdin");
         }
         let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))
             .expect("Couldn't convert str to streamtype");
@@ -72,10 +67,7 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
-    let out_is_tty = match isatty(1) {
-        Ok(x) => x,
-        Err(e) => panic!("Error checking if stdout is tty: {}", e),
-    };
+    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
 
     if let Some(convert_type) = matches.value_of("CONVERT") {
         let converter = Converter::new(
