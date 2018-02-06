@@ -1,13 +1,14 @@
 #![deny(missing_docs)]
 
 use kafka::consumer::{Consumer, FetchOffset};
-use std::{self, thread, time};
+use std;
+use std::collections::VecDeque;
 use error::*;
 
 /// A consumer from Kafka
 pub struct KafkaConsumer {
     consumer: Consumer,
-    messages: Vec<Vec<u8>>,
+    messages: VecDeque<Vec<u8>>,
 }
 
 impl Iterator for KafkaConsumer {
@@ -18,30 +19,26 @@ impl Iterator for KafkaConsumer {
             let kafka_consumer = &mut self.consumer;
             loop {
                 match kafka_consumer.poll() {
-                    Ok(x) => match x.iter().take(1).next() {
-                        Some(y) => {
-                            self.messages.append(&mut y.messages()
+                    Ok(mss) => {
+                        for ms in mss.iter() {
+                            self.messages.append(&mut ms.messages()
                                 .iter()
                                 .map(|z| z.value.to_vec())
-                                .collect::<Vec<_>>());
+                                .collect::<VecDeque<_>>());
                             kafka_consumer
-                                .consume_messageset(y)
+                                .consume_messageset(ms)
                                 .expect("Couldn't mark messageset as consumed");
-                            kafka_consumer
-                                .commit_consumed()
-                                .expect("Couldn't commit consumption");
-                            break;
                         }
-                        None => {
-                            thread::sleep(time::Duration::from_secs(1));
-                            continue;
-                        }
-                    },
+                        kafka_consumer
+                            .commit_consumed()
+                            .expect("Couldn't commit consumption");
+                        break;
+                    }
                     Err(_) => return None,
                 }
             }
         }
-        self.messages.pop()
+        self.messages.pop_front()
     }
 }
 
@@ -64,7 +61,7 @@ impl KafkaConsumer {
         {
             Ok(consumer) => Ok(KafkaConsumer {
                 consumer: consumer,
-                messages: vec![],
+                messages: VecDeque::new(),
             }),
             Err(e) => Err(StreamDelimitError::KafkaInitializeError(e))?,
         }
