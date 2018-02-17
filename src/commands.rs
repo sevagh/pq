@@ -9,6 +9,7 @@ use clap::ArgMatches;
 use std::path::PathBuf;
 use protobuf::descriptor::FileDescriptorSet;
 use libc;
+use formatter::CustomFormatter;
 
 pub struct CommandRunner {
     descriptors: Vec<FileDescriptorSet>,
@@ -91,11 +92,13 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
             &msgtype
         );
 
+        let mut formatter = CustomFormatter::new(out_is_tty);
+
         for (ctr, item) in consumer.enumerate() {
             if count >= 0 && ctr >= count as usize {
                 return;
             }
-            decoder.decode_message(&item, &mut stdout.lock(), out_is_tty);
+            decoder.decode_message(&item, &mut stdout.lock(), &mut formatter);
         }
     }
 }

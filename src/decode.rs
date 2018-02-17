@@ -26,7 +26,7 @@ impl<'a> PqDecoder<'a> {
         }
     }
 
-    pub fn decode_message(&self, data: &[u8], out: &mut Write, is_tty: bool) {
+    pub fn decode_message(&self, data: &[u8], out: &mut Write, formatter: &mut CustomFormatter) {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::for_named_message(
             &self.descriptors,
@@ -35,10 +35,7 @@ impl<'a> PqDecoder<'a> {
         ).expect("Couldn't initialize deserializer");
         match Value::deserialize(&mut deserializer) {
             Ok(x) => {
-                if let Err(e) = x.serialize(&mut Serializer::with_formatter(
-                    out,
-                    CustomFormatter::new(is_tty),
-                )) {
+                if let Err(e) = x.serialize(&mut Serializer::with_formatter(out, formatter)) {
                     panic!("Couldn't serialize message: {}", e);
                 }
             }

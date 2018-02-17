@@ -22,7 +22,7 @@ impl CustomFormatter {
     }
 }
 
-impl Formatter for CustomFormatter {
+impl <'a> Formatter for &'a mut CustomFormatter {
     fn begin_array<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
         self.formatter.begin_array(w)
     }
