@@ -82,11 +82,13 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
             stdout_.write_all(&item).expect("Couldn't write to stdout");
         }
     } else {
+        let msgtype = format!(".{}",
+                              matches
+                              .value_of("MSGTYPE")
+                              .expect("Must supply --msgtype or --convert"));
         let decoder = PqDecoder::new(
             descriptors,
-            matches
-                .value_of("MSGTYPE")
-                .expect("Must supply --msgtype or --convert"),
+            &msgtype
         );
 
         for (ctr, item) in consumer.enumerate() {

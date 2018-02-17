@@ -30,7 +30,7 @@ impl<'a> PqDecoder<'a> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer = Deserializer::for_named_message(
             &self.descriptors,
-            &(format!(".{}", self.message_type)),
+            self.message_type,
             stream,
         ).expect("Couldn't initialize deserializer");
         match Value::deserialize(&mut deserializer) {
