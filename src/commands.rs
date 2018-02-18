@@ -1,6 +1,6 @@
 use decode::PqDecoder;
 use discovery::get_loaded_descriptors;
-
+use serde_value::Value;
 use stream_delimit::byte_consumer::ByteConsumer;
 use stream_delimit::stream::*;
 use stream_delimit::converter::Converter;
@@ -10,6 +10,9 @@ use std::path::PathBuf;
 use protobuf::descriptor::FileDescriptorSet;
 use libc;
 use formatter::CustomFormatter;
+
+use std::sync::mpsc::channel;
+use std::thread::spawn;
 
 pub struct CommandRunner {
     descriptors: Vec<FileDescriptorSet>,
@@ -45,22 +48,18 @@ impl CommandRunner {
     }
 
     pub fn run_byte(self, matches: &ArgMatches) {
-        let stdin = io::stdin();
-        let mut stdin = stdin.lock();
         if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
             panic!("pq expects input to be piped from stdin");
         }
-        let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))
+        let stream_type =
+            str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))
             .expect("Couldn't convert str to streamtype");
         decode_or_convert(
-            ByteConsumer::new(&mut stdin, stream_type),
-            matches,
-            self.descriptors,
-        )
+            ByteConsumer::new(io::stdin(), stream_type), matches, self.descriptors)
     }
 }
 
-fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
+fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
     mut consumer: T,
     matches: &ArgMatches,
     descriptors: Vec<FileDescriptorSet>,
@@ -87,18 +86,35 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>>>(
                               matches
                               .value_of("MSGTYPE")
                               .expect("Must supply --msgtype or --convert"));
-        let decoder = PqDecoder::new(
-            descriptors,
-            &msgtype
-        );
+        let (tx, rx) = channel::<Value>();
 
-        let mut formatter = CustomFormatter::new(out_is_tty);
+        let producer_handler = {
+            let descriptors = descriptors.clone();
+            let msgtype = msgtype.clone();
+            spawn(move || {
+                let decoder = PqDecoder::new(descriptors, &msgtype);
+                for (ctr, item) in consumer.enumerate() {
+                    if count >= 0 && ctr >= count as usize {
+                        break;
+                    }
+                    let v = decoder.decode_message(&item);
+                    if tx.send(v).is_err() {
+                        panic!("cannot send value to stdout");
+                    }
+                }
+            })
+        };
 
-        for (ctr, item) in consumer.enumerate() {
-            if count >= 0 && ctr >= count as usize {
-                return;
+        let consumer_handler = spawn(move || {
+            let decoder = PqDecoder::new(descriptors, &msgtype);
+            let mut formatter = CustomFormatter::new(out_is_tty);
+            let mut stdout_ = stdout.lock();
+            for val in rx {
+                decoder.write_message(val, &mut stdout_, &mut formatter);
             }
-            decoder.decode_message(&item, &mut stdout.lock(), &mut formatter);
-        }
+        });
+
+        producer_handler.join().unwrap();
+        consumer_handler.join().unwrap();
     }
 }
