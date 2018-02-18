@@ -1,18 +1,20 @@
+use clap::ArgMatches;
+use libc;
+use protobuf::descriptor::FileDescriptorSet;
+use serde_value::Value;
+
+use std::io::{self, Write};
+use std::path::PathBuf;
+use std::sync::mpsc::channel;
+use std::thread::spawn;
+
 use decode::PqDecoder;
 use discovery::get_loaded_descriptors;
-use serde_value::Value;
+use formatter::CustomFormatter;
 use stream_delimit::byte_consumer::ByteConsumer;
 use stream_delimit::stream::*;
 use stream_delimit::converter::Converter;
-use std::io::{self, Write};
-use clap::ArgMatches;
-use std::path::PathBuf;
-use protobuf::descriptor::FileDescriptorSet;
-use libc;
-use formatter::CustomFormatter;
 
-use std::sync::mpsc::channel;
-use std::thread::spawn;
 
 pub struct CommandRunner {
     descriptors: Vec<FileDescriptorSet>,
