@@ -16,6 +16,9 @@ release: docker
 test: docker
 	docker $(DOCKER_ARGS) sh -c "cargo test --verbose $(CHOWN_CMD)"
 
+publish: docker
+	docker $(DOCKER_ARGS) sh -c "cargo login $(CARGO_TOKEN) && cd stream-delimit && cargo publish && cd ../ && cargo publish $(CHOWN_CMD)"
+
 fmt:
 	-cargo +nightly fmt --all
 
