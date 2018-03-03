@@ -32,7 +32,9 @@ impl Iterator for KafkaConsumer {
                         kafka_consumer
                             .commit_consumed()
                             .expect("Couldn't commit consumption");
-                        break;
+                        if !self.messages.is_empty() {
+                            break;
+                        }
                     }
                     Err(_) => return None,
                 }
