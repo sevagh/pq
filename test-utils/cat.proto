@@ -1,0 +1,5 @@
+package com.example.cat;
+
+message Cat {
+  required bool is_lazy = 1;
+}
