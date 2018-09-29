@@ -1,7 +1,7 @@
-use serde_json::ser::{CompactFormatter, Formatter, PrettyFormatter};
 use erased_serde_json::Formatter as ErasedFormatter;
-use std::io::{self, Write};
+use serde_json::ser::{CompactFormatter, Formatter, PrettyFormatter};
 use std::boxed::Box;
+use std::io::{self, Write};
 
 pub struct CustomFormatter {
     formatter: Box<ErasedFormatter>,
@@ -22,7 +22,7 @@ impl CustomFormatter {
     }
 }
 
-impl <'a> Formatter for &'a mut CustomFormatter {
+impl<'a> Formatter for &'a mut CustomFormatter {
     fn begin_array<W: ?Sized + Write>(&mut self, w: &mut W) -> io::Result<()> {
         self.formatter.begin_array(w)
     }

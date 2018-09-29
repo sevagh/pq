@@ -1,12 +1,12 @@
-use std::io::Write;
+use formatter::CustomFormatter;
+use protobuf::descriptor::FileDescriptorSet;
+use protobuf::CodedInputStream;
 use serde::{Deserialize, Serialize};
 use serde_json::ser::Serializer;
 use serde_protobuf::de::Deserializer;
 use serde_protobuf::descriptor::Descriptors;
 use serde_value::Value;
-use protobuf::CodedInputStream;
-use protobuf::descriptor::FileDescriptorSet;
-use formatter::CustomFormatter;
+use std::io::Write;
 
 pub struct PqDecoder<'a> {
     pub descriptors: Descriptors,
@@ -30,7 +30,7 @@ impl<'a> PqDecoder<'a> {
         let stream = CodedInputStream::from_bytes(data);
         let mut deserializer =
             Deserializer::for_named_message(&self.descriptors, self.message_type, stream)
-            .expect("Couldn't initialize deserializer");
+                .expect("Couldn't initialize deserializer");
         match Value::deserialize(&mut deserializer) {
             Ok(x) => x,
             Err(e) => panic!("Couldn't decode message: {}", e),

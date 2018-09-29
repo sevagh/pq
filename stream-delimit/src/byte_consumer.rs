@@ -1,8 +1,8 @@
 #![deny(missing_docs)]
 
-use varint::consume_single_varint;
-use stream::*;
 use std::io::Read;
+use stream::*;
+use varint::consume_single_varint;
 
 /// A consumer for a byte stream
 pub struct ByteConsumer<T: Read> {
@@ -10,14 +10,14 @@ pub struct ByteConsumer<T: Read> {
     type_: StreamType,
 }
 
-impl <T: Read> ByteConsumer<T> {
+impl<T: Read> ByteConsumer<T> {
     /// Return a ByteConsumer from for single messages, varint or leb128-delimited
     pub fn new(read: T, type_: StreamType) -> ByteConsumer<T> {
         ByteConsumer { read, type_ }
     }
 }
 
-impl <T: Read> Iterator for ByteConsumer<T> {
+impl<T: Read> Iterator for ByteConsumer<T> {
     type Item = Vec<u8>;
 
     fn next(&mut self) -> Option<Vec<u8>> {

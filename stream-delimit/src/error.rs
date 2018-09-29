@@ -1,5 +1,5 @@
-use std::fmt;
 use std::error::Error;
+use std::fmt;
 use std::io;
 use std::result;
 
@@ -7,7 +7,8 @@ pub type Result<T> = result::Result<T, StreamDelimitError>;
 
 #[derive(Debug)]
 pub enum StreamDelimitError {
-    #[cfg(feature = "with_kafka")] KafkaInitializeError(::kafka::error::Error),
+    #[cfg(feature = "with_kafka")]
+    KafkaInitializeError(::kafka::error::Error),
     VarintDecodeError(io::Error),
     InvalidStreamTypeError(String),
     VarintDecodeMaxBytesError,

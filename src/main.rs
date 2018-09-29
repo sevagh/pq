@@ -11,10 +11,10 @@ extern crate serde_protobuf;
 extern crate serde_value;
 extern crate stream_delimit;
 
+mod commands;
+mod decode;
 mod discovery;
 mod formatter;
-mod decode;
-mod commands;
 
 use commands::*;
 
@@ -35,7 +35,8 @@ fn main() {
             (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
             (@arg FROMBEG: --beginning "Consume topic from beginning")
         )
-    ).get_matches();
+    )
+    .get_matches();
 
     let extra_dirs = match matches.values_of("EXTRA_DIRS") {
         Some(dirs) => dirs.map(std::path::PathBuf::from).collect::<Vec<_>>(),

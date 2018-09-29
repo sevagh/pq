@@ -1,8 +1,8 @@
+use protobuf::descriptor::FileDescriptorSet;
+use protobuf::parse_from_reader;
 use std::env;
 use std::fs::{read_dir, File};
 use std::path::PathBuf;
-use protobuf::parse_from_reader;
-use protobuf::descriptor::FileDescriptorSet;
 
 pub fn get_loaded_descriptors(
     additional_fdset_dirs: Vec<PathBuf>,
@@ -10,10 +10,12 @@ pub fn get_loaded_descriptors(
 ) -> Vec<FileDescriptorSet> {
     let (mut fdsets, mut tested_things) = discover_fdsets(additional_fdset_dirs);
     fdsets.append(&mut additional_fdset_files);
-    tested_things.append(&mut additional_fdset_files
-        .iter()
-        .map(|x| format!("File: {:?}", x))
-        .collect::<Vec<_>>());
+    tested_things.append(
+        &mut additional_fdset_files
+            .iter()
+            .map(|x| format!("File: {:?}", x))
+            .collect::<Vec<_>>(),
+    );
 
     let mut descriptors: Vec<FileDescriptorSet> = Vec::new();
 

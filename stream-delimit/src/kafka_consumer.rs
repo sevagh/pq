@@ -1,9 +1,9 @@
 #![deny(missing_docs)]
 
+use error::*;
 use kafka::consumer::{Consumer, FetchOffset};
 use std;
 use std::collections::VecDeque;
-use error::*;
 
 /// A consumer from Kafka
 pub struct KafkaConsumer {
@@ -21,10 +21,13 @@ impl Iterator for KafkaConsumer {
                 match kafka_consumer.poll() {
                     Ok(mss) => {
                         for ms in mss.iter() {
-                            self.messages.append(&mut ms.messages()
-                                .iter()
-                                .map(|z| z.value.to_vec())
-                                .collect::<VecDeque<_>>());
+                            self.messages.append(
+                                &mut ms
+                                    .messages()
+                                    .iter()
+                                    .map(|z| z.value.to_vec())
+                                    .collect::<VecDeque<_>>(),
+                            );
                             kafka_consumer
                                 .consume_messageset(ms)
                                 .expect("Couldn't mark messageset as consumed");
@@ -57,9 +60,10 @@ impl KafkaConsumer {
                 .split(',')
                 .map(std::borrow::ToOwned::to_owned)
                 .collect::<Vec<String>>(),
-        ).with_topic(topic.to_owned())
-            .with_fallback_offset(fetch_offset)
-            .create()
+        )
+        .with_topic(topic.to_owned())
+        .with_fallback_offset(fetch_offset)
+        .create()
         {
             Ok(consumer) => Ok(KafkaConsumer {
                 consumer: consumer,

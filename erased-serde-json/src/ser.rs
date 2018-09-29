@@ -18,7 +18,11 @@ pub trait Formatter {
     fn erased_write_f64(&mut self, writer: &mut io::Write, value: f64) -> Result<(), io::Error>;
     fn erased_begin_string(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
     fn erased_end_string(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
-    fn erased_write_string_fragment(&mut self, writer: &mut io::Write, fragment: &str) -> Result<(), io::Error>;
+    fn erased_write_string_fragment(
+        &mut self,
+        writer: &mut io::Write,
+        fragment: &str,
+    ) -> Result<(), io::Error>;
     fn erased_write_char_escape(
         &mut self,
         writer: &mut io::Write,
@@ -26,18 +30,27 @@ pub trait Formatter {
     ) -> Result<(), io::Error>;
     fn erased_begin_array(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
     fn erased_end_array(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
-    fn erased_begin_array_value(&mut self, writer: &mut io::Write, first: bool) -> Result<(), io::Error>;
+    fn erased_begin_array_value(
+        &mut self,
+        writer: &mut io::Write,
+        first: bool,
+    ) -> Result<(), io::Error>;
     fn erased_end_array_value(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
     fn erased_begin_object(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
     fn erased_end_object(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
-    fn erased_begin_object_key(&mut self, writer: &mut io::Write, first: bool) -> Result<(), io::Error>;
+    fn erased_begin_object_key(
+        &mut self,
+        writer: &mut io::Write,
+        first: bool,
+    ) -> Result<(), io::Error>;
     fn erased_end_object_key(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
     fn erased_begin_object_value(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
     fn erased_end_object_value(&mut self, writer: &mut io::Write) -> Result<(), io::Error>;
 }
 
 impl<T> Formatter for T
-    where T: serde_json::ser::Formatter
+where
+    T: serde_json::ser::Formatter,
 {
     fn erased_write_null(&mut self, w: &mut io::Write) -> Result<(), io::Error> {
         self.write_null(w)
@@ -81,7 +94,11 @@ impl<T> Formatter for T
     fn erased_end_string(&mut self, w: &mut io::Write) -> Result<(), io::Error> {
         self.end_string(w)
     }
-    fn erased_write_string_fragment(&mut self, w: &mut io::Write, fragment: &str) -> Result<(), io::Error> {
+    fn erased_write_string_fragment(
+        &mut self,
+        w: &mut io::Write,
+        fragment: &str,
+    ) -> Result<(), io::Error> {
         self.write_string_fragment(w, fragment)
     }
     fn erased_write_char_escape(
@@ -97,7 +114,11 @@ impl<T> Formatter for T
     fn erased_end_array(&mut self, w: &mut io::Write) -> Result<(), io::Error> {
         self.end_array(w)
     }
-    fn erased_begin_array_value(&mut self, w: &mut io::Write, first: bool) -> Result<(), io::Error> {
+    fn erased_begin_array_value(
+        &mut self,
+        w: &mut io::Write,
+        first: bool,
+    ) -> Result<(), io::Error> {
         self.begin_array_value(w, first)
     }
     fn erased_end_array_value(&mut self, w: &mut io::Write) -> Result<(), io::Error> {
@@ -126,49 +147,106 @@ impl<T> Formatter for T
 macro_rules! impl_formatter_for_trait_object {
     ($ty:ty) => {
         impl<'a> serde_json::ser::Formatter for $ty {
-            fn write_null<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn write_null<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_write_null(&mut w)
             }
-            fn write_bool<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: bool) -> Result<(), io::Error> {
+            fn write_bool<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: bool,
+            ) -> Result<(), io::Error> {
                 self.erased_write_bool(&mut w, v)
             }
-            fn write_i8<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: i8) -> Result<(), io::Error> {
+            fn write_i8<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: i8,
+            ) -> Result<(), io::Error> {
                 self.erased_write_i8(&mut w, v)
             }
-            fn write_i16<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: i16) -> Result<(), io::Error> {
+            fn write_i16<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: i16,
+            ) -> Result<(), io::Error> {
                 self.erased_write_i16(&mut w, v)
             }
-            fn write_i32<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: i32) -> Result<(), io::Error> {
+            fn write_i32<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: i32,
+            ) -> Result<(), io::Error> {
                 self.erased_write_i32(&mut w, v)
             }
-            fn write_i64<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: i64) -> Result<(), io::Error> {
+            fn write_i64<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: i64,
+            ) -> Result<(), io::Error> {
                 self.erased_write_i64(&mut w, v)
             }
-            fn write_u8<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: u8) -> Result<(), io::Error> {
+            fn write_u8<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: u8,
+            ) -> Result<(), io::Error> {
                 self.erased_write_u8(&mut w, v)
             }
-            fn write_u16<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: u16) -> Result<(), io::Error> {
+            fn write_u16<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: u16,
+            ) -> Result<(), io::Error> {
                 self.erased_write_u16(&mut w, v)
             }
-            fn write_u32<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: u32) -> Result<(), io::Error> {
+            fn write_u32<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: u32,
+            ) -> Result<(), io::Error> {
                 self.erased_write_u32(&mut w, v)
             }
-            fn write_u64<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: u64) -> Result<(), io::Error> {
+            fn write_u64<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: u64,
+            ) -> Result<(), io::Error> {
                 self.erased_write_u64(&mut w, v)
             }
-            fn write_f32<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: f32) -> Result<(), io::Error> {
+            fn write_f32<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: f32,
+            ) -> Result<(), io::Error> {
                 self.erased_write_f32(&mut w, v)
             }
-            fn write_f64<W: ?Sized + io::Write>(&mut self, mut w: &mut W, v: f64) -> Result<(), io::Error> {
+            fn write_f64<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                v: f64,
+            ) -> Result<(), io::Error> {
                 self.erased_write_f64(&mut w, v)
             }
-            fn begin_string<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn begin_string<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_begin_string(&mut w)
             }
-            fn end_string<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn end_string<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_end_string(&mut w)
             }
-            fn write_string_fragment<W: ?Sized + io::Write>(&mut self, mut w: &mut W, fragment: &str) -> Result<(), io::Error> {
+            fn write_string_fragment<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                fragment: &str,
+            ) -> Result<(), io::Error> {
                 self.erased_write_string_fragment(&mut w, fragment)
             }
             fn write_char_escape<W: ?Sized + io::Write>(
@@ -178,34 +256,63 @@ macro_rules! impl_formatter_for_trait_object {
             ) -> Result<(), io::Error> {
                 self.erased_write_char_escape(&mut w, char_escape)
             }
-            fn begin_array<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn begin_array<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_begin_array(&mut w)
             }
             fn end_array<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
                 self.erased_end_array(&mut w)
             }
-            fn begin_array_value<W: ?Sized + io::Write>(&mut self, mut w: &mut W, first: bool) -> Result<(), io::Error> {
+            fn begin_array_value<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                first: bool,
+            ) -> Result<(), io::Error> {
                 self.erased_begin_array_value(&mut w, first)
             }
-            fn end_array_value<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn end_array_value<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_end_array_value(&mut w)
             }
-            fn begin_object<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn begin_object<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_begin_object(&mut w)
             }
-            fn end_object<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn end_object<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_end_object(&mut w)
             }
-            fn begin_object_key<W: ?Sized + io::Write>(&mut self, mut w: &mut W, first: bool) -> Result<(), io::Error> {
+            fn begin_object_key<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+                first: bool,
+            ) -> Result<(), io::Error> {
                 self.erased_begin_object_key(&mut w, first)
             }
-            fn end_object_key<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn end_object_key<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_end_object_key(&mut w)
             }
-            fn begin_object_value<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn begin_object_value<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_begin_object_value(&mut w)
             }
-            fn end_object_value<W: ?Sized + io::Write>(&mut self, mut w: &mut W) -> Result<(), io::Error> {
+            fn end_object_value<W: ?Sized + io::Write>(
+                &mut self,
+                mut w: &mut W,
+            ) -> Result<(), io::Error> {
                 self.erased_end_object_value(&mut w)
             }
         }

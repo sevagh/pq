@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 
-use varint::encode_varint;
 use stream::*;
+use varint::encode_varint;
 
 /// A Converter struct to convert from a stream iterator to another `StreamType`
 /// Useful for example to dump Kafka messages to a varint-delimited text file
