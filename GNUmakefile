@@ -1,6 +1,7 @@
 WORKSPACES="./" "./stream-delimit/"
 CHOWN_CMD=; chown -R 1000:1000 ./
 DOCKER_ARGS=run -v $(PWD):/volume:Z -w /volume -t clux/muslrust
+CARGO_TOKEN:=$(shell grep 'token' ~/.cargo/credentials | cut -d'"' -f2)
 
 all: debug
 
@@ -17,7 +18,7 @@ test: docker
 	docker $(DOCKER_ARGS) sh -c "cargo test --verbose $(CHOWN_CMD)"
 
 publish: docker
-	docker $(DOCKER_ARGS) sh -c "cargo login $(CARGO_TOKEN) && cd stream-delimit && cargo publish && cd ../ && cargo publish $(CHOWN_CMD)"
+	docker $(DOCKER_ARGS) sh -c "cargo login $(CARGO_TOKEN) && cd stream-delimit && cargo publish ; cd ../ && cd erased-serde-json && cargo publish ; cd ../ && cargo publish $(CHOWN_CMD)"
 
 fmt:
 	-cargo fmt --all

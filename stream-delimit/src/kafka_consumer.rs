@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-use error::*;
+use crate::error::*;
 use kafka::consumer::{Consumer, FetchOffset};
 use std;
 use std::collections::VecDeque;
