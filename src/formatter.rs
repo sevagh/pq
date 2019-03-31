@@ -4,13 +4,13 @@ use std::boxed::Box;
 use std::io::{self, Write};
 
 pub struct CustomFormatter {
-    formatter: Box<ErasedFormatter>,
+    formatter: Box<dyn ErasedFormatter>,
     depth: usize,
 }
 
 impl CustomFormatter {
     pub fn new(is_tty: bool) -> Self {
-        let f: Box<ErasedFormatter> = if is_tty {
+        let f: Box<dyn ErasedFormatter> = if is_tty {
             Box::new(PrettyFormatter::default())
         } else {
             Box::new(CompactFormatter)

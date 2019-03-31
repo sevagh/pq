@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-use error::*;
+use crate::error::*;
 
 /// An enum type for byte streams
 pub enum StreamType {

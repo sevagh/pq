@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-use error::*;
+use crate::error::*;
 use std::io::Read;
 
 const VARINT_MAX_BYTES: usize = 10;

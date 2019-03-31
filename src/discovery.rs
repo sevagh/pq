@@ -46,7 +46,7 @@ fn discover_fdsets(additional_fdset_dirs: Vec<PathBuf>) -> (Vec<PathBuf>, Vec<St
         fdset_files.append(&mut get_fdset_files_from_path(&p));
     }
 
-    if let Some(mut x) = env::home_dir() {
+    if let Some(mut x) = dirs::home_dir() {
         x.push(".pq");
         tested_things.push(format!("Directory: {:?}", x));
         fdset_files.append(&mut get_fdset_files_from_path(&x));

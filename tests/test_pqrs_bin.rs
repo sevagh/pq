@@ -1,5 +1,4 @@
-extern crate assert_cli;
-extern crate protobuf;
+use assert_cli;
 
 use std::env;
 

@@ -1,6 +1,6 @@
 WORKSPACES="./" "./stream-delimit/"
 CHOWN_CMD=; chown -R 1000:1000 ./
-DOCKER_ARGS=run -v cargo-cache:/root/.cargo -v $(PWD):/volume:Z -w /volume -t clux/muslrust
+DOCKER_ARGS=run -v $(PWD):/volume:Z -w /volume -t clux/muslrust
 
 all: debug
 
@@ -20,10 +20,10 @@ publish: docker
 	docker $(DOCKER_ARGS) sh -c "cargo login $(CARGO_TOKEN) && cd stream-delimit && cargo publish && cd ../ && cargo publish $(CHOWN_CMD)"
 
 fmt:
-	-cargo +nightly fmt --all
+	-cargo fmt --all
 
 clippy:
-	-cargo +nightly clippy --all
+	-cargo clippy --all
 
 package: release
 	cd target/x86_64-unknown-linux-musl/release;\
