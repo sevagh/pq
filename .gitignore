@@ -1,6 +1,5 @@
 target
 rust
 *.tar.gz
-pq
 *~
 *.bk

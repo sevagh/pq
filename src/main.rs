@@ -2,21 +2,13 @@
 
 #[macro_use]
 extern crate clap;
-extern crate erased_serde_json;
-extern crate libc;
-extern crate protobuf;
-extern crate serde;
-extern crate serde_json;
-extern crate serde_protobuf;
-extern crate serde_value;
-extern crate stream_delimit;
 
 mod commands;
 mod decode;
 mod discovery;
 mod formatter;
 
-use commands::*;
+use crate::commands::*;
 
 fn main() {
     let matches = clap_app!(

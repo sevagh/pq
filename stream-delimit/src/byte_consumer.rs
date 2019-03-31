@@ -1,8 +1,8 @@
 #![deny(missing_docs)]
 
 use std::io::Read;
-use stream::*;
-use varint::consume_single_varint;
+use crate::stream::*;
+use crate::varint::consume_single_varint;
 
 /// A consumer for a byte stream
 pub struct ByteConsumer<T: Read> {

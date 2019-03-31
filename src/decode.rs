@@ -1,4 +1,4 @@
-use formatter::CustomFormatter;
+use crate::formatter::CustomFormatter;
 use protobuf::descriptor::FileDescriptorSet;
 use protobuf::CodedInputStream;
 use serde::{Deserialize, Serialize};
@@ -14,15 +14,15 @@ pub struct PqDecoder<'a> {
 }
 
 impl<'a> PqDecoder<'a> {
-    pub fn new(loaded_descs: Vec<FileDescriptorSet>, msgtype: &str) -> PqDecoder {
+    pub fn new(loaded_descs: Vec<FileDescriptorSet>, message_type: &str) -> PqDecoder<'_> {
         let mut descriptors = Descriptors::new();
         for fdset in loaded_descs {
             descriptors.add_file_set_proto(&fdset);
         }
         descriptors.resolve_refs();
         PqDecoder {
-            descriptors: descriptors,
-            message_type: msgtype,
+            descriptors,
+            message_type,
         }
     }
 
@@ -37,7 +37,7 @@ impl<'a> PqDecoder<'a> {
         }
     }
 
-    pub fn write_message(&self, v: Value, out: &mut Write, formatter: &mut CustomFormatter) {
+    pub fn write_message(&self, v: Value, out: &mut dyn Write, formatter: &mut CustomFormatter) {
         if let Err(e) = v.serialize(&mut Serializer::with_formatter(out, formatter)) {
             panic!("Couldn't serialize message: {}", e);
         }

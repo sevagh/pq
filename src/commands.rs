@@ -8,9 +8,9 @@ use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
-use decode::PqDecoder;
-use discovery::get_loaded_descriptors;
-use formatter::CustomFormatter;
+use crate::decode::PqDecoder;
+use crate::discovery::get_loaded_descriptors;
+use crate::formatter::CustomFormatter;
 use stream_delimit::byte_consumer::ByteConsumer;
 use stream_delimit::converter::Converter;
 use stream_delimit::stream::*;
@@ -29,7 +29,7 @@ impl CommandRunner {
     }
 
     #[cfg(feature = "default")]
-    pub fn run_kafka(self, matches: &ArgMatches) {
+    pub fn run_kafka(self, matches: &ArgMatches<'_>) {
         if let (Some(brokers), Some(topic)) =
             (matches.value_of("BROKERS"), matches.value_of("TOPIC"))
         {
@@ -48,7 +48,7 @@ impl CommandRunner {
         not_implemented!("This version of pq has been compiled without kafka support");
     }
 
-    pub fn run_byte(self, matches: &ArgMatches) {
+    pub fn run_byte(self, matches: &ArgMatches<'_>) {
         if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
             panic!("pq expects input to be piped from stdin");
         }
@@ -64,7 +64,7 @@ impl CommandRunner {
 
 fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
     mut consumer: T,
-    matches: &ArgMatches,
+    matches: &ArgMatches<'_>,
     descriptors: Vec<FileDescriptorSet>,
 ) {
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
