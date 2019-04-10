@@ -66,7 +66,7 @@ impl KafkaConsumer {
         .create()
         {
             Ok(consumer) => Ok(KafkaConsumer {
-                consumer: consumer,
+                consumer,
                 messages: VecDeque::new(),
             }),
             Err(e) => Err(StreamDelimitError::KafkaInitializeError(e))?,

@@ -89,7 +89,7 @@ fn test_bad_input() {
         .fails()
         .and()
         .stderr()
-        .contains("WireError")
+        .contains("protobuf error")
         .unwrap();
 }
 

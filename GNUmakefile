@@ -32,4 +32,4 @@ package: release
 		cd -;\
 		mv target/x86_64-unknown-linux-musl/release/pq-bin.tar.gz ./pq-bin.tar.gz 
 
-.PHONY: all debug release lint package
+.PHONY: all debug release package
