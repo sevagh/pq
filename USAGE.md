@@ -61,6 +61,17 @@ $ pq kafka my_topic --brokers=192.168.0.1:9092 --count 1 --convert varint |\
 }
 ```
 
+Pipe `kafkacat` output to it:
+```
+$ kafkacat -b 192.168.0.1:9092 -C -u -q -f "%R%s" -t my_topic |\
+> pq --msgtype=com.example.dog.Dog --stream i32be
+{
+  "age": 10,
+  "breed": "gsd",
+  "temperament": "aggressive"
+}
+```
+
 ### Compile without kafka
 
 To compile `pq` without kafka support, run:
