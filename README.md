@@ -2,7 +2,7 @@
 
 ### protobuf to json deserializer, written in Rust
 
-`pq` is a tool which deserializes protobuf messages given a set of pre-compiled `.fdset` files. It can understand varint/leb128-delimited streams, and it can connect to Kafka.
+`pq` is a tool which deserializes protobuf messages given a set of pre-compiled `.fdset` files. It can understand varint/leb128-delimited/i32be streams, and it can connect to Kafka.
 
 `pq` will pretty-print when outputting to a tty, but you should pipe it to `jq` for more fully-featured json handling.
 

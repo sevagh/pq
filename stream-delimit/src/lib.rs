@@ -1,6 +1,8 @@
+extern crate byteorder;
 #[cfg(feature = "with_kafka")]
 extern crate kafka;
 
+mod i32be;
 mod varint;
 
 pub mod error;

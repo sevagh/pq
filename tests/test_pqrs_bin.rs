@@ -36,6 +36,19 @@ fn test_dog_decode_stream() {
 }
 
 #[test]
+fn test_dog_decode_i32be_stream() {
+    assert_cli::Assert::main_binary()
+        .with_env(assert_cli::Environment::inherit().insert("FDSET_PATH", get_fdset_dir("fdsets")))
+        .with_args(&["--msgtype=com.example.dog.Dog", "--stream=i32be"])
+        .stdin(include_str!("samples/dog_i32be_stream"))
+        .succeeds()
+        .and()
+        .stdout()
+        .contains("{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}")
+        .unwrap();
+}
+
+#[test]
 fn test_nonexistent_fdset_dir() {
     assert_cli::Assert::main_binary()
         .with_env(
