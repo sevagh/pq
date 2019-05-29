@@ -15,3 +15,26 @@ pub fn consume_single_i32be(read: &mut Read) -> Option<Vec<u8>> {
         Err(_) => None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use byteorder::WriteBytesExt;
+    use std::io::Cursor;
+
+    fn reads_back(x: i32) {
+        let mut buf = vec![];
+        buf.write_i32::<BigEndian>(x).unwrap();
+        assert_eq!(x, Cursor::new(buf).read_i32::<BigEndian>().unwrap());
+    }
+
+    #[test]
+    fn test_simple() {
+        reads_back(1);
+    }
+
+    #[test]
+    fn test_delimiter_longer() {
+        reads_back(300);
+    }
+}
