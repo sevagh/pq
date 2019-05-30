@@ -45,7 +45,7 @@ impl CommandRunner {
 
     #[cfg(not(feature = "default"))]
     pub fn run_kafka(self, _: &ArgMatches) {
-        not_implemented!("This version of pq has been compiled without kafka support");
+        unimplemented!("This version of pq has been compiled without kafka support");
     }
 
     pub fn run_byte(self, matches: &ArgMatches<'_>) {
