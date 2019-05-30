@@ -42,6 +42,8 @@ $ pq --msgtype com.example.dog.Dog --stream varint <./tests/samples/dog_stream
 }
 ```
 
+[More usage](./USAGE.md)
+
 ### Compiling for Windows
 
 1. Install [Visual Studio Installer](https://visualstudio.microsoft.com/downloads/) Community edition
