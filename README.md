@@ -43,3 +43,14 @@ $ pq --msgtype com.example.dog.Dog --stream varint <./tests/samples/dog_stream
 ```
 
 [More usage](./USAGE.md)
+
+### Compiling for Windows
+
+1. Install [Visual Studio Installer](https://visualstudio.microsoft.com/downloads/) Community edition
+2. Run the installer and install `Visual Studio Build Tools 2019`. You need the `C++ Build Tools` workload. Note that you can't just install the minimal package, you also need `MSVC C++ x64/86 Build Tools` and `Windows 10 SDK`.
+3. Open `x64 Native Tools Command Prompt` from the start menu.
+4. Download and run [`rustup-init.exe`](https://win.rustup.rs/x86_64)
+5. Close and reopen your terminal (so `cargo` will be in your path)
+6. Run `cargo install --no-default-features pq`
+
+Note that this will disable the Kafka feature. Kafka is not currently supported on Windows.

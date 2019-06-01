@@ -45,11 +45,11 @@ impl CommandRunner {
 
     #[cfg(not(feature = "default"))]
     pub fn run_kafka(self, _: &ArgMatches) {
-        not_implemented!("This version of pq has been compiled without kafka support");
+        unimplemented!("This version of pq has been compiled without kafka support");
     }
 
     pub fn run_byte(self, matches: &ArgMatches<'_>) {
-        if unsafe { libc::isatty(libc::STDIN_FILENO) != 0 } {
+        if unsafe { libc::isatty(0) != 0 } {
             panic!("pq expects input to be piped from stdin");
         }
         let stream_type = str_to_streamtype(matches.value_of("STREAM").unwrap_or("single"))
@@ -70,7 +70,7 @@ fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
-    let out_is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) != 0 };
+    let out_is_tty = unsafe { libc::isatty(1) != 0 };
 
     if let Some(convert_type) = matches.value_of("CONVERT") {
         let converter = Converter::new(
