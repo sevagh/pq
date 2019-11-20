@@ -13,7 +13,7 @@ edition = "2018"
 
 [dependencies]
 serde = "1.0"
-serde-value = "0.5"
+serde-value = "0.6"
 erased_serde_json = { path = "erased-serde-json", version = "0.1.1" }
 serde_json = "1.0"
 serde-protobuf = "0.8"
@@ -21,10 +21,10 @@ protobuf = "2.3"
 stream_delimit = { path = "stream-delimit", version = "0.5.4" }
 clap = "2"
 libc = "0.2"
-dirs = "1.0"
+dirs = "2.0"
 
 [dev-dependencies]
-assert_cli = "0.5"
+assert_cli = "0.6"
 
 [features]
 default = ["stream_delimit/with_kafka"]
