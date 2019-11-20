@@ -3,7 +3,7 @@
 use byteorder::{BigEndian, ReadBytesExt};
 use std::io::Read;
 
-pub fn consume_single_i32be(read: &mut Read) -> Option<Vec<u8>> {
+pub fn consume_single_i32be(read: &mut dyn Read) -> Option<Vec<u8>> {
     match read.read_i32::<BigEndian>() {
         Ok(length) => {
             let mut msg_buf = vec![0; length as usize];

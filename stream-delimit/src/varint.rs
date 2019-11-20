@@ -5,7 +5,7 @@ use std::io::Read;
 
 const VARINT_MAX_BYTES: usize = 10;
 
-pub fn consume_single_varint(read: &mut Read) -> Option<Vec<u8>> {
+pub fn consume_single_varint(read: &mut dyn Read) -> Option<Vec<u8>> {
     let ret: Option<Vec<u8>>;
     match decode_varint(read) {
         Ok(x) => {
@@ -21,7 +21,7 @@ pub fn consume_single_varint(read: &mut Read) -> Option<Vec<u8>> {
     ret
 }
 
-pub fn decode_varint(read: &mut Read) -> Result<u64> {
+pub fn decode_varint(read: &mut dyn Read) -> Result<u64> {
     let mut varint_buf: Vec<u8> = Vec::new();
     for i in 0..VARINT_MAX_BYTES {
         varint_buf.push(0u8);
