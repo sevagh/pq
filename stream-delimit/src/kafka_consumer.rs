@@ -69,7 +69,7 @@ impl KafkaConsumer {
                 consumer,
                 messages: VecDeque::new(),
             }),
-            Err(e) => Err(StreamDelimitError::KafkaInitializeError(e))?,
+            Err(e) => Err(StreamDelimitError::KafkaInitializeError(e)),
         }
     }
 }

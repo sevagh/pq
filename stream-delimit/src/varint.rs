@@ -27,7 +27,7 @@ pub fn decode_varint(read: &mut dyn Read) -> Result<u64> {
         varint_buf.push(0u8);
         match read.read_exact(&mut varint_buf[i..]) {
             Ok(_) => (),
-            Err(e) => return Err(StreamDelimitError::VarintDecodeError(e))?,
+            Err(e) => return Err(StreamDelimitError::VarintDecodeError(e)),
         }
         if (varint_buf[i] & 0x80) >> 7 != 0x1 {
             let mut concat: u64 = 0;
@@ -38,7 +38,7 @@ pub fn decode_varint(read: &mut dyn Read) -> Result<u64> {
             return Ok(concat);
         }
     }
-    Err(StreamDelimitError::VarintDecodeMaxBytesError)?
+    Err(StreamDelimitError::VarintDecodeMaxBytesError)
 }
 
 pub fn encode_varint(mut value: u64) -> Vec<u8> {

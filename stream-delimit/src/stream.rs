@@ -24,6 +24,6 @@ pub fn str_to_streamtype(input: &str) -> Result<StreamType> {
         "i32be" => Ok(StreamType::I32BE),
         _ => Err(StreamDelimitError::InvalidStreamTypeError(
             input.to_string(),
-        ))?,
+        )),
     }
 }

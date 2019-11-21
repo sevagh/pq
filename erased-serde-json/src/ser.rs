@@ -5,17 +5,29 @@ use serde_json::ser::CharEscape;
 
 pub trait Formatter {
     fn erased_write_null(&mut self, writer: &mut dyn io::Write) -> Result<(), io::Error>;
-    fn erased_write_bool(&mut self, writer: &mut dyn io::Write, value: bool) -> Result<(), io::Error>;
+    fn erased_write_bool(
+        &mut self,
+        writer: &mut dyn io::Write,
+        value: bool,
+    ) -> Result<(), io::Error>;
     fn erased_write_i8(&mut self, writer: &mut dyn io::Write, value: i8) -> Result<(), io::Error>;
-    fn erased_write_i16(&mut self, writer: &mut dyn io::Write, value: i16) -> Result<(), io::Error>;
-    fn erased_write_i32(&mut self, writer: &mut dyn io::Write, value: i32) -> Result<(), io::Error>;
-    fn erased_write_i64(&mut self, writer: &mut dyn io::Write, value: i64) -> Result<(), io::Error>;
+    fn erased_write_i16(&mut self, writer: &mut dyn io::Write, value: i16)
+        -> Result<(), io::Error>;
+    fn erased_write_i32(&mut self, writer: &mut dyn io::Write, value: i32)
+        -> Result<(), io::Error>;
+    fn erased_write_i64(&mut self, writer: &mut dyn io::Write, value: i64)
+        -> Result<(), io::Error>;
     fn erased_write_u8(&mut self, writer: &mut dyn io::Write, value: u8) -> Result<(), io::Error>;
-    fn erased_write_u16(&mut self, writer: &mut dyn io::Write, value: u16) -> Result<(), io::Error>;
-    fn erased_write_u32(&mut self, writer: &mut dyn io::Write, value: u32) -> Result<(), io::Error>;
-    fn erased_write_u64(&mut self, writer: &mut dyn io::Write, value: u64) -> Result<(), io::Error>;
-    fn erased_write_f32(&mut self, writer: &mut dyn io::Write, value: f32) -> Result<(), io::Error>;
-    fn erased_write_f64(&mut self, writer: &mut dyn io::Write, value: f64) -> Result<(), io::Error>;
+    fn erased_write_u16(&mut self, writer: &mut dyn io::Write, value: u16)
+        -> Result<(), io::Error>;
+    fn erased_write_u32(&mut self, writer: &mut dyn io::Write, value: u32)
+        -> Result<(), io::Error>;
+    fn erased_write_u64(&mut self, writer: &mut dyn io::Write, value: u64)
+        -> Result<(), io::Error>;
+    fn erased_write_f32(&mut self, writer: &mut dyn io::Write, value: f32)
+        -> Result<(), io::Error>;
+    fn erased_write_f64(&mut self, writer: &mut dyn io::Write, value: f64)
+        -> Result<(), io::Error>;
     fn erased_begin_string(&mut self, writer: &mut dyn io::Write) -> Result<(), io::Error>;
     fn erased_end_string(&mut self, writer: &mut dyn io::Write) -> Result<(), io::Error>;
     fn erased_write_string_fragment(
@@ -130,7 +142,11 @@ where
     fn erased_end_object(&mut self, w: &mut dyn io::Write) -> Result<(), io::Error> {
         self.end_object(w)
     }
-    fn erased_begin_object_key(&mut self, w: &mut dyn io::Write, first: bool) -> Result<(), io::Error> {
+    fn erased_begin_object_key(
+        &mut self,
+        w: &mut dyn io::Write,
+        first: bool,
+    ) -> Result<(), io::Error> {
         self.begin_object_key(w, first)
     }
     fn erased_end_object_key(&mut self, w: &mut dyn io::Write) -> Result<(), io::Error> {
