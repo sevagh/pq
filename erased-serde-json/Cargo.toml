@@ -1,6 +1,6 @@
 [package]
 name = "erased_serde_json"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
 license = "MIT/Apache-2.0"
 description = "Type-erased Formatter trait for serde_json::ser::Formatter"
