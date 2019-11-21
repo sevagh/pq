@@ -6,7 +6,7 @@ use crate::varint::encode_varint;
 /// A Converter struct to convert from a stream iterator to another `StreamType`
 /// Useful for example to dump Kafka messages to a varint-delimited text file
 pub struct Converter<'a> {
-    stream_src: Box<&'a mut Iterator<Item = Vec<u8>>>,
+    stream_src: Box<&'a mut dyn Iterator<Item = Vec<u8>>>,
     stream_dest: StreamType,
 }
 

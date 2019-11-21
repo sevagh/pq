@@ -47,7 +47,7 @@ impl Error for StreamDelimitError {
         }
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             #[cfg(feature = "with_kafka")]
             StreamDelimitError::KafkaInitializeError(ref e) => Some(e),

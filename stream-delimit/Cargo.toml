@@ -11,7 +11,7 @@ keywords = ["protobuf", "serde"]
 edition = "2018"
 
 [dependencies]
-kafka = { version = "0.7", optional = true }
+kafka = { version = "0.8", optional = true }
 byteorder = "1.3"
 
 [features]
