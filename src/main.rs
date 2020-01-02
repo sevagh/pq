@@ -13,7 +13,7 @@ use crate::commands::*;
 fn main() {
     let matches = clap_app!(
         @app (app_from_crate!())
-        (@arg MSGTYPE: --msgtype +takes_value +global conflicts_with[CONVERT]
+        (@arg MSGTYPE: -m --msgtype +takes_value +global conflicts_with[CONVERT]
             "Sets protobuf message type")
         (@arg STREAM: --stream +takes_value "Enables stream + sets stream type")
         (@arg COUNT: --count +takes_value +global "Stop after count messages")
