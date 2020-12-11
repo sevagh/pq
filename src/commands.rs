@@ -1,16 +1,15 @@
 use clap::ArgMatches;
 use libc;
 use protobuf::descriptor::FileDescriptorSet;
-use serde_value::Value;
+use serde_json::ser::Serializer;
 
 use std::io::{self, Write};
 use std::path::PathBuf;
-use std::sync::mpsc::channel;
-use std::thread::spawn;
 
 use crate::decode::PqDecoder;
 use crate::discovery::get_loaded_descriptors;
 use crate::formatter::CustomFormatter;
+
 use stream_delimit::byte_consumer::ByteConsumer;
 use stream_delimit::converter::Converter;
 use stream_delimit::stream::*;
@@ -91,35 +90,16 @@ fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
                 .value_of("MSGTYPE")
                 .expect("Must supply --msgtype or --convert")
         );
-        let (tx, rx) = channel::<Value>();
 
-        let producer_handler = {
-            let descriptors = descriptors.clone();
-            let msgtype = msgtype.clone();
-            spawn(move || {
-                let decoder = PqDecoder::new(descriptors, &msgtype);
-                for (ctr, item) in consumer.enumerate() {
-                    if count >= 0 && ctr >= count as usize {
-                        break;
-                    }
-                    let v = decoder.decode_message(&item);
-                    if tx.send(v).is_err() {
-                        panic!("cannot send value to stdout");
-                    }
-                }
-            })
-        };
-
-        let consumer_handler = spawn(move || {
-            let decoder = PqDecoder::new(descriptors, &msgtype);
-            let mut formatter = CustomFormatter::new(out_is_tty);
-            let mut stdout_ = stdout.lock();
-            for val in rx {
-                decoder.write_message(val, &mut stdout_, &mut formatter);
+        let decoder = PqDecoder::new(descriptors, &msgtype);
+        let mut formatter = CustomFormatter::new(out_is_tty);
+        let stdout_ = stdout.lock();
+        let mut serializer = Serializer::with_formatter(stdout_, &mut formatter);
+        for (ctr, item) in consumer.enumerate() {
+            if count >= 0 && ctr >= count as usize {
+                break;
             }
-        });
-
-        producer_handler.join().unwrap();
-        consumer_handler.join().unwrap();
+            decoder.transcode_message(&item, &mut serializer);
+        }
     }
 }
