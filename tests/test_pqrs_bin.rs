@@ -18,7 +18,7 @@ fn test_dog_decode() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}")
+        .contains("{\"breed\":\"gsd\",\"age\":3,\"temperament\":\"excited\"}")
         .unwrap();
 }
 
@@ -31,7 +31,7 @@ fn test_dog_decode_stream() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"age\":2,\"breed\":\"rottweiler\",\"temperament\":\"chill\"}")
+        .contains("{\"breed\":\"rottweiler\",\"age\":2,\"temperament\":\"chill\"}")
         .unwrap();
 }
 
@@ -44,7 +44,7 @@ fn test_dog_decode_i32be_stream() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"age\":3,\"breed\":\"gsd\",\"temperament\":\"excited\"}")
+        .contains("{\"breed\":\"gsd\",\"age\":3,\"temperament\":\"excited\"}")
         .unwrap();
 }
 
@@ -89,7 +89,7 @@ fn test_person_decode() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"id\":0,\"name\":\"khosrov\"}")
+        .contains("{\"name\":\"khosrov\",\"id\":0}")
         .unwrap();
 }
 
@@ -117,7 +117,7 @@ fn test_person_decode_with_command_line_fdset_dir() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"id\":0,\"name\":\"khosrov\"}")
+        .contains("{\"name\":\"khosrov\",\"id\":0}")
         .unwrap();
 }
 
@@ -132,7 +132,7 @@ fn test_person_decode_with_command_line_fdset_file() {
         .succeeds()
         .and()
         .stdout()
-        .contains("{\"id\":0,\"name\":\"khosrov\"}")
+        .contains("{\"name\":\"khosrov\",\"id\":0}")
         .unwrap();
 }
 
