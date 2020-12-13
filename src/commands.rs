@@ -36,7 +36,7 @@ impl CommandRunner {
                 Ok(x) => x,
                 Err(e) => panic!("Couldn't initialize kafka consumer: {}", e),
             };
-            decode_or_convert(consumer, matches, self.descriptors);
+            decode_or_convert(consumer, matches, self.descriptors).unwrap();
         } else {
             panic!("Kafka needs broker[s] and topic");
         }
@@ -58,14 +58,15 @@ impl CommandRunner {
             matches,
             self.descriptors,
         )
+        .unwrap()
     }
 }
 
-fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
+fn decode_or_convert<T: Iterator<Item = Vec<u8>> + FramedRead>(
     mut consumer: T,
     matches: &ArgMatches<'_>,
     descriptors: Vec<FileDescriptorSet>,
-) {
+) -> io::Result<()> {
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
@@ -79,10 +80,11 @@ fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
         let stdout_ = &mut stdout.lock();
         for (ctr, item) in converter.enumerate() {
             if count >= 0 && ctr >= count as usize {
-                return;
+                break;
             }
             stdout_.write_all(&item).expect("Couldn't write to stdout");
         }
+        Ok(())
     } else {
         let msgtype = format!(
             ".{}",
@@ -95,11 +97,15 @@ fn decode_or_convert<T: 'static + Send + Iterator<Item = Vec<u8>>>(
         let mut formatter = CustomFormatter::new(out_is_tty);
         let stdout_ = stdout.lock();
         let mut serializer = Serializer::with_formatter(stdout_, &mut formatter);
-        for (ctr, item) in consumer.enumerate() {
-            if count >= 0 && ctr >= count as usize {
+        let mut buffer = Vec::new();
+        let mut ctr = 0;
+        while let Some(item) = consumer.read_next_frame(&mut buffer)? {
+            if count >= 0 && ctr >= count {
                 break;
             }
+            ctr += 1;
             decoder.transcode_message(&item, &mut serializer);
         }
+        Ok(())
     }
 }
