@@ -1,6 +1,7 @@
 #![deny(missing_docs)]
 
 use crate::error::*;
+use crate::stream::FramedRead;
 use kafka::consumer::{Consumer, FetchOffset};
 use std;
 use std::collections::VecDeque;
@@ -9,6 +10,19 @@ use std::collections::VecDeque;
 pub struct KafkaConsumer {
     consumer: Consumer,
     messages: VecDeque<Vec<u8>>,
+}
+
+impl FramedRead for KafkaConsumer {
+    fn read_next_frame<'a>(
+        &mut self,
+        buffer: &'a mut Vec<u8>,
+    ) -> std::io::Result<Option<&'a [u8]>> {
+        let res = self.next().map(move |mut v| {
+            std::mem::swap(&mut v, buffer);
+            &buffer[..]
+        });
+        Ok(res)
+    }
 }
 
 impl Iterator for KafkaConsumer {
