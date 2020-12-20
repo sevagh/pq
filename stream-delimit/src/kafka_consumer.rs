@@ -3,7 +3,6 @@
 use crate::error::*;
 use crate::stream::FramedRead;
 use kafka::consumer::{Consumer, FetchOffset};
-use std;
 use std::collections::VecDeque;
 
 /// A consumer from Kafka

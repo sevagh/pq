@@ -1,5 +1,4 @@
 use clap::ArgMatches;
-use libc;
 use protobuf::descriptor::FileDescriptorSet;
 use serde_json::ser::Serializer;
 

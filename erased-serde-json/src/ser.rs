@@ -1,6 +1,5 @@
 use std::io;
 
-use serde_json;
 use serde_json::ser::CharEscape;
 
 pub trait Formatter {

@@ -100,4 +100,4 @@ $ cargo build --no-default-features
 5. Close and reopen your terminal (so `cargo` will be in your path)
 6. Run `cargo install --no-default-features pq`
 
-Note that this will disable the Kafka feature. Kafka is not currently supported on Windows.
+Note that this will disable the Kafka feature, which is not currently supported on Windows.

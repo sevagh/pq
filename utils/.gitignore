@@ -1,2 +1,4 @@
 *_pb2.py
 *.fdset
+__pycache__
+*.pyc
