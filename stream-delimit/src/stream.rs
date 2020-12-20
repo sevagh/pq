@@ -1,8 +1,11 @@
 #![deny(missing_docs)]
 
+use std::io;
+
 use crate::error::*;
 
 /// An enum type for byte streams
+#[derive(PartialEq, Eq)]
 pub enum StreamType {
     /// Protobuf messages with leading length encoded in leb128
     Leb128,
@@ -26,4 +29,11 @@ pub fn str_to_streamtype(input: &str) -> Result<StreamType> {
             input.to_string(),
         )),
     }
+}
+
+/// A trait for a stream that can be read in clearly defined chunks
+pub trait FramedRead {
+    /// should read the next available frame into the provided buffer.
+    /// clear() will be called before the buffer is filled
+    fn read_next_frame<'a>(&mut self, buffer: &'a mut Vec<u8>) -> io::Result<Option<&'a [u8]>>;
 }
