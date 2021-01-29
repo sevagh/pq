@@ -79,8 +79,6 @@ pub fn compile_descriptors_from_proto(proto_file: &str) -> PathBuf {
 
     cmd.arg("-I").arg(protoc_include());
 
-    println!("cmd: {:#?}", cmd);
-
     let output = cmd.output().expect("failed to execute protoc");
     if !output.status.success() {
         panic!(format!(
