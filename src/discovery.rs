@@ -1,8 +1,11 @@
 use protobuf::descriptor::FileDescriptorSet;
 use protobuf::parse_from_reader;
-use std::env;
-use std::fs::{read_dir, File};
-use std::path::PathBuf;
+use std::{
+    env,
+    fs::{read_dir, File},
+    path::PathBuf,
+    process::Command,
+};
 
 pub fn get_loaded_descriptors(
     additional_fdset_dirs: Vec<PathBuf>,
@@ -64,6 +67,29 @@ fn discover_fdsets(additional_fdset_dirs: Vec<PathBuf>) -> (Vec<PathBuf>, Vec<St
     (fdset_files, tested_things)
 }
 
+pub fn compile_descriptors_from_proto(proto_file: &str) -> PathBuf {
+    let fdset_path = env::temp_dir().join("tmp-pq.fdset");
+
+    let mut cmd = Command::new(protoc());
+    cmd.arg("--include_imports")
+        .arg("--include_source_info")
+        .arg("-o")
+        .arg(&fdset_path)
+        .arg(proto_file);
+
+    cmd.arg("-I").arg(protoc_include());
+
+    let output = cmd.output().expect("failed to execute protoc");
+    if !output.status.success() {
+        panic!(format!(
+            "protoc failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    fdset_path
+}
+
 fn get_fdset_files_from_path(path: &PathBuf) -> Vec<PathBuf> {
     let mut ret = vec![];
     if let Ok(paths) = read_dir(path.as_path()) {
@@ -75,4 +101,18 @@ fn get_fdset_files_from_path(path: &PathBuf) -> Vec<PathBuf> {
         }
     }
     ret
+}
+
+fn protoc() -> PathBuf {
+    match env::var_os("PROTOC") {
+        Some(protoc) => PathBuf::from(protoc),
+        None => PathBuf::from(default_env!("PROTOC", "protoc")),
+    }
+}
+
+fn protoc_include() -> PathBuf {
+    match env::var_os("PROTOC_INCLUDE") {
+        Some(include) => PathBuf::from(include),
+        None => PathBuf::from(default_env!("PROTOC_INCLUDE", "")),
+    }
 }

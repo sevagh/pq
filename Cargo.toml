@@ -22,6 +22,7 @@ clap = "2"
 libc = "0.2"
 dirs = "2.0"
 serde-transcode = ">= 1.1, <2"
+default-env = "0.1.1"
 
 [dev-dependencies]
 assert_cli = "0.6"

@@ -6,7 +6,7 @@ use std::io::{self, Write};
 use std::path::PathBuf;
 
 use crate::decode::PqDecoder;
-use crate::discovery::get_loaded_descriptors;
+use crate::discovery::{compile_descriptors_from_proto, get_loaded_descriptors};
 use crate::formatter::CustomFormatter;
 
 use stream_delimit::byte_consumer::ByteConsumer;
@@ -21,8 +21,18 @@ pub struct CommandRunner {
 use stream_delimit::kafka_consumer::KafkaConsumer;
 
 impl CommandRunner {
-    pub fn new(additional_fdset_dirs: Vec<PathBuf>, additional_fdset_files: Vec<PathBuf>) -> Self {
+    pub fn new(
+        additional_fdset_dirs: Vec<PathBuf>,
+        mut additional_fdset_files: Vec<PathBuf>,
+        additional_proto_file: Option<&str>,
+    ) -> Self {
+        if let Some(x) = additional_proto_file {
+            let compiled_descriptor_path = compile_descriptors_from_proto(x);
+            additional_fdset_files.push(compiled_descriptor_path);
+        }
+
         let descriptors = get_loaded_descriptors(additional_fdset_dirs, additional_fdset_files);
+
         CommandRunner { descriptors }
     }
 
