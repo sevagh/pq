@@ -2,13 +2,14 @@
 
 use crate::error::*;
 use crate::stream::FramedRead;
-use kafka::consumer::{Consumer, FetchOffset};
-use std::collections::VecDeque;
+use rdkafka::{
+    consumer::{BaseConsumer, Consumer, DefaultConsumerContext},
+    ClientConfig, Message,
+};
 
 /// A consumer from Kafka
 pub struct KafkaConsumer {
-    consumer: Consumer,
-    messages: VecDeque<Vec<u8>>,
+    consumer: BaseConsumer<DefaultConsumerContext>,
 }
 
 impl FramedRead for KafkaConsumer {
@@ -16,11 +17,19 @@ impl FramedRead for KafkaConsumer {
         &mut self,
         buffer: &'a mut Vec<u8>,
     ) -> std::io::Result<Option<&'a [u8]>> {
-        let res = self.next().map(move |mut v| {
-            std::mem::swap(&mut v, buffer);
-            &buffer[..]
-        });
-        Ok(res)
+        self.consumer
+            .poll(None)
+            .transpose()
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::BrokenPipe, e))
+            .map(move |o| {
+                o.and_then(move |m| {
+                    m.payload().map(move |p| {
+                        buffer.clear();
+                        buffer.extend_from_slice(p);
+                        &buffer[..]
+                    })
+                })
+            })
     }
 }
 
@@ -28,61 +37,39 @@ impl Iterator for KafkaConsumer {
     type Item = Vec<u8>;
 
     fn next(&mut self) -> Option<Vec<u8>> {
-        if self.messages.is_empty() {
-            let kafka_consumer = &mut self.consumer;
-            loop {
-                match kafka_consumer.poll() {
-                    Ok(mss) => {
-                        for ms in mss.iter() {
-                            self.messages.append(
-                                &mut ms
-                                    .messages()
-                                    .iter()
-                                    .map(|z| z.value.to_vec())
-                                    .collect::<VecDeque<_>>(),
-                            );
-                            kafka_consumer
-                                .consume_messageset(ms)
-                                .expect("Couldn't mark messageset as consumed");
-                        }
-                        kafka_consumer
-                            .commit_consumed()
-                            .expect("Couldn't commit consumption");
-                        if !self.messages.is_empty() {
-                            break;
-                        }
-                    }
-                    Err(_) => return None,
-                }
-            }
-        }
-        self.messages.pop_front()
+        let mut buffer = Vec::new();
+        self.read_next_frame(&mut buffer)
+            .expect("Failed to read next kafka message")?;
+        Some(buffer)
     }
 }
 
 impl KafkaConsumer {
     /// Return a KafkaConsumer with some basic kafka connection properties
     pub fn new(brokers: &str, topic: &str, from_beginning: bool) -> Result<KafkaConsumer> {
-        let fetch_offset = if from_beginning {
-            FetchOffset::Earliest
-        } else {
-            FetchOffset::Latest
-        };
-        match Consumer::from_hosts(
-            brokers
-                .split(',')
-                .map(std::borrow::ToOwned::to_owned)
-                .collect::<Vec<String>>(),
-        )
-        .with_topic(topic.to_owned())
-        .with_fallback_offset(fetch_offset)
-        .create()
-        {
-            Ok(consumer) => Ok(KafkaConsumer {
-                consumer,
-                messages: VecDeque::new(),
-            }),
-            Err(e) => Err(StreamDelimitError::KafkaInitializeError(e)),
-        }
+        let mut config = ClientConfig::new();
+        // we create a group id we can be reasonably sure is unique.
+        // this is to safeguard against some other process accessing kafka under the same group id.
+        // We are not committing or reading any offsets, so this is fine
+        let group_id = format!(
+            "pq-{}-pid-{}-starttime-{}",
+            env!("CARGO_PKG_VERSION"),
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+        );
+        config
+            .set("bootstrap.servers", brokers)
+            .set("enable.auto.commit", "false")
+            .set(
+                "auto.offset.reset",
+                if from_beginning { "earliest" } else { "latest" },
+            )
+            .set("group.id", &group_id);
+        let consumer: BaseConsumer = config.create()?;
+        consumer.subscribe(&[topic])?;
+        Ok(KafkaConsumer { consumer })
     }
 }

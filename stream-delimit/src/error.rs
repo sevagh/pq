@@ -3,12 +3,14 @@ use std::fmt;
 use std::io;
 use std::result;
 
+use rdkafka::error::KafkaError;
+
 pub type Result<T> = result::Result<T, StreamDelimitError>;
 
 #[derive(Debug)]
 pub enum StreamDelimitError {
     #[cfg(feature = "with_kafka")]
-    KafkaInitializeError(::kafka::error::Error),
+    KafkaInitializeError(::rdkafka::error::KafkaError),
     VarintDecodeError(io::Error),
     InvalidStreamTypeError(String),
     VarintDecodeMaxBytesError,
@@ -55,5 +57,12 @@ impl Error for StreamDelimitError {
             StreamDelimitError::InvalidStreamTypeError(_)
             | StreamDelimitError::VarintDecodeMaxBytesError => None,
         }
+    }
+}
+
+#[cfg(feature = "with_kafka")]
+impl From<KafkaError> for StreamDelimitError {
+    fn from(e: KafkaError) -> Self {
+        Self::KafkaInitializeError(e)
     }
 }
