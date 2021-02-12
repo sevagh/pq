@@ -52,7 +52,10 @@ impl Iterator for KafkaConsumer {
                             break;
                         }
                     }
-                    Err(_) => return None,
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        return None;
+                    }
                 }
             }
         }
@@ -76,6 +79,7 @@ impl KafkaConsumer {
         )
         .with_topic(topic.to_owned())
         .with_fallback_offset(fetch_offset)
+        .with_fetch_max_bytes_per_partition(1 * 1024 * 1024)
         .create()
         {
             Ok(consumer) => Ok(KafkaConsumer {
