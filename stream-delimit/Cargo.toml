@@ -11,7 +11,7 @@ keywords = ["protobuf", "serde"]
 edition = "2018"
 
 [dependencies]
-rdkafka = { version = "0.25.0", optional = true, features = ["zstd", "libz"], default-features = false }
+rdkafka = { version = "0.25.0", optional = true, features = ["zstd", "libz-static", "cmake-build"], default-features = false }
 byteorder = "1.3"
 
 [features]
