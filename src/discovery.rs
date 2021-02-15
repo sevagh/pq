@@ -81,10 +81,7 @@ pub fn compile_descriptors_from_proto(proto_file: &str) -> PathBuf {
 
     let output = cmd.output().expect("failed to execute protoc");
     if !output.status.success() {
-        panic!(format!(
-            "protoc failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
+        panic!("protoc failed: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     fdset_path
