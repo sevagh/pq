@@ -23,7 +23,7 @@ $ pq --protofile ./tests/protos/dog.proto  --msgtype com.example.dog.Dog <./test
 }
 ```
 
-Use PROTOC and PROTOC_INCLUDES to control the executed protoc binary and configure the `-I=/proto/path` argument (design copied from [prost](https://github.com/danburkert/prost/blob/master/prost-build/src/lib.rs)).
+Use PROTOC and PROTOC_INCLUDE to control the executed protoc binary and configure the `-I=/proto/path` argument (design copied from [prost](https://github.com/danburkert/prost/blob/master/prost-build/src/lib.rs)).
 
 To set up, put your `*.fdset` files in `~/.pq`, `/etc/pq`, or a different directory specified with the `FDSET_PATH` env var:
 
