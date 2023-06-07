@@ -15,6 +15,7 @@ use stream_delimit::stream::*;
 
 pub struct CommandRunner {
     descriptors: Vec<FileDescriptorSet>,
+    prettyjson: bool,
 }
 
 #[cfg(feature = "default")]
@@ -25,6 +26,7 @@ impl CommandRunner {
         additional_fdset_dirs: Vec<PathBuf>,
         mut additional_fdset_files: Vec<PathBuf>,
         additional_proto_file: Option<&str>,
+        prettyjson: bool,
     ) -> Self {
         if let Some(x) = additional_proto_file {
             let compiled_descriptor_path = compile_descriptors_from_proto(x);
@@ -33,7 +35,7 @@ impl CommandRunner {
 
         let descriptors = get_loaded_descriptors(additional_fdset_dirs, additional_fdset_files);
 
-        CommandRunner { descriptors }
+        CommandRunner { descriptors, prettyjson }
     }
 
     #[cfg(feature = "default")]
@@ -45,7 +47,7 @@ impl CommandRunner {
                 Ok(x) => x,
                 Err(e) => panic!("Couldn't initialize kafka consumer: {}", e),
             };
-            decode_or_convert(consumer, matches, self.descriptors).unwrap();
+            decode_or_convert(consumer, matches, self.descriptors, self.prettyjson).unwrap();
         } else {
             panic!("Kafka needs broker[s] and topic");
         }
@@ -66,6 +68,7 @@ impl CommandRunner {
             ByteConsumer::new(io::stdin(), stream_type),
             matches,
             self.descriptors,
+            self.prettyjson
         )
         .unwrap()
     }
@@ -75,12 +78,17 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>> + FramedRead>(
     mut consumer: T,
     matches: &ArgMatches<'_>,
     descriptors: Vec<FileDescriptorSet>,
+    prettyjson: bool,
 ) -> io::Result<()> {
     let count = value_t!(matches, "COUNT", i32).unwrap_or(-1);
 
     let stdout = io::stdout();
-    let out_is_tty = unsafe { libc::isatty(1) != 0 };
 
+    let use_pretty_json = if prettyjson {
+        prettyjson
+    } else {
+        unsafe { libc::isatty(1) != 0 }
+    };
     if let Some(convert_type) = matches.value_of("CONVERT") {
         let converter = Converter::new(
             &mut consumer,
@@ -103,7 +111,7 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>> + FramedRead>(
         );
 
         let decoder = PqDecoder::new(descriptors, &msgtype);
-        let mut formatter = CustomFormatter::new(out_is_tty);
+        let mut formatter = CustomFormatter::new(use_pretty_json);
         let stdout_ = stdout.lock();
         let mut serializer = Serializer::with_formatter(stdout_, &mut formatter);
         let mut buffer = Vec::new();
