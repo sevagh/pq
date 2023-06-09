@@ -9,7 +9,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["protobuf", "serde"]
 exclude = ["pq-bin.tar.gz", "pq", "target/**"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
