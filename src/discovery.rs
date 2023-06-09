@@ -3,7 +3,7 @@ use protobuf::parse_from_reader;
 use std::{
     env,
     fs::{read_dir, File},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
 
@@ -87,9 +87,9 @@ pub fn compile_descriptors_from_proto(proto_file: &str) -> PathBuf {
     fdset_path
 }
 
-fn get_fdset_files_from_path(path: &PathBuf) -> Vec<PathBuf> {
+fn get_fdset_files_from_path(path: &Path) -> Vec<PathBuf> {
     let mut ret = vec![];
-    if let Ok(paths) = read_dir(path.as_path()) {
+    if let Ok(paths) = read_dir(path) {
         for p in paths {
             let path = p.expect("error iterating through paths").path();
             if !path.is_dir() {

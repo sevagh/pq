@@ -11,7 +11,7 @@ pub struct CustomFormatter {
 impl CustomFormatter {
     pub fn new(use_pretty_json: bool) -> Self {
         let f: Box<dyn ErasedFormatter> = if use_pretty_json {
-            Box::new(PrettyFormatter::default())
+            Box::<PrettyFormatter<'_>>::default()
         } else {
             Box::new(CompactFormatter)
         };

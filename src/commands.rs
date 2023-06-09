@@ -124,7 +124,7 @@ fn decode_or_convert<T: Iterator<Item = Vec<u8>> + FramedRead>(
                 break;
             }
             ctr += 1;
-            decoder.transcode_message(&item, &mut serializer);
+            decoder.transcode_message(item, &mut serializer);
         }
         Ok(())
     }
