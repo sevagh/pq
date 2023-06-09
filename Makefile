@@ -1,11 +1,12 @@
 WORKSPACES="./" "./stream-delimit/"
-DOCKER_ARGS=run -v $(PWD):/volume:Z -w /volume -t clux/muslrust
-CARGO_TOKEN:=$(shell grep 'token' ~/.cargo/credentials | cut -d'"' -f2)
+DOCKER_IMAGE=docker.io/clux/muslrust
+DOCKER_ARGS=run -v $(PWD):/volume:Z -w /volume -t $(DOCKER_IMAGE)
+CARGO_TOKEN:=$(shell grep 'token' ~/.cargo/credentials.toml | cut -d'"' -f2)
 
 all: debug
 
 docker:
-	podman pull clux/muslrust
+	podman pull $(DOCKER_IMAGE)
 
 debug: docker
 	podman $(DOCKER_ARGS) sh -c "cargo build --verbose"

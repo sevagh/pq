@@ -35,7 +35,10 @@ impl CommandRunner {
 
         let descriptors = get_loaded_descriptors(additional_fdset_dirs, additional_fdset_files);
 
-        CommandRunner { descriptors, prettyjson }
+        CommandRunner {
+            descriptors,
+            prettyjson,
+        }
     }
 
     #[cfg(feature = "default")]
@@ -68,7 +71,7 @@ impl CommandRunner {
             ByteConsumer::new(io::stdin(), stream_type),
             matches,
             self.descriptors,
-            self.prettyjson
+            self.prettyjson,
         )
         .unwrap()
     }

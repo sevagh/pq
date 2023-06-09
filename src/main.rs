@@ -50,7 +50,12 @@ fn main() {
     let extra_proto_file = matches.value_of("EXTRA_PROTO_FILE");
     let prettyjson = matches.is_present("PRETTY_JSON");
 
-    let cmd = CommandRunner::new(extra_fdset_dirs, extra_fdset_files, extra_proto_file, prettyjson);
+    let cmd = CommandRunner::new(
+        extra_fdset_dirs,
+        extra_fdset_files,
+        extra_proto_file,
+        prettyjson,
+    );
 
     match matches.subcommand() {
         ("kafka", Some(m)) => cmd.run_kafka(m),
