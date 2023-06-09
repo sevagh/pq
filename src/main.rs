@@ -27,6 +27,8 @@ fn main() {
              "[repeatable] Specify an fdset file")
         (@arg EXTRA_PROTO_FILE: --protofile +takes_value +global
              "Specify a proto file")
+        (@arg PRETTY_JSON: --prettyjson +global
+            "Force pretty json formatter. Default is pretty for a tty, otherwise compact")
         (@subcommand kafka =>
             (@arg TOPIC: +required "Sets the kafka topic")
             (@arg BROKERS: +required --brokers +takes_value "Comma-separated kafka brokers")
@@ -46,8 +48,9 @@ fn main() {
     };
 
     let extra_proto_file = matches.value_of("EXTRA_PROTO_FILE");
+    let prettyjson = matches.is_present("PRETTY_JSON");
 
-    let cmd = CommandRunner::new(extra_fdset_dirs, extra_fdset_files, extra_proto_file);
+    let cmd = CommandRunner::new(extra_fdset_dirs, extra_fdset_files, extra_proto_file, prettyjson);
 
     match matches.subcommand() {
         ("kafka", Some(m)) => cmd.run_kafka(m),
