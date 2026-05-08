@@ -13,11 +13,10 @@ pub fn decode_varint(read: &mut dyn Read) -> Result<u64> {
             Ok(_) => (),
             Err(e) => return Err(StreamDelimitError::VarintDecodeError(e)),
         }
-        if (varint_buf[i] & 0x80) >> 7 != 0x1 {
+        if (varint_buf[i] & 0x80) == 0 {
             let mut concat: u64 = 0;
-            for i in (0..varint_buf.len()).rev() {
-                let i_ = i as u32;
-                concat += u64::from(varint_buf[i] & 0x7f) << (i_ * (8u32.pow(i_) - 1));
+            for (j, &byte) in varint_buf[..=i].iter().enumerate() {
+                concat |= u64::from(byte & 0x7f) << (j * 7);
             }
             return Ok(concat);
         }
@@ -52,10 +51,49 @@ mod tests {
     }
 
     #[test]
-    fn test_delimiter_longer() {
+    fn test_two_byte_varint() {
         assert_eq!(
             300,
             decode_varint(&mut Cursor::new(encode_varint(300))).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_three_byte_varint() {
+        // 16384 requires 3 bytes: 0x80 0x80 0x01
+        // This would fail with the old buggy shift formula
+        assert_eq!(
+            16384,
+            decode_varint(&mut Cursor::new(encode_varint(16384))).unwrap()
+        );
+        assert_eq!(
+            100000,
+            decode_varint(&mut Cursor::new(encode_varint(100000))).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_four_byte_varint() {
+        // 2097152 requires 4 bytes
+        assert_eq!(
+            2097152,
+            decode_varint(&mut Cursor::new(encode_varint(2097152))).unwrap()
+        );
+        assert_eq!(
+            10000000,
+            decode_varint(&mut Cursor::new(encode_varint(10000000))).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_large_varints() {
+        assert_eq!(
+            u32::MAX as u64,
+            decode_varint(&mut Cursor::new(encode_varint(u32::MAX as u64))).unwrap()
+        );
+        assert_eq!(
+            u64::MAX,
+            decode_varint(&mut Cursor::new(encode_varint(u64::MAX))).unwrap()
         );
     }
 }
