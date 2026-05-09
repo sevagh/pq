@@ -59,6 +59,28 @@ mod tests {
     }
 
     #[test]
+    fn test_decode_known_varint_bytes() {
+        let cases: &[(u64, &[u8])] = &[
+            (0, &[0x00]),
+            (1, &[0x01]),
+            (127, &[0x7f]),
+            (128, &[0x80, 0x01]),
+            (300, &[0xac, 0x02]),
+            (16384, &[0x80, 0x80, 0x01]),
+            (2097152, &[0x80, 0x80, 0x80, 0x01]),
+            (u32::MAX as u64, &[0xff, 0xff, 0xff, 0xff, 0x0f]),
+            (
+                u64::MAX,
+                &[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01],
+            ),
+        ];
+
+        for &(expected, bytes) in cases {
+            assert_eq!(expected, decode_varint(&mut Cursor::new(bytes)).unwrap());
+        }
+    }
+
+    #[test]
     fn test_three_byte_varint() {
         // 16384 requires 3 bytes: 0x80 0x80 0x01
         // This would fail with the old buggy shift formula

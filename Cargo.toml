@@ -33,6 +33,7 @@ default = ["stream_delimit/with_kafka"]
 
 [workspace]
 members = ["stream-delimit", "erased-serde-json"]
+default-members = [".", "stream-delimit", "erased-serde-json"]
 
 [profile.release]
 debug = true
